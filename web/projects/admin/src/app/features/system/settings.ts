@@ -1,0 +1,138 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
+import { AdminSystemService } from 'data-access';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Button, ToastService } from 'ui';
+import { PageHeader } from '../../shared/page-header';
+
+/**
+ * App settings (old Core configuration admin): edit values inline, add new keys.
+ * Saving sends only the changed keys as a bulk upsert.
+ */
+@Component({
+  selector: 'app-admin-settings',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Button, TranslatePipe, PageHeader],
+  template: `
+    <app-page-header
+      [title]="'settings.title' | translate"
+      [subtitle]="'settings.subtitle' | translate"
+    />
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        @if (list.isLoading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else {
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="width: 30%">{{ 'common.key' | translate }}</th>
+                <th style="width: 15%">{{ 'settings.col_module' | translate }}</th>
+                <th>{{ 'common.value' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of list.value() ?? []; track s.id) {
+                <tr>
+                  <td class="font-monospace small">{{ s.id }}</td>
+                  <td class="small text-body-secondary">{{ s.module }}</td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm"
+                      [value]="changes()[s.id] ?? s.value ?? ''"
+                      (input)="stage(s.id, $any($event.target).value)" />
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="text-center text-body-secondary py-4">
+                    {{ 'settings.empty' | translate }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-md-4">
+              <label class="form-label small" for="set-key">{{ 'settings.new_key' | translate }}</label>
+              <input id="set-key" type="text" class="form-control form-control-sm" #newKey />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small" for="set-value">{{ 'common.value' | translate }}</label>
+              <input id="set-value" type="text" class="form-control form-control-sm" #newValue />
+            </div>
+            <div class="col-md-3">
+              <button type="button" libButton variant="secondary" size="sm" [outline]="true"
+                (click)="stageNew(newKey, newValue)">
+                {{ 'settings.add_setting' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <button type="button" libButton variant="primary"
+            [disabled]="!hasChanges() || saving()"
+            (click)="save()">
+            {{ (saving() ? 'common.saving' : 'common.save_changes') | translate }}
+          </button>
+        }
+      </div>
+    </div>
+  `,
+})
+export class AdminSettings {
+  private readonly service = inject(AdminSystemService);
+  private readonly toast = inject(ToastService);
+  private readonly translate = inject(TranslateService);
+
+  protected readonly list = this.service.settingsResource();
+  protected readonly changes = signal<Record<string, string>>({});
+  protected readonly saving = signal(false);
+
+  protected hasChanges(): boolean {
+    return Object.keys(this.changes()).length > 0;
+  }
+
+  protected stage(key: string, value: string): void {
+    this.changes.update((c) => ({ ...c, [key]: value }));
+  }
+
+  protected stageNew(keyInput: HTMLInputElement, valueInput: HTMLInputElement): void {
+    const key = keyInput.value.trim();
+    if (!key) {
+      return;
+    }
+    this.stage(key, valueInput.value);
+    keyInput.value = '';
+    valueInput.value = '';
+    this.save();
+  }
+
+  protected save(): void {
+    const settings = this.changes();
+    if (!Object.keys(settings).length) {
+      return;
+    }
+    this.saving.set(true);
+    this.service.updateSettings({ settings }).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('settings.saved_ok'));
+        this.changes.set({});
+        this.saving.set(false);
+        this.list.reload();
+      },
+      error: () => {
+        this.toast.error(this.translate.instant('settings.save_failed'));
+        this.saving.set(false);
+      },
+    });
+  }
+}

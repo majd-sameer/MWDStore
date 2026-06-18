@@ -1,0 +1,47 @@
+// =============================================================================
+// MadeWithDetermination (صُنع بعزيمة) — Bootstrap 5 theme
+// -----------------------------------------------------------------------------
+// Variable overrides applied *before* Bootstrap is imported so the generated
+// CSS (colors, utilities, components) is built from the brand tokens. Mirrors
+// the key design tokens from `_tokens.scss` into the Bootstrap SCSS layer.
+// Shared by every app in the workspace via `styles/index.scss`.
+// Palette source: supported-doc/DESIGN.md (official visual identity).
+// =============================================================================
+
+// Brand palette ---------------------------------------------------------------
+$primary:   #5c9a3d; // Fresh Herb Green — primary action (--green)
+$dark:      #394142; // Deep Titanium — text / chrome (--ink)
+$secondary: #5a6364; // titanium-soft (--ink-2)
+$success:   #4c8330; // green-strong
+$info:      #2e4f72; // Royal Blue Slate (--navy)
+$warning:   #c9971e; // gold-bright
+$danger:    #d6455d;
+
+// Surface / body --------------------------------------------------------------
+$body-bg:    #fbf5e9; // Inner Ivory (--canvas)
+$body-color: #394142; // Deep Titanium (--ink)
+
+// Typography ------------------------------------------------------------------
+// Resolved at runtime from the `--font` custom property so the Arabic face can
+// swap in under [dir="rtl"] / :lang(ar) without recompiling.
+$font-family-sans-serif: var(--font);
+$headings-font-weight: 700;
+$line-height-base: 1.65;
+
+// Shape & depth ---------------------------------------------------------------
+$border-radius:      0.875rem; // 14px  --r (design --r-md)
+$border-radius-sm:   0.625rem; // 10px  --r-sm
+$border-radius-lg:   1.25rem;  // 20px  --r-lg
+$border-radius-pill: 999px;    // buttons are fully pill
+$enable-shadows:   false;
+$enable-negative-margins: true;
+
+// Component tweaks ------------------------------------------------------------
+// Buttons use a soft 15px radius across both apps (all sizes consistent).
+$btn-border-radius:    15px;
+$btn-border-radius-sm: 15px;
+$btn-border-radius-lg: 15px;
+$btn-font-weight:      600;
+
+$card-border-color:        #e6dac2; // --line
+$pagination-border-radius: $border-radius-sm;

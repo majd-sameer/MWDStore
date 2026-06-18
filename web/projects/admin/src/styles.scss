@@ -1,0 +1,347 @@
+// =============================================================================
+// MadeWithDetermination Admin — app-level design layer
+// -----------------------------------------------------------------------------
+// Rides on the shared theme (ui/styles). Every admin page uses the same
+// Bootstrap vocabulary (h1.h3 page titles, .card.border-0.shadow-sm panels,
+// .table.table-hover lists, .badge.text-bg-* statuses), so restyling those
+// classes here modernizes the whole console without touching each feature.
+// =============================================================================
+
+// Bootstrap Icons (sidebar / topbar glyphs) -------------------------------------
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+// Page titles -----------------------------------------------------------------
+h1.h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+// Panels ----------------------------------------------------------------------
+// Cards sit on pure white so they lift off the ivory canvas.
+.card {
+  --bs-card-bg: #ffffff;
+  --bs-card-border-radius: var(--r-lg);
+  --bs-card-inner-border-radius: calc(var(--r-lg) - 1px);
+  border: 1px solid var(--line-2);
+}
+.card.shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+.card-header {
+  padding-block: 0.85rem;
+  background: transparent;
+  border-block-end: 1px solid var(--line-2);
+}
+
+// Tables ----------------------------------------------------------------------
+// Airy, modern data tables: quiet uppercase headers, generous rows, soft
+// hover wash, hairline dividers.
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  --bs-table-active-bg: color-mix(in srgb, var(--green-soft) 60%, transparent);
+  border-color: var(--line-2);
+}
+.table > thead th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-3);
+  border-block-end: 1px solid var(--line);
+  padding-block: 0.55rem;
+  white-space: nowrap;
+}
+.table > tbody > tr > td {
+  padding-block: 0.8rem;
+}
+.table > tbody > tr:last-child > td {
+  border-block-end: 0;
+}
+
+// Status badges ---------------------------------------------------------------
+// Solid Bootstrap badges read heavy; soften every status into a tinted pill.
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.4em 0.75em;
+  border-radius: 999px;
+}
+.badge.text-bg-success {
+  background: color-mix(in srgb, var(--green) 15%, transparent) !important;
+  color: var(--green-strong) !important;
+}
+.badge.text-bg-secondary {
+  background: color-mix(in srgb, var(--ink-3) 16%, transparent) !important;
+  color: var(--ink-2) !important;
+}
+.badge.text-bg-danger {
+  background: color-mix(in srgb, #d6455d 14%, transparent) !important;
+  color: #b62f45 !important;
+}
+.badge.text-bg-warning {
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+}
+.badge.text-bg-info {
+  background: color-mix(in srgb, var(--navy) 13%, transparent) !important;
+  color: var(--navy) !important;
+}
+.badge.text-bg-primary {
+  background: color-mix(in srgb, var(--green) 15%, transparent) !important;
+  color: var(--green-strong) !important;
+}
+.badge.text-bg-light {
+  background: var(--surface-2) !important;
+  color: var(--ink-2) !important;
+  border: 1px solid var(--line) !important;
+}
+
+// Buttons ---------------------------------------------------------------------
+// Admin primary buttons are softly rounded (10px), not storefront pills.
+.btn-primary {
+  --bs-btn-border-radius: 10px;
+  color: #ffffff;
+}
+
+// Forms -----------------------------------------------------------------------
+// Inputs sit on white with the brand hairline; focus ring is the action green.
+.form-control,
+.form-select {
+  border-radius: var(--r-sm);
+  border-color: var(--line-strong);
+  background-color: var(--surface);
+}
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 18%, transparent);
+}
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.form-text {
+  font-size: 0.8rem;
+}
+
+// Toolbar helpers ---------------------------------------------------------------
+// Search input with a leading icon (wrap input in .search-box and add the icon).
+.search-box {
+  position: relative;
+}
+.search-box > .search-box-icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0.85rem;
+  transform: translateY(-50%);
+  color: var(--ink-3);
+  pointer-events: none;
+  line-height: 0;
+}
+.search-box > .form-control {
+  padding-inline-start: 2.5rem;
+  border-radius: 999px;
+}
+
+// Filter chips (segmented status filters on list pages).
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.filter-chip {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.filter-chip:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.filter-chip.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+// Icon-only row action buttons.
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.action-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.action-btn.action-btn-danger:hover {
+  background: color-mix(in srgb, #d6455d 12%, transparent);
+  border-color: color-mix(in srgb, #d6455d 40%, transparent);
+  color: #b62f45;
+}
+.action-btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+// List pager (prev / page chip / next).
+.list-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-start: 1rem;
+}
+.list-pager .page-chip {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 0.25rem 0.9rem;
+}
+
+// Table row art ------------------------------------------------------------------
+// 44px product thumbnail (or icon fallback) used in list rows.
+.row-thumb,
+.row-thumb-fallback {
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.row-thumb {
+  object-fit: cover;
+}
+.row-thumb-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+// Price with a struck-through previous price underneath.
+.price-old {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  font-size: 0.8rem;
+}
+
+// Stock level indicator dot (ok / low / out).
+.stock-dot {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  margin-inline-end: 0.45rem;
+  vertical-align: middle;
+}
+.stock-dot.ok {
+  background: var(--green);
+}
+.stock-dot.low {
+  background: var(--gold-bright);
+}
+.stock-dot.out {
+  background: #d6455d;
+}
+
+// Empty states ------------------------------------------------------------------
+.empty-state {
+  text-align: center;
+  padding-block: 3rem;
+  color: var(--ink-3);
+}
+.empty-state .empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  margin-block-end: 0.75rem;
+}
+.empty-state .empty-title {
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-block-end: 0.15rem;
+}
+
+// Sticky form action bar (long create/edit forms) --------------------------------
+.form-actions {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-start: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-md);
+}
+
+// Stat cards (dashboard) ----------------------------------------------------------
+.stat-card .stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+}
+.stat-card .stat-icon.tint-green {
+  background: var(--green-soft);
+  color: var(--green-strong);
+}
+.stat-card .stat-icon.tint-gold {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.stat-card .stat-icon.tint-navy {
+  background: color-mix(in srgb, var(--navy) 12%, transparent);
+  color: var(--navy);
+}
+.stat-card .stat-icon.tint-clay {
+  background: #f3e2d6;
+  color: #a86b3c;
+}
+.stat-card .stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-3);
+}
+.stat-card .stat-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}

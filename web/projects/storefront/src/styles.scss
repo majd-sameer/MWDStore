@@ -1,0 +1,10 @@
+/* You can add global styles to this file, and also import other style files */
+
+// The shop pagehead band breaks out of .wrap via margin-inline: calc(50% - 50vw),
+// which can overflow by half a scrollbar width on classic scrollbars. `clip`
+// (not `hidden`) guards that without creating a scroll container, so
+// position: sticky keeps working.
+html,
+body {
+  overflow-x: clip;
+}

@@ -1,0 +1,12 @@
+{
+  "/api": {
+    "target": "https://localhost:7142",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/user-content": {
+    "target": "https://localhost:7142",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

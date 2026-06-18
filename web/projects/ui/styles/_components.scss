@@ -1,0 +1,255 @@
+// =============================================================================
+// MadeWithDetermination — bespoke component styles (shared)
+// -----------------------------------------------------------------------------
+// Custom looks for the `ui` primitives that Bootstrap doesn't cover. A single
+// stylesheet serves both LTR and RTL: only logical properties are used
+// (margin-inline, inset-inline-*, border-start-*, text-align:start/end…), never
+// physical left/right.
+// =============================================================================
+
+// Directional icons (arrows / chevrons) mirror under RTL; everything else stays.
+[dir="rtl"] .icon-directional {
+  transform: scaleX(-1);
+}
+
+.lib-icon {
+  line-height: 0;
+}
+
+// Primary button → always white label (filled green), regardless of Bootstrap's
+// auto contrast pick, across rest / hover / active / disabled states.
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-color: #fff;
+  --bs-btn-disabled-color: #fff;
+}
+
+// Ghost button (Bootstrap .btn-outline-secondary) → token line + soft hover ----
+.btn-outline-secondary {
+  --bs-btn-color: var(--ink);
+  --bs-btn-border-color: var(--line);
+  --bs-btn-bg: transparent;
+  --bs-btn-hover-bg: var(--surface-2);
+  --bs-btn-hover-border-color: var(--line);
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-active-bg: var(--surface-2);
+  --bs-btn-active-border-color: var(--line);
+  --bs-btn-active-color: var(--ink);
+}
+
+// UiTile -----------------------------------------------------------------------
+.ui-tile {
+  overflow: hidden;
+  border-radius: var(--r);
+  background-color: var(--surface-2);
+
+  &__img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  &__art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    color: var(--ink-3);
+  }
+
+  &__initial {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    color: var(--ink-2);
+  }
+}
+
+// UiTag ------------------------------------------------------------------------
+.ui-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding-block: 0.2em;
+  padding-inline: 0.6em;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  background: var(--surface-2);
+  color: var(--ink-2);
+
+  &[data-tone="accent"] {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+  }
+  &[data-tone="indigo"] {
+    background: color-mix(in srgb, var(--indigo) 12%, transparent);
+    color: var(--indigo);
+  }
+  &[data-tone="success"] {
+    background: color-mix(in srgb, #5c9a3d 16%, transparent);
+    color: #4c8330;
+  }
+  &[data-tone="danger"] {
+    background: color-mix(in srgb, #d6455d 16%, transparent);
+    color: #b62f45;
+  }
+}
+
+// UiPill (eyebrow) -------------------------------------------------------------
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding-block: 0.4em;
+  padding-inline: 0.85em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+
+  &__dot {
+    inline-size: 0.5em;
+    block-size: 0.5em;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+}
+
+// UiStars ----------------------------------------------------------------------
+.ui-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.9rem;
+
+  &__track {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  &__base {
+    color: var(--line);
+  }
+  &__fill {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    overflow: hidden;
+    color: var(--gold-bright);
+  }
+  &__count {
+    font-size: 0.8rem;
+  }
+}
+
+// UiStepper --------------------------------------------------------------------
+.ui-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding-block: 0.2rem;
+  padding-inline: 0.3rem;
+  background: var(--surface);
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--ink);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--surface-3);
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__value {
+    min-inline-size: 2rem;
+    text-align: center;
+    font-weight: 600;
+  }
+}
+
+// UiAccordion ------------------------------------------------------------------
+.ui-accordion {
+  display: block;
+  border-block-end: 1px solid var(--line);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    inline-size: 100%;
+    padding-block: 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  &__chev {
+    color: var(--ink-3);
+    transition: transform 0.2s ease;
+    &.is-open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__body {
+    padding-block-end: 1.1rem;
+    color: var(--ink-2);
+    line-height: 1.65;
+  }
+}
+
+// UiBreadcrumb -----------------------------------------------------------------
+.ui-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__link {
+    color: var(--ink-2);
+    text-decoration: none;
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  &__sep {
+    color: var(--ink-3);
+  }
+}

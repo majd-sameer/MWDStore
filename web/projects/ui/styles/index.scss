@@ -1,0 +1,32 @@
+// =============================================================================
+// MadeWithDetermination shared global stylesheet
+// -----------------------------------------------------------------------------
+// Single Bootstrap + theme entry point referenced by every application's
+// `styles` array in angular.json (storefront, admin). Keeps the visual
+// language consistent across the workspace.
+//
+// Import order matters for Bootstrap theming:
+//   1. functions  -> needed by our overrides (e.g. color helpers)
+//   2. theme       -> our variable overrides
+//   3. bootstrap   -> variables defaults, maps, mixins, utilities, components
+// =============================================================================
+
+@import "bootstrap/scss/functions";
+@import "theme";
+@import "bootstrap/scss/bootstrap";
+
+// Brand design tokens (CSS custom properties + dark overrides + Arabic face +
+// gradient tiles). Imported AFTER Bootstrap so our `:root` block overrides
+// Bootstrap's own custom-property defaults.
+@import "tokens";
+
+// Bespoke component looks for the `ui` primitives (tiles, tags, pills, stepper,
+// stars, accordion, breadcrumb) + the RTL directional-icon flip. All logical.
+@import "components";
+
+// Project-wide helpers that build on the themed Bootstrap layer ---------------
+
+// Fixed container used by the shared toast host component.
+.mystore-toast-container {
+  z-index: $zindex-toast;
+}
