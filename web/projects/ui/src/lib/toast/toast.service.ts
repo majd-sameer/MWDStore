@@ -40,10 +40,12 @@ export class ToastService {
   }
 
   error(text: string, header?: string): number {
+    // Auto-dismiss like success toasts (longer, so it stays readable) — error
+    // toasts used to be sticky (autohide:false) and never left the screen.
     return this.show(text, {
       header,
       classname: 'bg-danger text-light',
-      autohide: false,
+      delay: 7000,
     });
   }
 

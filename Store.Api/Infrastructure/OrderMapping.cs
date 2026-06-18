@@ -1,4 +1,5 @@
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Domain;
 
 namespace Store.Api.Infrastructure;
@@ -52,4 +53,33 @@ public static class OrderMapping
     private static OrderAddressDto ToDto(this OrderAddress a) => new(
         a.ContactName, a.Phone, a.AddressLine1, a.AddressLine2,
         a.City, a.ZipCode, a.StateOrProvinceId, a.CountryId);
+
+    /// <summary>
+    /// Overlays the per-culture product names onto the order's line items (by product id), so a
+    /// localized order view (e.g. English) shows the English product name instead of the Arabic base.
+    /// No-op when <paramref name="cultureId"/> is null (base) or there are no items.
+    /// </summary>
+    public static async Task<OrderDetailDto> LocalizeItemsAsync(
+        this OrderDetailDto detail, ILocalizationService localization, string? cultureId, CancellationToken cancellationToken)
+    {
+        if (cultureId is null || detail.Items.Count == 0)
+        {
+            return detail;
+        }
+
+        var ids = detail.Items.Select(i => i.ProductId).ToList();
+        var overlay = await localization.GetOverlayAsync(LocalizedEntity.Product, ids, cultureId, cancellationToken);
+        if (overlay.IsEmpty)
+        {
+            return detail;
+        }
+
+        var items = detail.Items
+            .Select(i => i with
+            {
+                ProductName = overlay.Apply(i.ProductId, LocalizedProperty.Name, i.ProductName) ?? i.ProductName,
+            })
+            .ToList();
+        return detail with { Items = items };
+    }
 }

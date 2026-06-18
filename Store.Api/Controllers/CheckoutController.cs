@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Application.Orders;
 using Store.Application.Shipping;
 using Store.Application.ShoppingCart;
@@ -25,19 +26,22 @@ public sealed class CheckoutController : ControllerBase
     private readonly IShippingPriceService _shippingPriceService;
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
+    private readonly ILocalizationService _localization;
 
     public CheckoutController(
         ICartService cart,
         IOrderService orderService,
         IShippingPriceService shippingPriceService,
         StoreDbContext db,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        ILocalizationService localization)
     {
         _cart = cart;
         _orderService = orderService;
         _shippingPriceService = shippingPriceService;
         _db = db;
         _timeProvider = timeProvider;
+        _localization = localization;
     }
 
     /// <summary>The shipping methods (and prices) applicable to the cart for the given address.</summary>
@@ -234,6 +238,12 @@ public sealed class CheckoutController : ControllerBase
             .Include(o => o.BillingAddress)
             .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 
-        return order?.ToDetail();
+        if (order == null)
+        {
+            return null;
+        }
+
+        return await order.ToDetail()
+            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
     }
 }

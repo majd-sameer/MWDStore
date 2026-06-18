@@ -1,4 +1,4 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import { MoneyPipe } from 'core';
 import {
   ChangeDetectionStrategy,
@@ -6,6 +6,7 @@ import {
   computed,
   effect,
   inject,
+  PLATFORM_ID,
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -148,7 +149,7 @@ function toNumber(value: string | null): number | undefined {
         } @else if (data(); as r) {
           <div [class.is-refreshing]="result.isLoading()">
             @if (r.products?.length) {
-              @if (view() === 'grid') {
+              @if (effectiveView() === 'grid') {
                 <div class="pgrid">
                   @for (product of products(); track product.id) {
                     <app-product-card [product]="product" (addToCart)="add($event)" />
@@ -548,6 +549,12 @@ function toNumber(value: string | null): number | undefined {
       border-radius: var(--r-sm);
       overflow: hidden;
     }
+    /* Always card view on mobile — drop the grid/list toggle. */
+    @media (max-width: 542px) {
+      .viewtoggle {
+        display: none;
+      }
+    }
     .viewtoggle button {
       display: inline-flex;
       align-items: center;
@@ -809,6 +816,14 @@ export class ProductList {
   protected readonly view = signal<'grid' | 'list'>('grid');
   protected readonly sheetOpen = signal(false);
 
+  // The grid/list toggle is hidden ≤542px (always card view on mobile). Force the
+  // grid renderer there too, so resizing down from a list selection still shows cards.
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly isNarrow = signal(false);
+  protected readonly effectiveView = computed<'grid' | 'list'>(() =>
+    this.isNarrow() ? 'grid' : this.view(),
+  );
+
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
@@ -928,6 +943,12 @@ export class ProductList {
   });
 
   constructor() {
+    if (this.isBrowser) {
+      const mq = window.matchMedia('(max-width: 542px)');
+      this.isNarrow.set(mq.matches);
+      mq.addEventListener('change', (event) => this.isNarrow.set(event.matches));
+    }
+
     effect(() => {
       const value = this.result.value();
       if (value) {

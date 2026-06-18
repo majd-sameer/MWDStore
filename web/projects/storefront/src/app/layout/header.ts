@@ -145,7 +145,12 @@ interface CategoryLink {
         <div class="drawer-lang"><app-language-switcher /></div>
         <nav class="drawer-nav" [attr.aria-label]="'nav.menu' | translate">
           @for (link of mainLinks; track link.key) {
-            <a [routerLink]="link.link" (click)="menuOpen.set(false)">
+            <a
+              [routerLink]="link.link"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: link.link === '' }"
+              (click)="menuOpen.set(false)"
+            >
               {{ 'nav.' + link.key | translate }}
             </a>
           }
@@ -164,9 +169,12 @@ interface CategoryLink {
           }
 
           <a
+            class="drawer-account"
             [routerLink]="auth.isAuthenticated() ? '/account' : '/login'"
+            routerLinkActive="active"
             (click)="menuOpen.set(false)"
           >
+            <lib-icon name="user" [size]="18" />
             {{ (auth.isAuthenticated() ? 'nav.account' : 'nav.signin') | translate }}
           </a>
         </nav>
@@ -336,12 +344,15 @@ interface CategoryLink {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-block-end: 1rem;
+      margin-block-end: 0.75rem;
+      padding-block-end: 0.85rem;
+      border-block-end: 1px solid var(--line);
       flex: 0 0 auto;
     }
     .drawer-nav {
       display: flex;
       flex-direction: column;
+      gap: 2px;
       flex: 1 1 auto;
       min-block-size: 0;
       overflow-y: auto;
@@ -349,14 +360,36 @@ interface CategoryLink {
       -webkit-overflow-scrolling: touch;
     }
     .drawer-nav a {
-      padding-block: 0.85rem;
-      border-block-end: 1px solid var(--line-2);
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 0.75rem;
+      border-radius: var(--r-sm);
       color: var(--ink);
       font-weight: 600;
       text-decoration: none;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .drawer-nav a:hover {
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+    .drawer-nav a.active {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+    .drawer-nav a.active::before {
+      content: '';
+      position: absolute;
+      inset-block: 0.55rem;
+      inset-inline-start: 0;
+      inline-size: 3px;
+      border-radius: 999px;
+      background: var(--accent);
     }
     .drawer-section {
-      padding-block: 1rem 0.5rem;
+      padding: 1rem 0.75rem 0.4rem;
       font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -364,9 +397,18 @@ interface CategoryLink {
       color: var(--ink-3);
     }
     .drawer-nav a.drawer-sub {
-      padding-block: 0.65rem;
+      padding-block: 0.6rem;
       font-weight: 500;
       color: var(--ink-2);
+    }
+    .drawer-nav a.drawer-account {
+      margin-block-start: 0.6rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--line);
+      border-radius: 0;
+    }
+    .drawer-nav a.drawer-account:hover {
+      border-radius: var(--r-sm);
     }
     .drawer-lang {
       flex: 0 0 auto;

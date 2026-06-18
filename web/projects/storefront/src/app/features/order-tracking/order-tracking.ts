@@ -352,7 +352,9 @@ import {
       inline-size: 26px;
       block-size: 26px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.25);
+      /* Opaque (same tone as the old translucent white, but solid) so the
+         connector line behind it doesn't show through the dot. */
+      background: color-mix(in srgb, #fff 25%, var(--navy-deep));
       color: var(--navy-deep);
     }
     .step.done .step-dot {

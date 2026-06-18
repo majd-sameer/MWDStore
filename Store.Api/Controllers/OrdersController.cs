@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 
 namespace Store.Api.Controllers;
@@ -14,8 +15,13 @@ namespace Store.Api.Controllers;
 public sealed class OrdersController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly ILocalizationService _localization;
 
-    public OrdersController(StoreDbContext db) => _db = db;
+    public OrdersController(StoreDbContext db, ILocalizationService localization)
+    {
+        _db = db;
+        _localization = localization;
+    }
 
     /// <summary>The customer's orders, newest first (master orders only — excludes vendor sub-orders).</summary>
     [HttpGet]
@@ -42,7 +48,14 @@ public sealed class OrdersController : ControllerBase
             .Include(o => o.BillingAddress)
             .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customerId, cancellationToken);
 
-        return order == null ? NotFound() : Ok(order.ToDetail());
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        var detail = await order.ToDetail()
+            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
+        return Ok(detail);
     }
 
     /// <summary>
@@ -87,6 +100,10 @@ public sealed class OrdersController : ControllerBase
                 order.OrderStatus, OrderStatusNames.For(order.OrderStatus), order.CreatedOn));
         }
 
+        // Strip the guest email (tracking-number-only lookup) and localize line-item names.
+        var detail = await (order.ToDetail() with { GuestEmail = null })
+            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
+
         return Ok(new OrderTrackingDto(
             order.Id,
             order.TrackingNumber,
@@ -98,8 +115,6 @@ public sealed class OrdersController : ControllerBase
             order.ShippingMethod,
             order.PaymentMethod,
             history,
-            // Strip the guest email — this lookup is gated only by the tracking number, so the
-            // shopper's contact secret must not be echoed back in the public response.
-            order.ToDetail() with { GuestEmail = null }));
+            detail));
     }
 }
