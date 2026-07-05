@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -15,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// transaction log. The standard providers are seeded on first access using the old modules' ids.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.OrdersRefund)]
 [Route("api/admin/payments")]
 public sealed class AdminPaymentsController : ControllerBase
 {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -10,7 +9,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin app-settings page (old Core module's configuration admin): list + bulk upsert.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.SettingsManage)]
 [Route("api/admin/settings")]
 public sealed class AdminSettingsController : ControllerBase
 {

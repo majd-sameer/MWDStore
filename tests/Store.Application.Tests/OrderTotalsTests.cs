@@ -23,7 +23,8 @@ public class OrderTotalsTests
 
     private const string Standard = "Standard";
 
-    private static OrderService NewService(StoreDbContext db, decimal shippingFee = 0m)
+    private static OrderService NewService(
+        StoreDbContext db, decimal shippingFee = 0m, FakeOrderNotificationService? notifications = null)
     {
         var time = new FixedTimeProvider(Now);
         var shipping = new ConfiguredShippingPriceService(new ShippingOptions
@@ -31,7 +32,8 @@ public class OrderTotalsTests
             Methods = [new ShippingMethodSetting { Name = Standard, Price = shippingFee, MinOrderSubtotal = 0m }]
         });
         return new OrderService(
-            db, new CouponService(db, time), new TaxService(db), shipping, new ProductPricingService(time), time);
+            db, new CouponService(db, time), new TaxService(db), shipping, new ProductPricingService(time), time,
+            notifications ?? new FakeOrderNotificationService());
     }
 
     private static OrderAddressInfo Address(string? zip = null) =>
@@ -67,6 +69,39 @@ public class OrderTotalsTests
         Assert.Equal(45m, order.SubTotalWithDiscount);
         Assert.Equal(55m, order.OrderTotal); // 45 + 0 + 7 + 3 - 0
         Assert.Equal(OrderStatus.New, order.OrderStatus);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_NotifiesOrderPlaced_OnSuccess()
+    {
+        using var db = TestDb.New();
+        var p = NewProduct(1, "A", 10m);
+        db.Products.Add(p);
+        var checkoutId = AddCheckout(db, [(p, 1)]);
+        var notifications = new FakeOrderNotificationService();
+        var service = NewService(db, notifications: notifications);
+
+        var order = (await Create(service, checkoutId)).Value!;
+
+        var call = Assert.Single(notifications.Calls);
+        Assert.Equal("Placed", call.Event);
+        Assert.Equal(order.Id, call.OrderId);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_DoesNotNotify_WhenOrderCreationFails()
+    {
+        using var db = TestDb.New();
+        var p = NewProduct(1, "Gone", 10m, allowToOrder: false);
+        db.Products.Add(p);
+        var checkoutId = AddCheckout(db, [(p, 1)]);
+        var notifications = new FakeOrderNotificationService();
+        var service = NewService(db, notifications: notifications);
+
+        var result = await Create(service, checkoutId);
+
+        Assert.False(result.Success);
+        Assert.Empty(notifications.Calls);
     }
 
     // ---- tax (exclusive) --------------------------------------------------
@@ -254,6 +289,25 @@ public class OrderTotalsTests
 
         Assert.Equal(OrderStatus.Canceled, order.OrderStatus);
         Assert.Equal(5, db.Products.Single(x => x.Id == 1).StockQuantity);
+    }
+
+    [Fact]
+    public async Task CancelOrderAsync_NotifiesOrderCancelled()
+    {
+        using var db = TestDb.New();
+        var p = NewProduct(1, "Tracked", 10m, stockTracking: true, stock: 5);
+        db.Products.Add(p);
+        var checkoutId = AddCheckout(db, [(p, 3)]);
+        var notifications = new FakeOrderNotificationService();
+        var service = NewService(db, notifications: notifications);
+        var order = (await Create(service, checkoutId)).Value!;
+        notifications.Calls.Clear(); // drop the "Placed" call recorded above
+
+        await service.CancelOrderAsync(order);
+
+        var call = Assert.Single(notifications.Calls);
+        Assert.Equal("Cancelled", call.Event);
+        Assert.Equal(order.Id, call.OrderId);
     }
 
     [Fact]

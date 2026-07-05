@@ -235,6 +235,28 @@ public sealed class UpdateOrderStatusRequest
     public int OrderStatus { get; set; }
 }
 
+/// <summary>Refund an order in full or in part.</summary>
+public sealed class RefundOrderRequest
+{
+    /// <summary>Amount to refund; omit (null) to refund the full remaining captured amount.</summary>
+    [Range(0.01, double.MaxValue)]
+    public decimal? Amount { get; set; }
+
+    /// <summary>Optional reason recorded on the refund.</summary>
+    public string? Reason { get; set; }
+
+    /// <summary>
+    /// Optional caller-stable key making the refund idempotent: retrying with the same key returns the
+    /// original refund instead of issuing another. Recommended (a per-click GUID from the admin UI).
+    /// </summary>
+    public string? IdempotencyKey { get; set; }
+}
+
+/// <summary>Result of a refund operation.</summary>
+public sealed record RefundResultDto(
+    long RefundId, long OrderId, long PaymentId, decimal Amount, decimal TotalRefunded,
+    int PaymentStatus, bool FullyRefunded, string? ProviderRefundId, bool AlreadyProcessed);
+
 // ----- Inventory ----------------------------------------------------------------------------------
 
 public sealed record StockRowDto(long WarehouseId, string WarehouseName, int Quantity, int ReservedQuantity);

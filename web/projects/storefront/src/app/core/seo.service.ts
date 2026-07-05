@@ -54,11 +54,24 @@ export class SeoService {
     this.setCanonical(this.absoluteUrl());
   }
 
+  /** Storefront origin (empty string if unavailable, e.g. in a test harness). */
+  origin(): string {
+    return this.document.location?.origin ?? '';
+  }
+
+  /** Turns a root-relative path (or `RouterLink` array) into an absolute storefront URL,
+   *  dropping any query string — used for canonical links and JSON-LD `url`/`item` fields. */
+  toAbsoluteUrl(path: string | readonly unknown[]): string {
+    const segment = Array.isArray(path) ? path.join('/') : (path as string);
+    const clean = segment.split('?')[0];
+    const normalized = clean.startsWith('/') ? clean : `/${clean}`;
+    return `${this.origin()}${normalized}`;
+  }
+
   private absoluteUrl(): string {
     // `document.location` reflects the request URL during SSR and the browser
     // URL on the client; fall back to the router path if unavailable.
-    const origin = this.document.location?.origin ?? '';
-    return `${origin}${this.router.url.split('?')[0]}`;
+    return `${this.origin()}${this.router.url.split('?')[0]}`;
   }
 
   private setCanonical(href: string): void {

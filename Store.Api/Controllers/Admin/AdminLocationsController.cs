@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -13,7 +12,7 @@ namespace Store.Api.Controllers.Admin;
 /// countries and states-provinces admin pages).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.SettingsManage)]
 [Route("api/admin/locations")]
 public sealed class AdminLocationsController : ControllerBase
 {

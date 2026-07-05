@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import type { ContentBlockDto } from 'data-access';
 import { Icon, type IconName } from 'ui';
 
 /**
@@ -9,6 +10,10 @@ import { Icon, type IconName } from 'ui';
  * gold pill CTA to the About page. Right — a 2×2 grid of translucent value
  * cards (the first four brand values, sharing the About page's `about.value_*`
  * translations). Collapses to one column under 980px.
+ *
+ * The story paragraph (`[block]`, the `home.story` content block) and the
+ * first four value cards (`[valueBlocks]`, `home.value.1..4`) are
+ * admin-editable, falling back to the original i18n copy when missing.
  */
 @Component({
   selector: 'app-mission-band',
@@ -19,20 +24,20 @@ import { Icon, type IconName } from 'ui';
       <div class="wrap mission-grid">
         <div>
           <span class="eyebrow">{{ 'home.mission_eyebrow' | translate }}</span>
-          <h2 class="mission-title">{{ 'home.mission_title' | translate }}</h2>
-          <p class="mission-body">{{ 'home.mission_body' | translate }}</p>
-          <a class="mission-cta" routerLink="/pages/about-us">
-            {{ 'home.mission_cta' | translate }}
+          <h2 class="mission-title">{{ block()?.title || ('home.mission_title' | translate) }}</h2>
+          <p class="mission-body">{{ block()?.text || ('home.mission_body' | translate) }}</p>
+          <a class="mission-cta" [routerLink]="block()?.linkUrl || '/pages/about-us'">
+            {{ block()?.linkText || ('home.mission_cta' | translate) }}
             <lib-icon name="arrowEnd" [size]="18" />
           </a>
         </div>
 
         <div class="mission-vals">
-          @for (value of values; track value.key) {
+          @for (value of values; track value.key; let i = $index) {
             <div class="vcard">
               <span class="vcard-ic"><lib-icon [name]="value.icon" [size]="22" /></span>
-              <b>{{ 'about.value_' + value.key + '_title' | translate }}</b>
-              <span>{{ 'about.value_' + value.key + '_text' | translate }}</span>
+              <b>{{ valueBlock(i)?.title || ('about.value_' + value.key + '_title' | translate) }}</b>
+              <span>{{ valueBlock(i)?.text || ('about.value_' + value.key + '_text' | translate) }}</span>
             </div>
           }
         </div>
@@ -163,10 +168,20 @@ import { Icon, type IconName } from 'ui';
   `,
 })
 export class MissionBand {
+  /** The `home.story` content block, or null when missing/unpublished (falls back to i18n). */
+  readonly block = input<ContentBlockDto | null>(null);
+  /** The five `home.value.*` blocks in order; only the first four are used here. */
+  readonly valueBlocks = input<readonly ContentBlockDto[]>([]);
+
   protected readonly values: ReadonlyArray<{ icon: IconName; key: string }> = [
     { icon: 'shield', key: 'trust' },
     { icon: 'hands', key: 'empower' },
     { icon: 'leaf', key: 'heritage' },
     { icon: 'award', key: 'dignity' },
   ];
+
+  /** The value block at `index`, or null (falls back to the i18n copy for that value). */
+  protected valueBlock(index: number): ContentBlockDto | null {
+    return this.valueBlocks()[index] ?? null;
+  }
 }

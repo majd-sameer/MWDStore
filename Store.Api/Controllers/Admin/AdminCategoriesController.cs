@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -10,7 +9,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin category management (CRUD). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/categories")]
 public sealed class AdminCategoriesController : ControllerBase
 {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// <see cref="UserManager{TUser}"/> so Identity's security stamp stays consistent.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.AclManage)]
 [Route("api/admin/users")]
 public sealed class AdminUsersController : ControllerBase
 {

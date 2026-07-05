@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -17,7 +16,7 @@ namespace Store.Api.Controllers.Admin;
 /// matched by name) and related/cross-sell links. Deletes are soft (sets <c>IsDeleted</c>).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/products")]
 public sealed class AdminProductsController : ControllerBase
 {

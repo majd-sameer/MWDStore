@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
@@ -13,7 +12,7 @@ namespace Store.Api.Controllers.Admin;
 /// reference the returned media id.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.MediaManage)]
 [Route("api/admin/media")]
 public sealed class AdminMediaController : ControllerBase
 {

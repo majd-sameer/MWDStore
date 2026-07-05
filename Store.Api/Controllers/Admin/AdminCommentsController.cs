@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -12,7 +11,7 @@ namespace Store.Api.Controllers.Admin;
 /// 1 = Pending, 5 = Approved, 8 = NotApproved.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.ContentManage)]
 [Route("api/admin/comments")]
 public sealed class AdminCommentsController : ControllerBase
 {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -14,7 +13,7 @@ namespace Store.Api.Controllers.Admin;
 /// health, the best sellers, and the work queues (low stock + orders needing action).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.ReportsView)]
 [Route("api/admin/dashboard")]
 public sealed class AdminDashboardController : ControllerBase
 {

@@ -30,6 +30,7 @@ public sealed class OrderService : IOrderService
     private readonly IShippingPriceService _shippingPriceService;
     private readonly IProductPricingService _productPricingService;
     private readonly TimeProvider _timeProvider;
+    private readonly IOrderNotificationService _notifications;
 
     public OrderService(
         StoreDbContext db,
@@ -37,7 +38,8 @@ public sealed class OrderService : IOrderService
         ITaxService taxService,
         IShippingPriceService shippingPriceService,
         IProductPricingService productPricingService,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IOrderNotificationService notifications)
     {
         _db = db;
         _couponService = couponService;
@@ -45,6 +47,7 @@ public sealed class OrderService : IOrderService
         _shippingPriceService = shippingPriceService;
         _productPricingService = productPricingService;
         _timeProvider = timeProvider;
+        _notifications = notifications;
     }
 
     public async Task<Result<Order>> CreateOrderAsync(
@@ -240,6 +243,9 @@ public sealed class OrderService : IOrderService
         _couponService.AddCouponUsage(checkout.CustomerId, order.Id, couponResult);
         await _db.SaveChangesAsync(cancellationToken);
 
+        // Best-effort: notification failures never fail order placement (see IOrderNotificationService).
+        await _notifications.NotifyOrderPlacedAsync(order, cancellationToken);
+
         return Result.Ok(order);
     }
 
@@ -262,6 +268,9 @@ public sealed class OrderService : IOrderService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        // Best-effort: notification failures never fail order cancellation (see IOrderNotificationService).
+        await _notifications.NotifyOrderCancelledAsync(order, cancellationToken);
     }
 
     public async Task<decimal> GetTaxAsync(

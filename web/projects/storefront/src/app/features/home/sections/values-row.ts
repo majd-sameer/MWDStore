@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import type { ContentBlockDto } from 'data-access';
 import { Icon, type IconName } from 'ui';
 
 /**
@@ -8,6 +9,10 @@ import { Icon, type IconName } from 'ui';
  * a gold icon, bold title and muted text. Shares the About page's
  * `about.value_*` translations (the copy is identical by spec). 2 columns
  * under 980px.
+ *
+ * Each card is admin-editable via the `home.value.1`..`home.value.5` content
+ * blocks (`[blocks]`), falling back to the `about.value_*` i18n copy when a
+ * block is missing/unpublished.
  */
 @Component({
   selector: 'app-values-row',
@@ -20,11 +25,11 @@ import { Icon, type IconName } from 'ui';
         <h2 class="sec-title">{{ 'about.values_title' | translate }}</h2>
       </div>
       <div class="values">
-        @for (value of values; track value.key) {
+        @for (value of values; track value.key; let i = $index) {
           <div class="value">
             <span class="value-ic"><lib-icon [name]="value.icon" [size]="28" /></span>
-            <h3 class="value-title">{{ 'about.value_' + value.key + '_title' | translate }}</h3>
-            <p class="value-text">{{ 'about.value_' + value.key + '_text' | translate }}</p>
+            <h3 class="value-title">{{ blockAt(i)?.title || ('about.value_' + value.key + '_title' | translate) }}</h3>
+            <p class="value-text">{{ blockAt(i)?.text || ('about.value_' + value.key + '_text' | translate) }}</p>
           </div>
         }
       </div>
@@ -102,6 +107,10 @@ import { Icon, type IconName } from 'ui';
   `,
 })
 export class ValuesRow {
+  /** The five `home.value.*` blocks in order, or an empty array (each card then falls back to
+   * its i18n copy independently). */
+  readonly blocks = input<readonly ContentBlockDto[]>([]);
+
   protected readonly values: ReadonlyArray<{ icon: IconName; key: string }> = [
     { icon: 'shield', key: 'trust' },
     { icon: 'hands', key: 'empower' },
@@ -109,4 +118,8 @@ export class ValuesRow {
     { icon: 'award', key: 'dignity' },
     { icon: 'spark', key: 'quality' },
   ];
+
+  protected blockAt(index: number): ContentBlockDto | null {
+    return this.blocks()[index] ?? null;
+  }
 }

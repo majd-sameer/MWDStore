@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Per Google/robots.txt spec the Sitemap directive must be a fully-qualified URL, so a
+# root-relative path isn't valid here even though sitemap.xml is reverse-proxied through this
+# same storefront origin (see proxy.conf.json / DEPLOYMENT-RUNBOOK.md). crc.onlinepay.ae is the
+# storefront's public hostname for this deployment (DEPLOYMENT-RUNBOOK.md section 1). Update this
+# if the storefront is ever redeployed under a different hostname.
+Sitemap: https://crc.onlinepay.ae/sitemap.xml

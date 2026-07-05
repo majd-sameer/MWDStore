@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -10,7 +9,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin localization (old Localization module): cultures and per-culture resource strings.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.SettingsManage)]
 [Route("api/admin/localization")]
 public sealed class AdminLocalizationController : ControllerBase
 {

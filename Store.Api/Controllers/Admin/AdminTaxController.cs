@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -10,7 +9,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for tax classes and tax rates (consumed by checkout's <c>TaxService</c>).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.SettingsManage)]
 [Route("api/admin/tax")]
 public sealed class AdminTaxController : ControllerBase
 {

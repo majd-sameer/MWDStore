@@ -8,6 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Full ASP.NET Core Identity surface (AddDefaultTokenProviders, etc.) for PasswordResetServiceTests,
+         which builds a real UserManager<User> the same way Store.Api's Program.cs does. Store.Data only
+         brings in Microsoft.AspNetCore.Identity.EntityFrameworkCore via NuGet, which is missing the
+         shared-framework pieces this test project needs since it isn't Sdk="Microsoft.NET.Sdk.Web". -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -20,6 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ACL enforcement/policy/seeder/controller live in Store.Api; AclTests exercises them directly. -->
+    <ProjectReference Include="..\..\Store.Api\Store.Api.csproj" />
     <ProjectReference Include="..\..\Store.Application\Store.Application.csproj" />
     <ProjectReference Include="..\..\Store.Data\Store.Data.csproj" />
     <ProjectReference Include="..\..\Store.Domain\Store.Domain.csproj" />

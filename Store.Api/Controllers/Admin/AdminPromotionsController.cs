@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -14,7 +13,7 @@ namespace Store.Api.Controllers.Admin;
 /// join tables; usage rows come from checkout's <c>CouponService</c>.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/promotions")]
 public sealed class AdminPromotionsController : ControllerBase
 {

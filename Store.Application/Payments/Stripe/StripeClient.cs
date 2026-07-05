@@ -73,6 +73,36 @@ public sealed class StripeClient : IStripeClient
         return ToSession(session);
     }
 
+    public async Task<StripeRefund> CreateRefundAsync(
+        StripeRefundRequest request, CancellationToken cancellationToken = default)
+    {
+        var options = new RefundCreateOptions
+        {
+            PaymentIntent = request.PaymentIntentId,
+            Amount = ToMinorUnits(request.Amount, request.Currency)
+        };
+
+        // Stripe only accepts a fixed set of refund reasons; anything else must go in metadata.
+        if (string.Equals(request.Reason, "duplicate", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(request.Reason, "fraudulent", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(request.Reason, "requested_by_customer", StringComparison.OrdinalIgnoreCase))
+        {
+            options.Reason = request.Reason!.ToLowerInvariant();
+        }
+        else if (!string.IsNullOrWhiteSpace(request.Reason))
+        {
+            options.Metadata = new Dictionary<string, string> { ["reason"] = request.Reason };
+        }
+
+        var service = new global::Stripe.RefundService();
+        var refund = await service.CreateAsync(
+            options,
+            new RequestOptions { ApiKey = request.SecretKey, IdempotencyKey = request.IdempotencyKey },
+            cancellationToken);
+
+        return new StripeRefund(refund.Id, refund.Status);
+    }
+
     public StripeSession? ReadCheckoutSessionFromWebhook(string payload, string signatureHeader, string webhookSecret)
     {
         // Throws StripeException on a bad/forged signature — the controller maps that to 400.

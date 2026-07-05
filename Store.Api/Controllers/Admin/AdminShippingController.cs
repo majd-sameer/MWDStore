@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -17,7 +16,7 @@ namespace Store.Api.Controllers.Admin;
 /// matching the rows the old ShippingFree/ShippingTableRate modules registered.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.SettingsManage)]
 [Route("api/admin/shipping")]
 public sealed class AdminShippingController : ControllerBase
 {

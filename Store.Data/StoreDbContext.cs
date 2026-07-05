@@ -58,6 +58,7 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
     public DbSet<Culture> Cultures => Set<Culture>();
     public DbSet<LocalizedContentProperty> LocalizedContentProperties => Set<LocalizedContentProperty>();
     public DbSet<Resource> Resources => Set<Resource>();
+    public DbSet<ContentBlock> ContentBlocks => Set<ContentBlock>();
     public DbSet<NewsCategory> NewsCategories => Set<NewsCategory>();
     public DbSet<NewsItem> NewsItems => Set<NewsItem>();
     public DbSet<Order> Orders => Set<Order>();
@@ -66,6 +67,7 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentProvider> PaymentProviders => Set<PaymentProvider>();
+    public DbSet<Refund> Refunds => Set<Refund>();
     public DbSet<CartRule> CartRules => Set<CartRule>();
     public DbSet<CartRuleUsage> CartRuleUsages => Set<CartRuleUsage>();
     public DbSet<CatalogRule> CatalogRules => Set<CatalogRule>();
@@ -84,6 +86,9 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
     public DbSet<TaxRate> TaxRates => Set<TaxRate>();
     public DbSet<WishList> WishLists => Set<WishList>();
     public DbSet<WishListItem> WishListItems => Set<WishListItem>();
+    public DbSet<EmailAccount> EmailAccounts => Set<EmailAccount>();
+    public DbSet<MessageTemplate> MessageTemplates => Set<MessageTemplate>();
+    public DbSet<QueuedEmail> QueuedEmails => Set<QueuedEmail>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

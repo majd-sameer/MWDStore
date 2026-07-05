@@ -295,6 +295,7 @@ export class AdminLayout {
       /*  { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text' },
         { path: '/menus', key: 'menus', icon: 'bi-list-ul' },*/
         { path: '/news', key: 'news', icon: 'bi-newspaper' },
+        { path: '/content-blocks', key: 'content_blocks', icon: 'bi-layout-text-window' },
       ],
     },
     {

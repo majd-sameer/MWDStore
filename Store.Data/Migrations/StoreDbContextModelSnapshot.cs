@@ -722,6 +722,52 @@ namespace Store.Data.Migrations
                     b.ToTable("ContactArea", (string)null);
                 });
 
+            modelBuilder.Entity("Store.Domain.ContentBlock", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LinkText")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("ContentBlock", (string)null);
+                });
+
             modelBuilder.Entity("Store.Domain.Country", b =>
                 {
                     b.Property<string>("Id")
@@ -860,6 +906,51 @@ namespace Store.Data.Migrations
                     b.HasIndex(new[] { "StateOrProvinceId" }, "IX_Core_District_StateOrProvinceId");
 
                     b.ToTable("District", (string)null);
+                });
+
+            modelBuilder.Entity("Store.Domain.EmailAccount", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("EnableSsl")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailAccount", (string)null);
                 });
 
             modelBuilder.Entity("Store.Domain.Entity", b =>
@@ -1040,6 +1131,43 @@ namespace Store.Data.Migrations
                     b.HasIndex(new[] { "ParentId" }, "IX_Cms_MenuItem_ParentId");
 
                     b.ToTable("MenuItem", (string)null);
+                });
+
+            modelBuilder.Entity("Store.Domain.MessageTemplate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BccEmailAddresses")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Name" }, "IX_Messaging_MessageTemplate_Name")
+                        .IsUnique();
+
+                    b.ToTable("MessageTemplate", (string)null);
                 });
 
             modelBuilder.Entity("Store.Domain.NewsCategory", b =>
@@ -2057,6 +2185,66 @@ namespace Store.Data.Migrations
                     b.ToTable("Query", (string)null);
                 });
 
+            modelBuilder.Entity("Store.Domain.QueuedEmail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Bcc")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("EmailAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaxTries")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("SentOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("SentTries")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("To")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ToName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailAccountId");
+
+                    b.HasIndex(new[] { "SentOn" }, "IX_Messaging_QueuedEmail_SentOn");
+
+                    b.ToTable("QueuedEmail", (string)null);
+                });
+
             modelBuilder.Entity("Store.Domain.RecentlyViewedProduct", b =>
                 {
                     b.Property<long>("Id")
@@ -2077,6 +2265,57 @@ namespace Store.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RecentlyViewedProduct", (string)null);
+                });
+
+            modelBuilder.Entity("Store.Domain.Refund", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<long>("CreatedById")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PaymentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ProviderRefundId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "OrderId" }, "IX_Orders_Refund_OrderId");
+
+                    b.HasIndex(new[] { "PaymentId" }, "IX_Payments_Refund_PaymentId");
+
+                    b.HasIndex(new[] { "PaymentId", "IdempotencyKey" }, "IX_Payments_Refund_PaymentId_IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
+
+                    b.ToTable("Refund", (string)null);
                 });
 
             modelBuilder.Entity("Store.Domain.Reply", b =>
@@ -3628,6 +3867,32 @@ namespace Store.Data.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Store.Domain.QueuedEmail", b =>
+                {
+                    b.HasOne("Store.Domain.EmailAccount", "EmailAccount")
+                        .WithMany("QueuedEmails")
+                        .HasForeignKey("EmailAccountId");
+
+                    b.Navigation("EmailAccount");
+                });
+
+            modelBuilder.Entity("Store.Domain.Refund", b =>
+                {
+                    b.HasOne("Store.Domain.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .IsRequired();
+
+                    b.HasOne("Store.Domain.Payment", "Payment")
+                        .WithMany("Refunds")
+                        .HasForeignKey("PaymentId")
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("Store.Domain.Reply", b =>
                 {
                     b.HasOne("Store.Domain.Review", "Review")
@@ -4017,6 +4282,11 @@ namespace Store.Data.Migrations
                     b.Navigation("PriceAndDestinations");
                 });
 
+            modelBuilder.Entity("Store.Domain.EmailAccount", b =>
+                {
+                    b.Navigation("QueuedEmails");
+                });
+
             modelBuilder.Entity("Store.Domain.Entity", b =>
                 {
                     b.Navigation("MenuItems");
@@ -4066,6 +4336,11 @@ namespace Store.Data.Migrations
                     b.Navigation("OrderBillingAddresses");
 
                     b.Navigation("OrderShippingAddresses");
+                });
+
+            modelBuilder.Entity("Store.Domain.Payment", b =>
+                {
+                    b.Navigation("Refunds");
                 });
 
             modelBuilder.Entity("Store.Domain.Product", b =>

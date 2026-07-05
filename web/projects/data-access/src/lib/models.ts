@@ -26,6 +26,16 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   accessToken: string | null;
   expiresAt: string;
@@ -1496,4 +1506,48 @@ export interface AdminDashboardDto {
   topProducts: AdminTopProduct[];
   lowStock: AdminLowStock[];
   actionQueue: OrderSummaryDto[];
+}
+
+// ---------------------------------------------------------------------------
+// Content blocks (admin-editable homepage copy/media)
+// ---------------------------------------------------------------------------
+
+/** Published content block, localized for the request culture (`GET /api/content/blocks`). */
+export interface ContentBlockDto {
+  key: string;
+  title: string | null;
+  text: string | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  linkText: string | null;
+  sortOrder: number;
+}
+
+/** Admin shape: base (Arabic) fields plus the raw English overlay values. */
+export interface AdminContentBlockDto {
+  id: number;
+  key: string;
+  title: string | null;
+  text: string | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  linkText: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+  titleEn: string | null;
+  textEn: string | null;
+  linkTextEn: string | null;
+}
+
+export interface ContentBlockUpdateRequest {
+  title?: string | null;
+  text?: string | null;
+  imageUrl?: string | null;
+  linkUrl?: string | null;
+  linkText?: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+  titleEn?: string | null;
+  textEn?: string | null;
+  linkTextEn?: string | null;
 }

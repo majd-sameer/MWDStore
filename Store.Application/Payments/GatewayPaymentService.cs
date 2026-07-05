@@ -30,6 +30,7 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     private readonly TimeProvider _timeProvider;
     private readonly IStripeClient _stripe;
     private readonly PaymentsOptions _options;
+    private readonly IOrderNotificationService _notifications;
     private readonly ILogger<GatewayPaymentService> _logger;
 
     public GatewayPaymentService(
@@ -37,12 +38,14 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         TimeProvider timeProvider,
         IStripeClient stripe,
         PaymentsOptions options,
+        IOrderNotificationService notifications,
         ILogger<GatewayPaymentService> logger)
     {
         _db = db;
         _timeProvider = timeProvider;
         _stripe = stripe;
         _options = options;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -166,6 +169,12 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
 
         await _db.SaveChangesAsync(cancellationToken);
 
+        if (approved)
+        {
+            // Best-effort: notification failures never fail the payment callback (see IOrderNotificationService).
+            await _notifications.NotifyOrderPaidAsync(order, cancellationToken);
+        }
+
         return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, approved, callback.GatewayTransactionId));
     }
 
@@ -225,6 +234,10 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             payment.LatestUpdatedOn = now;
             SetOrderStatus(order, OrderStatus.PaymentReceived, now, "Stripe payment received.");
             await _db.SaveChangesAsync(cancellationToken);
+
+            // Best-effort: notification failures never fail Stripe settlement (see IOrderNotificationService).
+            await _notifications.NotifyOrderPaidAsync(order, cancellationToken);
+
             return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, sessionId));
         }
 

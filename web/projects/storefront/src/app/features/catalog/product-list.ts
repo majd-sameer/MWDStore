@@ -27,6 +27,7 @@ import {
   ToastService,
 } from 'ui';
 import { CartStore } from '../../core/cart.store';
+import { JsonLdService } from '../../core/json-ld.service';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
 import { CategoryLabelPipe } from '../../shared/category-label.pipe';
@@ -809,6 +810,7 @@ export class ProductList {
   private readonly router = inject(Router);
   private readonly cart = inject(CartStore);
   private readonly seo = inject(SeoService);
+  private readonly jsonLd = inject(JsonLdService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -964,6 +966,18 @@ export class ProductList {
           total !== undefined
             ? `Browse ${total} handmade products at MadeWithDetermination.`
             : 'Browse handmade products at MadeWithDetermination.',
+      });
+      // No product-detail schema applies here — drop a stale one left over from a
+      // client-side navigation away from a product page.
+      this.jsonLd.remove('product');
+      this.jsonLd.set('breadcrumb', {
+        '@type': 'BreadcrumbList',
+        itemListElement: this.crumbs().map((item, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: item.label,
+          ...(item.link ? { item: this.seo.toAbsoluteUrl(item.link) } : {}),
+        })),
       });
     });
   }

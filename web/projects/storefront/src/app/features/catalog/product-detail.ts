@@ -33,6 +33,7 @@ import {
   ToastService,
 } from 'ui';
 import { CartStore, type CartProduct } from '../../core/cart.store';
+import { JsonLdService } from '../../core/json-ld.service';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
 
@@ -1042,6 +1043,7 @@ export class ProductDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly cart = inject(CartStore);
   private readonly seo = inject(SeoService);
+  private readonly jsonLd = inject(JsonLdService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
   private readonly features = inject(StorefrontFeaturesService);
@@ -1173,6 +1175,8 @@ export class ProductDetail {
         description: p.metaDescription || this.stripHtml(p.shortDescription) || undefined,
         type: 'product',
       });
+      this.jsonLd.set('product', this.buildProductSchema(p));
+      this.jsonLd.set('breadcrumb', this.buildBreadcrumbSchema(this.crumbs(p)));
     });
 
     // Reviews + recently-viewed tracking follow the product id. The token is
@@ -1376,5 +1380,51 @@ export class ProductDetail {
 
   private stripHtml(value: string | null): string {
     return value ? value.replace(/<[^>]*>/g, '').trim() : '';
+  }
+
+  /** schema.org Product + Offer, built from the same data the page already renders. */
+  private buildProductSchema(p: ProductDetailModel): Record<string, unknown> {
+    const images = [
+      ...(p.thumbnailImageUrl ? [p.thumbnailImageUrl] : []),
+      ...(p.imageUrls ?? []),
+    ].map((url) => this.seo.toAbsoluteUrl(url));
+    const price = this.activePrice().price;
+    return {
+      '@type': 'Product',
+      name: p.name,
+      image: images,
+      description: this.stripHtml(p.shortDescription) || this.stripHtml(p.description) || undefined,
+      brand: p.brand?.name ? { '@type': 'Brand', name: p.brand.name } : undefined,
+      aggregateRating:
+        p.ratingAverage && p.reviewsCount
+          ? {
+              '@type': 'AggregateRating',
+              ratingValue: p.ratingAverage,
+              reviewCount: p.reviewsCount,
+            }
+          : undefined,
+      offers: {
+        '@type': 'Offer',
+        url: this.seo.toAbsoluteUrl(['/products', p.id]),
+        priceCurrency: 'JOD',
+        price: price.toFixed(2),
+        availability: this.canOrder()
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      },
+    };
+  }
+
+  /** schema.org BreadcrumbList mirroring the visible `<lib-breadcrumb>` trail. */
+  private buildBreadcrumbSchema(items: BreadcrumbItem[]): Record<string, unknown> {
+    return {
+      '@type': 'BreadcrumbList',
+      itemListElement: items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.label,
+        ...(item.link ? { item: this.seo.toAbsoluteUrl(item.link) } : {}),
+      })),
+    };
   }
 }

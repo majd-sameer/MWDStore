@@ -33,6 +33,7 @@ export * from './lib/locations.service';
 export * from './lib/order.service';
 export * from './lib/payments.service';
 export * from './lib/storefront-features.service';
+export * from './lib/content.service';
 
 // Admin services
 export * from './lib/admin/admin-dashboard.service';
@@ -53,6 +54,7 @@ export * from './lib/admin/admin-users.service';
 export * from './lib/admin/admin-customers.service';
 export * from './lib/admin/admin-moderation.service';
 export * from './lib/admin/admin-cms.service';
+export * from './lib/admin/admin-content-blocks.service';
 export * from './lib/admin/admin-payments.service';
 export * from './lib/admin/admin-system.service';
 export * from './lib/admin/admin-operations.service';

@@ -26,5 +26,8 @@ public class Payment
     public string? FailureMessage { get; set; }
 
     public Order Order { get; set; } = null!;
+
+    /// <summary>Refunds recorded against this (captured) payment; empty until the first refund.</summary>
+    public ICollection<Refund> Refunds { get; set; } = [];
 }
 

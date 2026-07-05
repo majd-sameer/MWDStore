@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +15,7 @@ namespace Store.Api.Controllers.Admin;
 /// management (customers hold no roles) and adds per-customer order stats.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.CustomersManage)]
 [Route("api/admin/customers")]
 public sealed class AdminCustomersController : ControllerBase
 {

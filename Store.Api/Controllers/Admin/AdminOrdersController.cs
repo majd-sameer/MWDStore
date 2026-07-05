@@ -1,27 +1,33 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Orders;
+using Store.Application.Payments;
 using Store.Data;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin order management: browse all orders, view detail, change status, and cancel (restocks).</summary>
+/// <summary>Admin order management: browse all orders, view detail, change status, cancel (restocks), and refund.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.OrdersManage)]
 [Route("api/admin/orders")]
 public sealed class AdminOrdersController : ControllerBase
 {
     private readonly StoreDbContext _db;
     private readonly IOrderService _orderService;
+    private readonly IOrderNotificationService _notifications;
+    private readonly IRefundService _refundService;
     private readonly TimeProvider _timeProvider;
 
-    public AdminOrdersController(StoreDbContext db, IOrderService orderService, TimeProvider timeProvider)
+    public AdminOrdersController(
+        StoreDbContext db, IOrderService orderService, IOrderNotificationService notifications,
+        IRefundService refundService, TimeProvider timeProvider)
     {
         _db = db;
         _orderService = orderService;
+        _notifications = notifications;
+        _refundService = refundService;
         _timeProvider = timeProvider;
     }
 
@@ -78,10 +84,17 @@ public sealed class AdminOrdersController : ControllerBase
             return NotFound();
         }
 
+        var previousStatus = order.OrderStatus;
         order.OrderStatus = request.OrderStatus;
         order.LatestUpdatedOn = _timeProvider.GetUtcNow();
         order.LatestUpdatedById = User.GetUserId();
         await _db.SaveChangesAsync(cancellationToken);
+
+        if (request.OrderStatus == OrderStatus.Shipped && previousStatus != OrderStatus.Shipped)
+        {
+            // Best-effort: notification failures never fail the status update (see IOrderNotificationService).
+            await _notifications.NotifyOrderShippedAsync(order, cancellationToken);
+        }
 
         return Ok(order.ToDetail());
     }
@@ -98,5 +111,30 @@ public sealed class AdminOrdersController : ControllerBase
 
         await _orderService.CancelOrderAsync(order, cancellationToken);
         return await Get(id, cancellationToken);
+    }
+
+    /// <summary>
+    /// Refunds the order's captured payment, in full or in part. Validates against the refundable balance
+    /// (captured minus already refunded), executes the refund (Stripe via the gateway; CoD/manual just
+    /// records it), advances the payment status, and — when fully refunded — moves the order to Refunded.
+    /// Idempotent when <see cref="RefundOrderRequest.IdempotencyKey"/> is supplied. Does NOT restock.
+    /// </summary>
+    [HttpPost("{id:long}/refund")]
+    public async Task<ActionResult<RefundResultDto>> Refund(
+        long id, RefundOrderRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _refundService.RefundAsync(
+            new RefundRequest(id, request.Amount, request.Reason, User.GetUserId(), request.IdempotencyKey),
+            cancellationToken);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        var r = result.Value!;
+        return Ok(new RefundResultDto(
+            r.RefundId, r.OrderId, r.PaymentId, r.Amount, r.TotalRefunded,
+            r.PaymentStatus, r.FullyRefunded, r.ProviderRefundId, r.AlreadyProcessed));
     }
 }

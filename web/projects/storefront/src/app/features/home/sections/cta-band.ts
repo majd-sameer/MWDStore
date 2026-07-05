@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import type { ContentBlockDto } from 'data-access';
 import { ToastService } from 'ui';
 
 /**
@@ -13,6 +15,9 @@ import { ToastService } from 'ui';
  * button) with a privacy note on the right. There is no newsletter endpoint
  * yet, so submit just acknowledges with a toast and clears the field.
  * Collapses to one column under 980px.
+ *
+ * The title and sub copy are admin-editable via the `home.cta` content block
+ * (`[block]`), falling back to the original i18n copy when missing.
  */
 @Component({
   selector: 'app-cta-band',
@@ -23,8 +28,8 @@ import { ToastService } from 'ui';
       <div class="ctaband">
         <div>
           <span class="eyebrow">{{ 'home.cta_eyebrow' | translate }}</span>
-          <h2 class="cta-title">{{ 'home.cta_title' | translate }}</h2>
-          <p class="cta-sub">{{ 'home.cta_sub' | translate }}</p>
+          <h2 class="cta-title">{{ block()?.title || ('home.cta_title' | translate) }}</h2>
+          <p class="cta-sub">{{ block()?.text || ('home.cta_sub' | translate) }}</p>
         </div>
         <div>
           <form class="subscribe" (submit)="subscribe($event)">
@@ -138,6 +143,9 @@ import { ToastService } from 'ui';
 export class CtaBand {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+
+  /** The `home.cta` content block, or null when missing/unpublished (falls back to i18n). */
+  readonly block = input<ContentBlockDto | null>(null);
 
   protected readonly email = signal('');
 

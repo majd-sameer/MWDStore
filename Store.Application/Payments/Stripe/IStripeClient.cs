@@ -22,6 +22,13 @@ public interface IStripeClient
     /// Throws when the signature is invalid.
     /// </summary>
     StripeSession? ReadCheckoutSessionFromWebhook(string payload, string signatureHeader, string webhookSecret);
+
+    /// <summary>
+    /// Issues a (full or partial) refund against a PaymentIntent. The optional idempotency key is
+    /// forwarded to Stripe so a retried call with the same key returns the original refund rather than
+    /// creating a second one. Throws <see cref="global::Stripe.StripeException"/> on a gateway error.
+    /// </summary>
+    Task<StripeRefund> CreateRefundAsync(StripeRefundRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Inputs for creating a Checkout Session for an order.</summary>
@@ -44,6 +51,26 @@ public sealed record StripeCheckoutRequest(
     string SecretKey,
     string SuccessUrl,
     string CancelUrl);
+
+/// <summary>Inputs for refunding a captured PaymentIntent.</summary>
+/// <param name="PaymentIntentId">The PaymentIntent (<c>pi_…</c>) to refund against.</param>
+/// <param name="Amount">Amount to refund in the major currency unit (e.g. JOD).</param>
+/// <param name="Currency">Lower-case ISO currency (e.g. <c>jod</c>) — for minor-unit scaling.</param>
+/// <param name="SecretKey">Stripe secret key for this provider.</param>
+/// <param name="Reason">Optional reason recorded on the Stripe refund.</param>
+/// <param name="IdempotencyKey">Optional Stripe idempotency key so retries don't double-refund.</param>
+public sealed record StripeRefundRequest(
+    string PaymentIntentId,
+    decimal Amount,
+    string Currency,
+    string SecretKey,
+    string? Reason,
+    string? IdempotencyKey);
+
+/// <summary>The slice of a Stripe refund the gateway flow records.</summary>
+/// <param name="Id">Refund id (<c>re_…</c>).</param>
+/// <param name="Status">Stripe refund status (<c>succeeded</c>, <c>pending</c>, …).</param>
+public sealed record StripeRefund(string Id, string? Status);
 
 /// <summary>The slice of a Stripe Checkout Session the gateway flow acts on.</summary>
 /// <param name="Id">Session id (<c>cs_test_…</c>).</param>

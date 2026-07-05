@@ -9,11 +9,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 import {
   CatalogService,
+  ContentService,
   StorefrontFeaturesService,
+  type ContentBlockDto,
   type ProductListItem,
 } from 'data-access';
 import { ToastService } from 'ui';
 import { CartStore } from '../../core/cart.store';
+import { JsonLdService } from '../../core/json-ld.service';
 import { SeoService } from '../../core/seo.service';
 import { Hero } from './sections/hero';
 import { TrustStrip } from './sections/trust-strip';
@@ -46,7 +49,11 @@ import { CtaBand } from './sections/cta-band';
     CtaBand,
   ],
   template: `
-    <app-hero [centers]="centerCount()" [products]="productCount()" />
+    <app-hero
+      [centers]="centerCount()"
+      [products]="productCount()"
+      [block]="heroBlock()"
+    />
 
     <app-trust-strip />
 
@@ -62,7 +69,7 @@ import { CtaBand } from './sections/cta-band';
       (addToCart)="add($event)"
     />
 
-    <app-mission-band />
+    <app-mission-band [block]="storyBlock()" [valueBlocks]="valueBlocks()" />
 
     <app-featured-row
       eyebrow="home.fresh_eyebrow"
@@ -73,20 +80,50 @@ import { CtaBand } from './sections/cta-band';
 
     <app-story-rail [items]="stories()" />
 
-    <app-values-row />
+    <app-values-row [blocks]="valueBlocks()" />
 
-    <app-cta-band />
+    <app-cta-band [block]="ctaBlock()" />
   `,
 })
 export class Home {
   private readonly catalog = inject(CatalogService);
+  private readonly content = inject(ContentService);
   private readonly features = inject(StorefrontFeaturesService);
   private readonly cart = inject(CartStore);
   private readonly toast = inject(ToastService);
   private readonly seo = inject(SeoService);
+  private readonly jsonLd = inject(JsonLdService);
   private readonly translate = inject(TranslateService);
 
   protected readonly categories = this.catalog.categoriesResource();
+
+  /** Admin-editable homepage content blocks (`home.hero`, `home.story`, `home.value.1..5`,
+   * `home.cta`). Missing/unpublished keys resolve to `null` — sections fall back to their
+   * built-in i18n copy so nothing ever renders blank. */
+  private readonly contentBlocks = this.content.blocksResource(() => 'home');
+  private readonly blocksByKey = computed(() => {
+    const map = new Map<string, ContentBlockDto>();
+    for (const block of this.contentBlocks.value() ?? []) {
+      map.set(block.key, block);
+    }
+    return map;
+  });
+  protected readonly heroBlock = computed(() => this.blocksByKey().get('home.hero') ?? null);
+  protected readonly storyBlock = computed(() => this.blocksByKey().get('home.story') ?? null);
+  protected readonly ctaBlock = computed(() => this.blocksByKey().get('home.cta') ?? null);
+  /** The five "our values" blocks (`home.value.1`..`home.value.5`), in order — shared by
+   * `MissionBand` (first four) and `ValuesRow` (all five). */
+  protected readonly valueBlocks = computed(() => {
+    const map = this.blocksByKey();
+    const blocks: ContentBlockDto[] = [];
+    for (let i = 1; i <= 5; i++) {
+      const block = map.get(`home.value.${i}`);
+      if (block) {
+        blocks.push(block);
+      }
+    }
+    return blocks;
+  });
   private readonly vendorCount = this.catalog.vendorCountResource();
   /** Top-rated products stand in for "best sellers" (the API has no sales rank). */
   protected readonly best = this.catalog.productsResource(() => ({
@@ -130,6 +167,15 @@ export class Home {
       const title = this.metaTitle();
       if (title) {
         this.seo.update({ title, description: this.metaDescription() });
+        // No product schema applies on the home page — drop a stale one left over
+        // from a client-side navigation back from a product page.
+        this.jsonLd.remove('product');
+        this.jsonLd.set('breadcrumb', {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: this.translate.instant('common.home') },
+          ],
+        });
       }
     });
   }

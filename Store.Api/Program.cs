@@ -6,6 +6,7 @@ using Microsoft.OpenApi;
 using Store.Api.Infrastructure;
 using Store.Application;
 using Store.Application.Auth;
+using Store.Application.Scheduling;
 using Store.Data;
 using Store.Domain;
 
@@ -50,7 +51,21 @@ builder.Services.AddStoreData(builder.Configuration);
 builder.Services.AddSingleton(
     builder.Configuration.GetSection(Store.Application.Payments.PaymentsOptions.SectionName)
         .Get<Store.Application.Payments.PaymentsOptions>() ?? new Store.Application.Payments.PaymentsOptions());
+// Email/SMTP fallback options. Registered before AddStoreApplication so the bound instance wins over the
+// library's TryAddSingleton default. Only used when the database has no default EmailAccount.
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection(Store.Application.Messaging.EmailOptions.SectionName)
+        .Get<Store.Application.Messaging.EmailOptions>() ?? new Store.Application.Messaging.EmailOptions());
+// Store-owner notification recipient (same AdminUser:Email the admin bootstrap account uses). Registered
+// before AddStoreApplication so the bound instance wins over the library's TryAddSingleton default.
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection(Store.Application.Messaging.OwnerNotificationOptions.SectionName)
+        .Get<Store.Application.Messaging.OwnerNotificationOptions>() ?? new Store.Application.Messaging.OwnerNotificationOptions());
 builder.Services.AddStoreApplication();
+
+// Scheduled-task framework (global enable switch + per-task Enabled/Interval overrides by task Name).
+builder.Services.Configure<ScheduledTaskOptions>(
+    builder.Configuration.GetSection(ScheduledTaskOptions.SectionName));
 
 // Local media storage for admin uploads (product images, etc.).
 builder.Services.AddSingleton<IMediaStorage, LocalMediaStorage>();
@@ -96,6 +111,12 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Granular admin ACL: [RequirePermission] policies backed by Identity role claims, resolved from the
+// DB per request (revocation applies immediately, no re-login). Handler is default-deny.
+builder.Services.AddScoped<IRolePermissionReader, RolePermissionReader>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+
 // Bootstrap admin account options (password lives in gitignored config / user-secrets).
 var adminSeedOptions = builder.Configuration.GetSection(AdminSeedOptions.SectionName).Get<AdminSeedOptions>()
     ?? new AdminSeedOptions();
@@ -128,11 +149,17 @@ var app = builder.Build();
 // NOTE: the schema itself is NOT auto-migrated here — apply EF migrations as a deploy step
 // (`dotnet ef database update`) before the app starts against a fresh database.
 await IdentitySeeder.SeedAsync(app.Services);
+// ACL permission grants for the admin role (needs the role from IdentitySeeder to exist first).
+await AclSeeder.SeedAsync(app.Services);
 await LocationSeeder.SeedAsync(app.Services);
 // Real catalog seeding from catalog.seed.json (no-op when the file is absent).
 await CatalogSeeder.SeedAsync(app.Services);
 // English content overrides from translations.en.json (no-op when the file is absent).
 await LocalizationSeeder.SeedAsync(app.Services);
+// Homepage content blocks (hero/story/values/CTA) with today's AR/EN copy as initial values.
+await ContentSeeder.SeedAsync(app.Services);
+// Transactional email foundation: default (placeholder) email account + starter message templates.
+await EmailSeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

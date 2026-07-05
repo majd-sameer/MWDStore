@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
@@ -15,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// list shipments globally or per order, and update tracking numbers.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[RequirePermission(Permissions.OrdersManage)]
 [Route("api/admin/shipments")]
 public sealed class AdminShipmentsController : ControllerBase
 {

@@ -314,6 +314,22 @@ export const routes: Routes = [
           import('./features/cms/news-form').then((m) => m.AdminNewsForm),
       },
       {
+        path: 'content-blocks',
+        title: 'Content blocks · MadeWithDetermination Admin',
+        loadComponent: () =>
+          import('./features/content-blocks/content-blocks').then(
+            (m) => m.AdminContentBlocks,
+          ),
+      },
+      {
+        path: 'content-blocks/:id',
+        title: 'Edit content block · MadeWithDetermination Admin',
+        loadComponent: () =>
+          import('./features/content-blocks/content-block-form').then(
+            (m) => m.AdminContentBlockForm,
+          ),
+      },
+      {
         path: 'promotions',
         title: 'Promotions · MadeWithDetermination Admin',
         loadComponent: () =>

@@ -89,6 +89,18 @@ export const routes: Routes = [
       import('./features/auth/register').then((m) => m.Register),
   },
   {
+    path: 'forgot-password',
+    title: 'Forgot password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password').then((m) => m.ForgotPassword),
+  },
+  {
+    path: 'reset-password',
+    title: 'Reset password',
+    loadComponent: () =>
+      import('./features/auth/reset-password').then((m) => m.ResetPassword),
+  },
+  {
     // Open to everyone: guests check out without an account (the cart lives
     // client-side for anonymous visitors) and track via a 6-digit code + email.
     path: 'checkout',

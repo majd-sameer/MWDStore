@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Common;
+using Store.Application.Content;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -11,8 +12,8 @@ using Store.Domain;
 namespace Store.Api.Controllers;
 
 /// <summary>
-/// Public content: CMS pages by slug (old Cms module), news listing/detail (old News module)
-/// and the contact form (old Contacts module).
+/// Public content: CMS pages by slug (old Cms module), news listing/detail (old News module),
+/// the contact form (old Contacts module) and admin-editable homepage content blocks.
 /// </summary>
 [ApiController]
 [AllowAnonymous]
@@ -23,17 +24,34 @@ public sealed class ContentController : ControllerBase
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
     private readonly ILocalizationService _localization;
+    private readonly IContentBlockService _contentBlocks;
 
     public ContentController(
         StoreDbContext db,
         TimeProvider timeProvider,
         IMediaUrlBuilder mediaUrl,
-        ILocalizationService localization)
+        ILocalizationService localization,
+        IContentBlockService contentBlocks)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
         _localization = localization;
+        _contentBlocks = contentBlocks;
+    }
+
+    // ----- Content blocks -------------------------------------------------------------------------
+
+    /// <summary>Published homepage content blocks, optionally narrowed to a key prefix (e.g.
+    /// <c>?prefix=home</c>), localized for the request culture. Missing/unpublished keys simply
+    /// don't appear — callers (storefront sections) fall back to their built-in copy.</summary>
+    [HttpGet("content/blocks")]
+    public async Task<ActionResult<IReadOnlyList<ContentBlockDto>>> Blocks(
+        [FromQuery] string? prefix, CancellationToken cancellationToken)
+    {
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        var blocks = await _contentBlocks.GetPublishedAsync(prefix, cultureId, cancellationToken);
+        return Ok(blocks);
     }
 
     // ----- CMS pages ----------------------------------------------------------------------------

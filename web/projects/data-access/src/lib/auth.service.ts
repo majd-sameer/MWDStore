@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { API_ROOT } from './http-utils';
-import type { AuthResponse, LoginRequest, RegisterRequest } from './models';
+import type {
+  AuthResponse,
+  ForgotPasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+} from './models';
 
 /**
  * Auth endpoints (the Postman "Auth" folder). These only call the API and
@@ -21,5 +27,15 @@ export class AuthService {
   /** POST /api/auth/login */
   login(body: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${API_ROOT}/auth/login`, body);
+  }
+
+  /** POST /api/auth/forgot-password — always resolves 200, regardless of whether the account exists. */
+  forgotPassword(body: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${API_ROOT}/auth/forgot-password`, body);
+  }
+
+  /** POST /api/auth/reset-password */
+  resetPassword(body: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${API_ROOT}/auth/reset-password`, body);
   }
 }

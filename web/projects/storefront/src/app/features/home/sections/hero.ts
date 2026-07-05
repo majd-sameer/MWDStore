@@ -9,6 +9,7 @@ import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from 'core';
+import type { ContentBlockDto } from 'data-access';
 import { Button, Icon } from 'ui';
 
 /**
@@ -18,6 +19,11 @@ import { Button, Icon } from 'ui';
  * products stats are fed from `data-access` by the Home page; the proceeds
  * figure is brand copy. All copy keyed through ngx-translate; numerals follow
  * the active locale (Arabic-Indic in ar).
+ *
+ * The title, lead paragraph, photo and shop CTA are admin-editable via the
+ * `home.hero` content block (`[block]`, from `ContentService`) — when present
+ * and published it overrides the i18n copy below; missing/unpublished falls
+ * back gracefully to the original hardcoded copy.
  */
 @Component({
   selector: 'app-hero',
@@ -30,16 +36,20 @@ import { Button, Icon } from 'ui';
         <div class="hero-copy">
           <span class="eyebrow">{{ 'home.hero_eyebrow' | translate }}</span>
           <h1 class="hero-title">
-            {{ 'home.hero_title_pre' | translate }}
-            <span class="accent">{{ 'home.hero_title_accent' | translate }}</span>
-            <br />
-            {{ 'home.hero_title_post' | translate }}
+            @if (block()?.title; as title) {
+              {{ title }}
+            } @else {
+              {{ 'home.hero_title_pre' | translate }}
+              <span class="accent">{{ 'home.hero_title_accent' | translate }}</span>
+              <br />
+              {{ 'home.hero_title_post' | translate }}
+            }
           </h1>
-          <p class="hero-lead">{{ 'home.hero_lead' | translate }}</p>
+          <p class="hero-lead">{{ block()?.text || ('home.hero_lead' | translate) }}</p>
 
           <div class="hero-ctas">
-            <a libButton variant="primary" size="lg" routerLink="/shop">
-              {{ 'home.hero_cta_shop' | translate }}
+            <a libButton variant="primary" size="lg" [routerLink]="block()?.linkUrl || '/shop'">
+              {{ block()?.linkText || ('home.hero_cta_shop' | translate) }}
               <lib-icon name="arrowEnd" [size]="18" class="ms-1" />
             </a>
             <a
@@ -78,7 +88,7 @@ import { Button, Icon } from 'ui';
         <div class="hero-media">
           <img
             class="hero-photo"
-            src="/home-hero.jpg"
+            [src]="block()?.imageUrl || '/home-hero.jpg'"
             [alt]="'home.hero_photo' | translate"
             width="900"
             height="1125"
@@ -261,6 +271,8 @@ export class Hero {
   readonly centers = input<number | null>(null);
   /** Total handmade products in the catalog (from the API). */
   readonly products = input<number | null>(null);
+  /** The `home.hero` content block, or null when missing/unpublished (falls back to i18n). */
+  readonly block = input<ContentBlockDto | null>(null);
 
   protected readonly locale = computed(() =>
     this.language.lang() === 'ar' ? 'ar' : 'en-US',

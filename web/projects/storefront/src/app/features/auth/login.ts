@@ -77,6 +77,10 @@ interface LoginModel {
             />
           </lib-form-field>
 
+          <p class="auth-forgot">
+            <a routerLink="/forgot-password">{{ 'auth.forgot_password_link' | translate }}</a>
+          </p>
+
           <button
             libButton
             variant="primary"
@@ -131,6 +135,19 @@ interface LoginModel {
     }
     form button[libButton] {
       margin-block-start: 0.5rem;
+    }
+    .auth-forgot {
+      text-align: end;
+      margin-block: -0.5rem 0.75rem;
+    }
+    .auth-forgot a {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--green-strong);
+      text-decoration: none;
+    }
+    .auth-forgot a:hover {
+      text-decoration: underline;
     }
     .auth-alt {
       text-align: center;
