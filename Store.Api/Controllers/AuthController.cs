@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Auth;
 using Store.Domain;
 
@@ -24,19 +25,22 @@ public sealed class AuthController : ControllerBase
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IAntiforgery _antiforgery;
     private readonly TimeProvider _timeProvider;
+    private readonly IAuditService _auditService;
 
     public AuthController(
         UserManager<User> userManager,
         IJwtTokenService tokenService,
         IRefreshTokenService refreshTokenService,
         IAntiforgery antiforgery,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IAuditService auditService)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
         _antiforgery = antiforgery;
         _timeProvider = timeProvider;
+        _auditService = auditService;
     }
 
     [HttpPost("register")]
@@ -81,7 +85,45 @@ public sealed class AuthController : ControllerBase
             return Unauthorized(new { error = "Invalid email or password." });
         }
 
+        await AuditStaffLoginAsync(user);
         return await IssueTokenAsync(user);
+    }
+
+    /// <summary>
+    /// Records a back-office sign-in in the audit trail. Storefront (customer-only) logins are not
+    /// audited — the trail is for staff actions. Best-effort: a logging failure never blocks login.
+    /// </summary>
+    private async Task AuditStaffLoginAsync(User user)
+    {
+        try
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var staffRole = roles.FirstOrDefault(r => AppRoles.Staff.Contains(r));
+            if (staffRole is null)
+            {
+                return;
+            }
+
+            await _auditService.LogAsync(new AuditEntry
+            {
+                UserId = user.Id,
+                UserName = user.UserName ?? user.Email ?? "unknown",
+                Role = staffRole,
+                Action = "Login",
+                EntityType = "User",
+                EntityId = user.Id,
+                EntityName = user.FullName ?? user.UserName,
+                Area = "Account",
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                CorrelationId = Request.Headers.TryGetValue("X-Correlation-Id", out var cid)
+                    ? cid.ToString()
+                    : null,
+            });
+        }
+        catch
+        {
+            // Auditing must not break authentication.
+        }
     }
 
     /// <summary>

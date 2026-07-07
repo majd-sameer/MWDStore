@@ -1,0 +1,257 @@
+
+    <app-page-header
+      [title]="'audit.title' | translate"
+      [subtitle]="'audit.subtitle' | translate"
+    />
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+            <input
+              type="search"
+              class="form-control"
+              [attr.placeholder]="'audit.search_ph' | translate"
+              (input)="onSearchInput($event)"
+              [attr.aria-label]="'audit.search_ph' | translate"
+            />
+          </div>
+          <select
+            class="form-select w-auto"
+            [value]="area()"
+            (change)="setArea($event)"
+            [attr.aria-label]="'audit.area' | translate"
+          >
+            <option value="">{{ 'audit.all_areas' | translate }}</option>
+            @for (a of areas(); track a) {
+              <option [value]="a">{{ a }}</option>
+            }
+          </select>
+          <input
+            type="date"
+            class="form-control w-auto"
+            [value]="from()"
+            (change)="setFrom($event)"
+            [attr.aria-label]="'audit.from' | translate"
+          />
+          <input
+            type="date"
+            class="form-control w-auto"
+            [value]="to()"
+            (change)="setTo($event)"
+            [attr.aria-label]="'audit.to' | translate"
+          />
+          <div class="filter-chips" role="group" [attr.aria-label]="'audit.action' | translate">
+            @for (a of actions; track a) {
+              <button
+                type="button"
+                class="filter-chip"
+                [class.active]="action() === a"
+                (click)="setAction(a)"
+              >
+                {{ 'audit.actions.' + a | translate }}
+              </button>
+            }
+          </div>
+          @if (hasFilters()) {
+            <button
+              type="button"
+              class="btn btn-link btn-sm p-0 ms-auto d-inline-flex align-items-center gap-1"
+              (click)="clearFilters()"
+            >
+              <lib-icon name="x" [size]="14" />
+              {{ 'audit.clear_filters' | translate }}
+            </button>
+          }
+        </div>
+
+        @if (logs.isLoading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else if (logs.error()) {
+          <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
+        } @else if (logs.value(); as rows) {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'audit.col_time' | translate }}</th>
+                  <th scope="col">{{ 'audit.col_user' | translate }}</th>
+                  <th scope="col">{{ 'audit.col_action' | translate }}</th>
+                  <th scope="col">{{ 'audit.col_entity' | translate }}</th>
+                  <th scope="col">{{ 'audit.col_area' | translate }}</th>
+                  <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows; track row.id) {
+                  <tr>
+                    <td class="small" [attr.title]="row.createdOn + ' UTC'">
+                      {{ row.createdOn | date: 'medium' }}
+                    </td>
+                    <td>
+                      <div class="fw-medium">{{ row.userName }}</div>
+                      @if (row.role) {
+                        <div class="small text-body-secondary">{{ 'roles.' + row.role | translate }}</div>
+                      }
+                    </td>
+                    <td>
+                      <span class="badge" [class]="badge(row.action)">
+                        {{ 'audit.actions.' + row.action | translate }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="fw-medium">{{ row.entityName || row.entityType }}</div>
+                      <div class="small text-body-secondary">
+                        {{ row.entityType }}@if (row.entityId) { · #{{ row.entityId }} }
+                      </div>
+                    </td>
+                    <td><span class="badge text-bg-light">{{ row.area }}</span></td>
+                    <td class="text-end">
+                      <button
+                        type="button"
+                        class="action-btn"
+                        [title]="'audit.view' | translate"
+                        (click)="open(row.id)"
+                      >
+                        <lib-icon name="eye" [size]="15" [label]="'audit.view' | translate" />
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty-state">
+                        <span class="empty-icon"><lib-icon name="shield" [size]="26" /></span>
+                        <div class="empty-title">
+                          {{ (hasFilters() ? 'audit.empty_filtered' : 'audit.empty') | translate }}
+                        </div>
+                        @if (hasFilters()) {
+                          <button type="button" class="btn btn-link btn-sm" (click)="clearFilters()">
+                            {{ 'audit.clear_filters' | translate }}
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (rows.length || page() > 1) {
+            <div class="list-pager">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                [disabled]="page() === 1"
+                (click)="prev()"
+              >
+                <lib-icon name="chevStart" [size]="15" />
+                {{ 'common.previous' | translate }}
+              </button>
+              <span class="page-chip">{{ 'common.page_info' | translate: { page: page(), count: rows.length } }}</span>
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                [disabled]="!hasMore()"
+                (click)="next()"
+              >
+                {{ 'common.next' | translate }}
+                <lib-icon name="chevEnd" [size]="15" />
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    @if (selectedId() !== null) {
+      <button
+        type="button"
+        class="audit-backdrop"
+        [attr.aria-label]="'common.close' | translate"
+        (click)="close()"
+      ></button>
+      <aside class="audit-drawer p-4" role="dialog" aria-modal="true">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h2 class="h5 mb-0">{{ 'audit.detail_title' | translate }}</h2>
+          <button
+            type="button"
+            class="action-btn"
+            [title]="'common.close' | translate"
+            (click)="close()"
+          >
+            <lib-icon name="x" [size]="16" [label]="'common.close' | translate" />
+          </button>
+        </div>
+
+        @if (detail.isLoading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else if (detail.value(); as entry) {
+          <dl class="row small mb-3">
+            <dt class="col-4 text-body-secondary">{{ 'audit.col_time' | translate }}</dt>
+            <dd class="col-8">{{ entry.createdOn | date: 'medium' }}</dd>
+            <dt class="col-4 text-body-secondary">{{ 'audit.col_user' | translate }}</dt>
+            <dd class="col-8">
+              {{ entry.userName }}
+              @if (entry.role) { <span class="text-body-secondary">· {{ 'roles.' + entry.role | translate }}</span> }
+            </dd>
+            <dt class="col-4 text-body-secondary">{{ 'audit.col_action' | translate }}</dt>
+            <dd class="col-8">
+              <span class="badge" [class]="badge(entry.action)">
+                {{ 'audit.actions.' + entry.action | translate }}
+              </span>
+            </dd>
+            <dt class="col-4 text-body-secondary">{{ 'audit.col_entity' | translate }}</dt>
+            <dd class="col-8">
+              {{ entry.entityName || entry.entityType }}
+              <span class="text-body-secondary">({{ entry.entityType }}@if (entry.entityId) { · #{{ entry.entityId }} })</span>
+            </dd>
+            <dt class="col-4 text-body-secondary">{{ 'audit.col_area' | translate }}</dt>
+            <dd class="col-8">{{ entry.area }}</dd>
+            @if (entry.ipAddress) {
+              <dt class="col-4 text-body-secondary">{{ 'audit.ip' | translate }}</dt>
+              <dd class="col-8">{{ entry.ipAddress }}</dd>
+            }
+            @if (entry.correlationId) {
+              <dt class="col-4 text-body-secondary">{{ 'audit.correlation' | translate }}</dt>
+              <dd class="col-8 text-truncate">{{ entry.correlationId }}</dd>
+            }
+          </dl>
+
+          <h3 class="h6">{{ 'audit.changes' | translate }}</h3>
+          @if (diffRows().length) {
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'audit.field' | translate }}</th>
+                  <th scope="col">{{ 'audit.old' | translate }}</th>
+                  <th scope="col">{{ 'audit.new' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of diffRows(); track d.key) {
+                  <tr>
+                    <td class="fw-medium">{{ d.key }}</td>
+                    <td><span class="diff-old">{{ d.oldValue ?? '—' }}</span></td>
+                    <td><span class="diff-new">{{ d.newValue ?? '—' }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="text-body-secondary small">{{ 'audit.no_changes' | translate }}</p>
+          }
+        }
+      </aside>
+    }
+

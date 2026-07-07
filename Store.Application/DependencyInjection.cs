@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Store.Application.Auditing;
 using Store.Application.Auth;
 using Store.Application.Catalog;
 using Store.Application.Catalog.Pricing;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.TryAddSingleton(new CatalogOptions());
         services.TryAddSingleton(new ShippingOptions());
 
+        services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IProductPricingService, ProductPricingService>();
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<ILocalizationService, LocalizationService>();

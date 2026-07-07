@@ -11,8 +11,9 @@ using Store.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Add services to the container. The audit filter runs globally but only acts on successful
+// admin mutations (see AuditActionFilter).
+builder.Services.AddControllers(options => options.Filters.Add<AuditActionFilter>());
 
 // CORS for the local Angular SPA dev servers (storefront 4200, admin 4201).
 // Credentials are allowed so the httpOnly refresh cookie and the XSRF cookie flow cross-origin;

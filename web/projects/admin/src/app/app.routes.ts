@@ -145,6 +145,13 @@ export const routes: Routes = [
           import('./features/system/logs').then((m) => m.AdminLogs),
       },
       {
+        path: 'audit-log',
+        title: 'Audit Log · MadeWithDetermination Admin',
+        canActivate: [roleGuard(...AREA.settings)],
+        loadComponent: () =>
+          import('./features/system/audit-log').then((m) => m.AdminAuditLog),
+      },
+      {
         path: 'categories',
         title: 'Categories · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.catalog)],

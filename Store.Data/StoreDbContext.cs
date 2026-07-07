@@ -1,16 +1,25 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Store.Data.Auditing;
 using Store.Domain;
 
 namespace Store.Data;
 
 public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
 {
-    public StoreDbContext(DbContextOptions<StoreDbContext> options)
+    private readonly IAuditContext? _auditContext;
+
+    /// <summary>
+    /// The audit context is optional so direct construction (tests, design-time) still works; at
+    /// runtime DI supplies the scoped buffer that <c>SaveChanges</c> writes captured changes into.
+    /// </summary>
+    public StoreDbContext(DbContextOptions<StoreDbContext> options, IAuditContext? auditContext = null)
         : base(options)
     {
+        _auditContext = auditContext;
     }
 
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
     public DbSet<Brand> Brands => Set<Brand>();
@@ -91,6 +100,124 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
         // existing schema via our IEntityTypeConfiguration classes.
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StoreDbContext).Assembly);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        CaptureAudit();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        CaptureAudit();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Snapshots the pending changes (Added/Modified/Deleted) into the scoped audit buffer before
+    /// they are flattened by the save — changed scalar properties only, secrets stripped, and the
+    /// audit table itself never re-audited. No-op when no audit context is attached.
+    /// </summary>
+    private void CaptureAudit()
+    {
+        if (_auditContext is null)
+        {
+            return;
+        }
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is AuditLog)
+            {
+                continue;
+            }
+
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            {
+                continue;
+            }
+
+            var change = new AuditChange
+            {
+                EntityType = entry.Entity.GetType().Name,
+                State = entry.State.ToString(),
+                EntityId = ResolveEntityId(entry),
+                EntityName = ResolveEntityName(entry),
+            };
+
+            foreach (var property in entry.Properties)
+            {
+                var name = property.Metadata.Name;
+                if (property.Metadata.IsPrimaryKey() || AuditSecrets.IsSecret(name))
+                {
+                    continue;
+                }
+
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        change.NewValues[name] = property.CurrentValue;
+                        break;
+                    case EntityState.Deleted:
+                        change.OldValues[name] = property.OriginalValue;
+                        break;
+                    case EntityState.Modified when property.IsModified
+                        && !Equals(property.OriginalValue, property.CurrentValue):
+                        change.OldValues[name] = property.OriginalValue;
+                        change.NewValues[name] = property.CurrentValue;
+                        break;
+                }
+            }
+
+            // A "Modified" entry whose only changes were keys/secrets carries no real diff — skip it.
+            if (entry.State == EntityState.Modified && change.NewValues.Count == 0)
+            {
+                continue;
+            }
+
+            _auditContext.Add(change);
+        }
+    }
+
+    private static long? ResolveEntityId(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        var keyProperty = entry.Metadata.FindPrimaryKey()?.Properties.FirstOrDefault();
+        if (keyProperty is null)
+        {
+            return null;
+        }
+
+        var value = entry.Property(keyProperty.Name).CurrentValue;
+        return value switch
+        {
+            long l => l,
+            int i => i,
+            _ => null,
+        };
+    }
+
+    private static readonly string[] NameProperties =
+        ["Name", "Title", "OrderNumber", "Code", "Slug", "Email", "UserName"];
+
+    private static string? ResolveEntityName(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        foreach (var candidate in NameProperties)
+        {
+            var property = entry.Metadata.FindProperty(candidate);
+            if (property is null)
+            {
+                continue;
+            }
+
+            if (entry.Property(candidate).CurrentValue is string { Length: > 0 } value)
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
 

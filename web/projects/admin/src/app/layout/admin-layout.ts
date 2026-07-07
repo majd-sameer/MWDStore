@@ -104,11 +104,12 @@ export class AdminLayout {
         { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
       ],
     },
-    // System — settings. Phase 2 adds audit-log here.
+    // System — settings.
     {
       key: 'system',
       items: [
         { path: '/locations', key: 'countries', icon: 'bi-globe2', roles: AREA.settings },
+        { path: '/audit-log', key: 'auditLog', icon: 'bi-clipboard-check', roles: AREA.settings },
         { path: '/settings', key: 'settings', icon: 'bi-gear', roles: AREA.settings },
       ],
     },
