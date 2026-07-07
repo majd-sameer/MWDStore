@@ -1,0 +1,30 @@
+
+    <div class="confirm-hero">
+      <span class="confirm-check"><lib-icon name="check" [size]="34" /></span>
+      <h1 class="confirm-title">{{ 'confirmation.title' | translate }}</h1>
+      <p class="confirm-sub">{{ 'confirmation.thanks' | translate }}</p>
+    </div>
+
+    @if (order.isLoading()) {
+      <div class="state">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (order.error()) {
+      <div class="alert alert-warning">{{ 'confirmation.load_error' | translate }}</div>
+    } @else {
+      <div class="confirm-card">
+        <app-order-detail-view [order]="order.value()" />
+      </div>
+    }
+
+    <div class="confirm-ctas">
+      <a libButton variant="secondary" [outline]="true" routerLink="/account/orders">
+        {{ 'confirmation.view_orders' | translate }}
+      </a>
+      <a libButton variant="dark" routerLink="/shop">
+        {{ 'confirmation.continue' | translate }}
+      </a>
+    </div>
+  

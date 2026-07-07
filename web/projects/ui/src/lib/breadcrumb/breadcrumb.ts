@@ -19,24 +19,7 @@ export interface BreadcrumbItem {
   selector: 'lib-breadcrumb',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, Icon],
-  template: `
-    <nav [attr.aria-label]="ariaLabel()">
-      <ol class="ui-breadcrumb">
-        @for (item of items(); track $index; let last = $last) {
-          <li class="ui-breadcrumb__item">
-            @if (item.link && !last) {
-              <a [routerLink]="item.link" class="ui-breadcrumb__link">{{ item.label }}</a>
-            } @else {
-              <span [attr.aria-current]="last ? 'page' : null">{{ item.label }}</span>
-            }
-            @if (!last) {
-              <lib-icon name="chevEnd" [size]="14" class="ui-breadcrumb__sep" />
-            }
-          </li>
-        }
-      </ol>
-    </nav>
-  `,
+  templateUrl: './breadcrumb.html',
 })
 export class Breadcrumb {
   readonly items = input.required<readonly BreadcrumbItem[]>();

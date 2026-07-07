@@ -19,56 +19,8 @@ import { SeoService } from '../../core/seo.service';
   selector: 'app-news-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, TranslatePipe, RouterLink],
-  template: `
-    <div class="container py-4 article">
-      <nav class="mb-3">
-        <a routerLink="/news">← {{ 'news.back' | translate }}</a>
-      </nav>
-
-      @if (loading()) {
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-          </div>
-        </div>
-      } @else if (item(); as n) {
-        <h1 class="page-title">{{ n.name }}</h1>
-        @if (n.publishedOn) {
-          <time class="article-date" [attr.datetime]="n.publishedOn">
-            {{ n.publishedOn | date: 'mediumDate' : '' : locale() }}
-          </time>
-        }
-        @if (n.thumbnailUrl) {
-          <img class="article-hero" [src]="n.thumbnailUrl" [alt]="n.name" />
-        }
-        <div class="article-body" [innerHTML]="n.fullContent"></div>
-      } @else {
-        <p class="text-body-secondary text-center py-5">{{ 'common.error' | translate }}</p>
-      }
-    </div>
-  `,
-  styles: `
-    .article {
-      max-inline-size: 48rem;
-    }
-    .page-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-block-end: 0.25rem;
-    }
-    .article-date {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--ink-3, #888);
-      margin-block-end: 1rem;
-    }
-    .article-hero {
-      inline-size: 100%;
-      border-radius: 0.75rem;
-      margin-block-end: 1.25rem;
-    }
-  `,
+  templateUrl: './news-detail.html',
+  styleUrl: './news-detail.scss',
 })
 export class NewsDetail {
   private readonly route = inject(ActivatedRoute);

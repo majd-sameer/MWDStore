@@ -23,27 +23,7 @@ import { Icon } from '../icon/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   host: { class: 'ui-accordion' },
-  template: `
-    <button
-      type="button"
-      class="ui-accordion__head"
-      [attr.aria-expanded]="open()"
-      (click)="toggle()"
-    >
-      <span class="ui-accordion__title">{{ title() }}</span>
-      <lib-icon
-        name="chevDown"
-        [size]="18"
-        class="ui-accordion__chev"
-        [class.is-open]="open()"
-      />
-    </button>
-    @if (open()) {
-      <div class="ui-accordion__body">
-        <ng-content />
-      </div>
-    }
-  `,
+  templateUrl: './accordion.html',
 })
 export class Accordion {
   readonly title = input<string | null>(null);

@@ -1,0 +1,48 @@
+
+    <div class="container py-4">
+      <h1 class="page-title">{{ 'wishlist.title' | translate }}</h1>
+
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (!items().length) {
+        <div class="text-center py-5">
+          <p class="text-body-secondary">{{ 'wishlist.empty' | translate }}</p>
+          <a libButton variant="dark" routerLink="/shop">{{ 'cart.browse' | translate }}</a>
+        </div>
+      } @else {
+        <div class="wl-grid">
+          @for (item of items(); track item.id) {
+            <div class="wl-card">
+              <a [routerLink]="['/products', item.productId]">
+                <lib-tile [src]="item.thumbnailUrl" [seed]="item.productName ?? item.productId"
+                  [alt]="item.productName" ratio="1x1" />
+              </a>
+              <div class="wl-body">
+                <a class="wl-name" [routerLink]="['/products', item.productId]">{{ item.productName }}</a>
+                <div class="wl-price tabular-nums">{{ item.price | money }}</div>
+                @if (!item.isAvailable) {
+                  <div class="small text-warning">{{ 'wishlist.unavailable' | translate }}</div>
+                }
+                <div class="d-flex gap-2 mt-2">
+                  @if (item.isAvailable) {
+                    <button type="button" libButton variant="dark" size="sm"
+                      (click)="addToCart(item)">
+                      {{ 'product.add' | translate }}
+                    </button>
+                  }
+                  <button type="button" libButton variant="secondary" size="sm" [outline]="true"
+                    (click)="remove(item)">
+                    {{ 'wishlist.remove' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  

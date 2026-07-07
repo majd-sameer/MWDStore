@@ -12,21 +12,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   selector: 'lib-stars',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ui-stars' },
-  template: `
-    <span
-      class="ui-stars__track"
-      role="img"
-      [attr.aria-label]="ariaLabel()"
-    >
-      <span class="ui-stars__base" aria-hidden="true">★★★★★</span>
-      <span class="ui-stars__fill" aria-hidden="true" [style.inline-size.%]="pct()"
-        >★★★★★</span
-      >
-    </span>
-    @if (count() !== null) {
-      <span class="ui-stars__count text-body-secondary">({{ count() }})</span>
-    }
-  `,
+  templateUrl: './stars.html',
 })
 export class Stars {
   readonly rating = input<number | null>(null);

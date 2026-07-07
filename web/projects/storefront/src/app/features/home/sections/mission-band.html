@@ -1,0 +1,25 @@
+
+    <section class="mission">
+      <div class="wrap mission-grid">
+        <div>
+          <span class="eyebrow">{{ 'home.mission_eyebrow' | translate }}</span>
+          <h2 class="mission-title">{{ 'home.mission_title' | translate }}</h2>
+          <p class="mission-body">{{ 'home.mission_body' | translate }}</p>
+          <a class="mission-cta" routerLink="/pages/about-us">
+            {{ 'home.mission_cta' | translate }}
+            <lib-icon name="arrowEnd" [size]="18" />
+          </a>
+        </div>
+
+        <div class="mission-vals">
+          @for (value of values; track value.key) {
+            <div class="vcard">
+              <span class="vcard-ic"><lib-icon [name]="value.icon" [size]="22" /></span>
+              <b>{{ 'about.value_' + value.key + '_title' | translate }}</b>
+              <span>{{ 'about.value_' + value.key + '_text' | translate }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  

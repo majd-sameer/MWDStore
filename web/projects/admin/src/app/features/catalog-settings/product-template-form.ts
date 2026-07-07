@@ -25,57 +25,7 @@ import { PageHeader } from '../../shared/page-header';
   selector: 'app-admin-product-template-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, RouterLink, TranslatePipe, PageHeader],
-  template: `
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/product-templates" class="text-decoration-none">← {{ 'templates.title' | translate }}</a>
-    </nav>
-    <app-page-header [title]="(isNew() ? 'templates.new_title' : 'templates.edit_title') | translate" />
-
-    @if (!isNew() && list.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (!isNew() && list.error()) {
-      <div class="alert alert-danger">{{ 'templates.load_one_failed' | translate }}</div>
-    } @else {
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              <label class="form-label" for="tpl-name">{{ 'common.name' | translate }}</label>
-              <input id="tpl-name" type="text" class="form-control mb-3" [value]="name()"
-                (input)="name.set($any($event.target).value)" />
-
-              <div class="form-label">{{ 'nav.attributes' | translate }}</div>
-              <div class="border rounded p-2 mb-3" style="max-height: 18rem; overflow-y: auto">
-                @for (a of attributes.value() ?? []; track a.id) {
-                  <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="tpl-attr-{{ a.id }}"
-                      [checked]="selectedIds().includes(a.id)"
-                      (change)="toggle(a.id)" />
-                    <label class="form-check-label" for="tpl-attr-{{ a.id }}">
-                      {{ a.groupName }} / {{ a.name }}
-                    </label>
-                  </div>
-                } @empty {
-                  <span class="text-body-secondary small">{{ 'templates.define_attributes_first' | translate }}</span>
-                }
-              </div>
-
-              <div class="form-actions">
-                <button type="button" libButton variant="primary" [disabled]="saving()" (click)="save()">
-                  {{ (saving() ? 'common.saving' : isNew() ? 'templates.create' : 'common.save_changes') | translate }}
-                </button>
-                <a routerLink="/product-templates" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './product-template-form.html',
 })
 export class AdminProductTemplateForm {
   private readonly route = inject(ActivatedRoute);

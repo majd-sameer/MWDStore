@@ -12,9 +12,6 @@ import { ToastHost } from 'ui';
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, ToastHost],
-  template: `
-    <router-outlet />
-    <lib-toast-host />
-  `,
+  templateUrl: './app.html',
 })
 export class App {}

@@ -1,0 +1,325 @@
+
+    @if (product.isLoading()) {
+      <div class="state">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (product.error()) {
+      <div class="alert alert-danger">
+        {{ 'product.not_found' | translate }}
+        <a routerLink="/shop">{{ 'product.back_to_shop' | translate }}</a>
+      </div>
+    } @else if (product.value(); as p) {
+      <lib-breadcrumb [items]="crumbs(p)" />
+
+      <div class="pdp">
+        <!-- Gallery (sticky on wide screens): slider + hover-zoom + lightbox -->
+        <div class="pdp-gallery">
+          <div class="pdp-stage">
+            @if (activeImage(); as img) {
+              <div
+                class="pdp-stage-img"
+                [class.is-zoom]="zooming()"
+                (mouseenter)="zooming.set(true)"
+                (mousemove)="onZoomMove($event)"
+                (mouseleave)="zooming.set(false)"
+                (click)="openLightbox()"
+                (keydown.enter)="openLightbox()"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'common.zoom' | translate"
+              >
+                <img class="pdp-stage-src" [src]="img" [alt]="p.name"
+                  [style.transform-origin]="zoomOrigin()" />
+                <span class="pdp-zoom-hint" aria-hidden="true"><lib-icon name="search" [size]="16" /></span>
+              </div>
+            } @else {
+              <lib-tile class="pdp-main" [seed]="p.name ?? p.id" [alt]="p.name" ratio="1x1" />
+            }
+
+            @if (galleryImages().length > 1) {
+              <button type="button" class="pdp-nav prev" (click)="prev(); $event.stopPropagation()"
+                [attr.aria-label]="'common.prev' | translate">
+                <lib-icon name="chevStart" [size]="22" />
+              </button>
+              <button type="button" class="pdp-nav next" (click)="next(); $event.stopPropagation()"
+                [attr.aria-label]="'common.next' | translate">
+                <lib-icon name="chevEnd" [size]="22" />
+              </button>
+              <span class="pdp-count tabular-nums">{{ activeIndex() + 1 }} / {{ galleryImages().length }}</span>
+            }
+          </div>
+
+          @if (galleryImages().length) {
+            <div class="pdp-thumbs">
+              @for (url of galleryImages(); track url; let i = $index) {
+                <button type="button" class="pdp-thumb-btn" [class.is-on]="i === activeIndex()"
+                  (click)="selectImage(i)" [attr.aria-label]="p.name">
+                  <lib-tile [src]="url" [seed]="p.name ?? p.id" ratio="1x1" />
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="pdp-thumbs" aria-hidden="true">
+              @for (i of [1, 2, 3, 4]; track i) {
+                <lib-tile [seed]="(p.name ?? '') + i" ratio="1x1" />
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Info -->
+        <div class="pdp-info">
+          @if (category(); as cat) {
+            <a class="pdp-cat" [routerLink]="['/shop']" [queryParams]="{ category: cat.slug }">{{ cat.name }}</a>
+          }
+          <h1 class="pdp-title">{{ p.name }}</h1>
+
+          <div class="pdp-meta">
+            @if (p.ratingAverage; as rating) {
+              <span class="pdp-rating">
+                <lib-stars [rating]="rating" />
+                <span class="tabular-nums">{{ rating.toFixed(1) }}</span>
+              </span>
+              <span class="dot"></span>
+            }
+            <span class="muted">{{ 'product.reviews' | translate: { count: p.reviewsCount } }}</span>
+            <span class="dot"></span>
+            <span class="badge-stock"><lib-icon name="check" [size]="13" /> {{ 'product.in_stock' | translate }}</span>
+          </div>
+
+          <div class="pdp-price">
+            <span class="pdp-now tabular-nums">{{ activePrice().price | money }}</span>
+            @if (activePrice().oldPrice; as oldPrice) {
+              <span class="pdp-old tabular-nums">{{ oldPrice | money }}</span>
+              <span class="badge-sale">
+                {{ 'product.save' | translate: { percent: activePrice().percentOfSaving } }}
+              </span>
+            }
+          </div>
+
+          <p class="pdp-desc">
+            @if (p.shortDescription) {
+              <span [innerHTML]="p.shortDescription"></span>
+            }
+            {{ 'product.handmade_note' | translate }}
+          </p>
+
+          <!-- Origin / provenance card -->
+          <div class="pdp-origin">
+            <span class="pdp-origin-ic"><lib-icon name="pin" [size]="22" /></span>
+            <span class="pdp-origin-text">
+              <b>{{ 'product.made_in' | translate: { place: originPlace() } }}</b>
+              <span class="muted">{{ 'product.origin_note' | translate }}</span>
+            </span>
+          </div>
+
+          @if (p.variations?.length) {
+            <div class="pdp-variations" role="group" [attr.aria-label]="'product.options' | translate">
+              <div class="pdp-label">{{ 'product.options' | translate }}</div>
+              <div class="pdp-chips">
+                @for (variation of p.variations; track variation.id) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.active]="variation.id === selectedVariationId()"
+                    [disabled]="variation.stockTrackingIsEnabled && variation.stockQuantity === 0"
+                    (click)="selectedVariationId.set(variation.id)"
+                  >
+                    {{ variation.name }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          @if (p.isCallForPricing) {
+            <div class="alert alert-secondary">{{ 'product.call_for_pricing_long' | translate }}</div>
+          } @else {
+            <div class="pdp-buy">
+              <lib-stepper [(value)]="quantity" [min]="1" [max]="maxQty()" />
+              <button
+                libButton
+                variant="success"
+                size="lg"
+                class="pdp-add"
+                [disabled]="!canOrder() || adding()"
+                (click)="addToCart(p)"
+              >
+                <lib-icon name="bag" [size]="18" class="me-2" />
+                {{ (canOrder() ? 'product.add' : 'product.out_of_stock') | translate }}
+              </button>
+              <button type="button" class="pdp-wish" [class.is-on]="wished()"
+                [attr.aria-pressed]="wished()" [attr.aria-label]="'product.wishlist' | translate"
+                (click)="toggleWish(p.id)">
+                <lib-icon name="heart" [size]="20" />
+              </button>
+            </div>
+          }
+
+          <!-- Trust perks -->
+          <div class="pdp-perks">
+            @for (perk of perks; track perk.title) {
+              <div class="pdp-perk">
+                <span class="pdp-perk-ic"><lib-icon [name]="perk.icon" [size]="20" /></span>
+                <span class="pdp-perk-text">
+                  <b>{{ perk.title | translate }}</b>
+                  <small class="muted">{{ perk.text | translate }}</small>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra content (description / specification / attributes) as detail bands -->
+      @if (p.description || p.specification || p.attributes?.length) {
+        <section class="pdp-detail2">
+          @if (p.description) {
+            <div class="formcard desc">
+              <h3>{{ 'product.description' | translate }}</h3>
+              <div class="craft-body" [innerHTML]="p.description"></div>
+            </div>
+          }
+          @if (p.specification) {
+            <div class="formcard desc">
+              <h3>{{ 'product.specification' | translate }}</h3>
+              <div class="craft-body" [innerHTML]="p.specification"></div>
+            </div>
+          }
+          @if (p.attributes?.length) {
+            <div class="formcard">
+              <h3>{{ 'product.details' | translate }}</h3>
+              <ul class="speclist">
+                @for (attribute of p.attributes; track attribute.name) {
+                  <li><span class="muted">{{ attribute.name }}</span><b>{{ attribute.value }}</b></li>
+                }
+              </ul>
+            </div>
+          }
+        </section>
+      }
+      <section class="pdp-reviews">
+        <div class="sec-head">
+          <h2 class="pdp-related-title">{{ 'reviews.title' | translate }}</h2>
+          @if (reviews().length) {
+            <span class="reviews-count">
+              {{ 'product.reviews' | translate: { count: reviews().length } }}
+            </span>
+          }
+        </div>
+
+        @if (reviews().length) {
+          <div class="review-list">
+            @for (review of reviews(); track review.id) {
+              <article class="review-card">
+                <span class="review-avatar" aria-hidden="true">{{ initial(review.reviewerName) }}</span>
+                <div class="review-main">
+                  <div class="review-head">
+                    <span class="review-author">{{ review.reviewerName }}</span>
+                    <span class="review-date">{{ review.createdOn | date: 'mediumDate' : '' : locale() }}</span>
+                  </div>
+                  <lib-stars [rating]="review.rating" />
+                  @if (review.title) {
+                    <div class="review-title">{{ review.title }}</div>
+                  }
+                  <p class="review-body">{{ review.comment }}</p>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="review-empty">{{ 'reviews.empty' | translate }}</div>
+        }
+
+        @if (isAuthenticated()) {
+          @if (reviewSubmitted()) {
+            <div class="review-thanks">
+              <lib-icon name="check" [size]="18" /> {{ 'reviews.submitted' | translate }}
+            </div>
+          } @else {
+            <div class="formcard review-form">
+              <h3>{{ 'reviews.write' | translate }}</h3>
+              <div class="review-grid">
+                <div class="field rating-field">
+                  <label class="field-label" for="rv-rating">{{ 'reviews.rating' | translate }}</label>
+                  <select id="rv-rating" class="form-control"
+                          [value]="reviewRating()"
+                          (change)="reviewRating.set(+$any($event.target).value)">
+                    @for (n of [5, 4, 3, 2, 1]; track n) {
+                      <option [value]="n">{{ n }} ★</option>
+                    }
+                  </select>
+                </div>
+                <div class="field title-field">
+                  <label class="field-label" for="rv-title">{{ 'reviews.your_title' | translate }}</label>
+                  <input id="rv-title" type="text" class="form-control"
+                         [value]="reviewTitle()" (input)="reviewTitle.set($any($event.target).value)" />
+                </div>
+                <div class="field comment-field">
+                  <label class="field-label" for="rv-comment">{{ 'reviews.your_comment' | translate }}</label>
+                  <textarea id="rv-comment" rows="4" class="form-control"
+                            [value]="reviewComment()" (input)="reviewComment.set($any($event.target).value)"></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="button" libButton variant="dark"
+                          [disabled]="submittingReview()" (click)="submitReview(p.id)">
+                    {{ 'reviews.submit' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        } @else {
+          <p class="review-signin">{{ 'reviews.signin' | translate }}</p>
+        }
+      </section>
+      @if (p.relatedProducts?.length) {
+        <section class="pdp-related mt-5">
+          <div class="sec-head">
+            <h2 class="pdp-related-title">{{ 'product.related' | translate }}</h2>
+            @if (category(); as cat) {
+              <a class="sec-link" [routerLink]="['/shop']" [queryParams]="{ category: cat.slug }">
+                {{ 'shop.title' | translate }} <lib-icon name="arrowEnd" [size]="16" />
+              </a>
+            }
+          </div>
+          <div class="row row-cols-2 row-cols-md-4 g-4">
+            @for (related of p.relatedProducts; track related.id) {
+              <div class="col">
+                <app-product-card [product]="related" (addToCart)="quickAdd($event)" />
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+
+
+      <!-- Fullscreen lightbox: zoomed product view with slider controls -->
+      @if (lightboxOpen() && activeImage(); as img) {
+        <div class="pdp-lightbox" role="dialog" aria-modal="true"
+          (click)="onBackdropClick($event)" (keydown.escape)="closeLightbox()">
+          <button type="button" class="lb-btn lb-close" (click)="closeLightbox()"
+            [attr.aria-label]="'common.close' | translate">
+            <lib-icon name="x" [size]="24" />
+          </button>
+          @if (galleryImages().length > 1) {
+            <button type="button" class="lb-btn lb-nav prev" (click)="prev()"
+              [attr.aria-label]="'common.prev' | translate">
+              <lib-icon name="chevStart" [size]="30" />
+            </button>
+            <button type="button" class="lb-btn lb-nav next" (click)="next()"
+              [attr.aria-label]="'common.next' | translate">
+              <lib-icon name="chevEnd" [size]="30" />
+            </button>
+          }
+          <img class="lb-img" [src]="img" [alt]="p.name" />
+          @if (galleryImages().length > 1) {
+            <span class="lb-count tabular-nums">{{ activeIndex() + 1 }} / {{ galleryImages().length }}</span>
+          }
+        </div>
+      }
+    }
+  

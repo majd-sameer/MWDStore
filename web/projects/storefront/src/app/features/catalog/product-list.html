@@ -1,0 +1,316 @@
+
+    <div class="pagehead">
+      <div class="ph-inner">
+        <lib-breadcrumb [items]="crumbs()" />
+        <h1 class="ph-title">{{ title() }}</h1>
+        <p class="ph-sub">
+          {{ (query().query ? 'shop.search_sub' : 'shop.subtitle') | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div class="listing">
+      <aside class="listing-side">
+        <ng-container *ngTemplateOutlet="filtersTpl; context: { ns: 'side' }" />
+      </aside>
+
+      <div class="listing-main">
+        <div class="toolbar">
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm filter-toggle"
+            (click)="sheetOpen.set(true)"
+          >
+            <lib-icon name="filter" [size]="18" />
+            {{ 'shop.filter' | translate }}
+          </button>
+
+          <span class="result-n">
+            {{
+              (totalProduct() === 1 ? 'shop.result' : 'shop.results')
+                | translate: { count: totalProduct() }
+            }}
+          </span>
+
+          <div class="toolbar-right">
+            <div class="viewtoggle" role="group" [attr.aria-label]="'shop.view' | translate">
+              <button
+                type="button"
+                [class.is-on]="view() === 'grid'"
+                (click)="view.set('grid')"
+                [attr.aria-label]="'shop.view_grid' | translate"
+              >
+                <lib-icon name="grid" [size]="18" />
+              </button>
+              <button
+                type="button"
+                [class.is-on]="view() === 'list'"
+                (click)="view.set('list')"
+                [attr.aria-label]="'shop.view_list' | translate"
+              >
+                <lib-icon name="menu" [size]="18" />
+              </button>
+            </div>
+
+            <label class="sortsel">
+              <span class="sort-label">{{ 'common.sort' | translate }}:</span>
+              <select
+                class="form-select form-select-sm"
+                [value]="query().sort ?? ''"
+                (change)="setSort($event)"
+                [attr.aria-label]="'common.sort' | translate"
+              >
+                <option value="">{{ 'common.featured' | translate }}</option>
+                <option value="price-asc">{{ 'common.price_low' | translate }}</option>
+                <option value="price-desc">{{ 'common.price_high' | translate }}</option>
+                <option value="rating">{{ 'common.rating' | translate }}</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        @if (result.error()) {
+          <div class="alert alert-danger">{{ 'common.error' | translate }}</div>
+        } @else if (!data() && result.isLoading()) {
+          <div class="state">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else if (data(); as r) {
+          <div [class.is-refreshing]="result.isLoading()">
+            @if (r.products?.length) {
+              @if (effectiveView() === 'grid') {
+                <div class="pgrid">
+                  @for (product of products(); track product.id) {
+                    <app-product-card [product]="product" (addToCart)="add($event)" />
+                  }
+                </div>
+              } @else {
+                <div class="listcol">
+                  @for (p of products(); track p.id) {
+                    <article class="lrow">
+                      <a
+                        class="lrow-media"
+                        [routerLink]="['/products', p.id]"
+                        [attr.aria-label]="p.name"
+                      >
+                        <lib-tile
+                          [src]="p.thumbnailImageUrl"
+                          [seed]="p.name ?? p.id"
+                          [alt]="p.name"
+                          ratio="4x3"
+                        />
+                      </a>
+                      <div class="lrow-body">
+                        @if (p.categoryName) {
+                          <span class="lrow-cat">{{ p.categorySlug | categoryLabel: p.categoryName }}</span>
+                        }
+                        <a class="lrow-title" [routerLink]="['/products', p.id]">
+                          <h3>{{ p.name }}</h3>
+                        </a>
+                        @if (p.shortDescription) {
+                          <p class="lrow-desc">{{ p.shortDescription }}</p>
+                        }
+                        @if (p.ratingAverage; as rating) {
+                          <lib-stars [rating]="rating" [count]="p.reviewsCount" />
+                        }
+                      </div>
+                      <div class="lrow-buy">
+                        <div class="lrow-price">
+                          @if (p.isCallForPricing) {
+                            <span class="lrow-call">
+                              {{ 'product.call_for_pricing' | translate }}
+                            </span>
+                          } @else {
+                            <span class="lrow-now tabular-nums">
+                              {{ p.calculatedProductPrice.price | money }}
+                            </span>
+                            @if (p.calculatedProductPrice.oldPrice; as old) {
+                              <span class="lrow-old tabular-nums">{{ old | money }}</span>
+                            }
+                          }
+                        </div>
+                        @if (!p.isCallForPricing) {
+                          <button
+                            type="button"
+                            class="btn btn-primary btn-sm lrow-add"
+                            [disabled]="!canOrder(p)"
+                            (click)="add(p)"
+                          >
+                            <lib-icon name="bag" [size]="16" />
+                            {{ 'shop.add_to_cart' | translate }}
+                          </button>
+                        }
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+
+              <div class="pager">
+                <lib-pagination
+                  [page]="r.page"
+                  [pageSize]="r.pageSize"
+                  [collectionSize]="r.totalProduct"
+                  (pageChange)="goToPage($event)"
+                />
+              </div>
+            } @else {
+              <div class="empty">
+                <lib-icon name="search" [size]="40" />
+                <h3>{{ 'shop.empty_title' | translate }}</h3>
+                <p>{{ 'shop.empty_sub' | translate }}</p>
+                <button type="button" class="btn btn-outline-secondary" (click)="clear()">
+                  {{ 'shop.reset_filters' | translate }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Mobile filter sheet (same filters markup, slides in below 980px) -->
+    <div class="filtersheet" [class.is-open]="sheetOpen()">
+      <button
+        type="button"
+        class="sheet-scrim"
+        (click)="sheetOpen.set(false)"
+        [attr.aria-label]="'shop.close' | translate"
+        [attr.tabindex]="sheetOpen() ? null : -1"
+      ></button>
+      <div class="sheet-panel">
+        <div class="sheet-head">
+          <h3>{{ 'shop.filter' | translate }}</h3>
+          <button
+            type="button"
+            class="sheet-close"
+            (click)="sheetOpen.set(false)"
+            [attr.aria-label]="'shop.close' | translate"
+          >
+            <lib-icon name="x" [size]="20" />
+          </button>
+        </div>
+        <ng-container *ngTemplateOutlet="filtersTpl; context: { ns: 'sheet' }" />
+        <button
+          type="button"
+          class="btn btn-primary w-100 sheet-show"
+          (click)="sheetOpen.set(false)"
+        >
+          {{ 'shop.show_products' | translate: { count: totalProduct() } }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters card — rendered in the sidebar and again inside the mobile
+         sheet; ns namespaces the radio groups so the two copies don't fight. -->
+    <ng-template #filtersTpl let-ns="ns">
+      <div class="filters">
+        <div class="filters-head">
+          <h3>{{ 'shop.filter' | translate }}</h3>
+          @if (hasFilters()) {
+            <button type="button" class="link-btn" (click)="clear()">
+              {{ 'shop.reset' | translate }}
+            </button>
+          }
+        </div>
+
+        <div class="fgroup">
+          <h4>{{ 'shop.category' | translate }}</h4>
+          <div class="frows">
+            <label class="frow" [class.is-on]="!query().category">
+              <input
+                type="radio"
+                [name]="'cat-' + ns"
+                [checked]="!query().category"
+                (change)="setCategory(null)"
+              />
+              <span class="frow-name">{{ 'shop.all_products' | translate }}</span>
+              <span class="frow-n tabular-nums">{{ allCount() }}</span>
+            </label>
+            @for (cat of categories(); track cat.id) {
+              <label class="frow" [class.is-on]="query().category === cat.slug">
+                <input
+                  type="radio"
+                  [name]="'cat-' + ns"
+                  [checked]="query().category === cat.slug"
+                  (change)="setCategory(cat.slug)"
+                />
+                <span class="frow-name">{{ cat.slug | categoryLabel: cat.name }}</span>
+                <span class="frow-n tabular-nums">{{ cat.count }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        @if (priceFacet()) {
+          <div class="fgroup">
+            <h4>{{ 'common.max_price' | translate }}</h4>
+            <input
+              type="range"
+              class="form-range"
+              [min]="sliderMin()"
+              [max]="sliderMax()"
+              step="1"
+              [value]="sliderValue()"
+              (change)="applyMaxPrice($event)"
+              [attr.aria-label]="'common.max_price' | translate"
+            />
+            <div class="frange">
+              <span class="tabular-nums">{{ sliderMin() | money }}</span>
+              <span class="tabular-nums">{{ sliderValue() | money }}</span>
+            </div>
+          </div>
+        }
+
+        @if (brands().length) {
+          <div class="fgroup">
+            <h4>{{ 'shop.center' | translate }}</h4>
+            <div class="frows">
+              @for (b of brands(); track b.id) {
+                <label class="frow" [class.is-on]="selectedBrands().includes(b.slug ?? '')">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedBrands().includes(b.slug ?? '')"
+                    (change)="toggleBrand(b.slug)"
+                  />
+                  <span class="frow-name">{{ b.name }}</span>
+                  <span class="frow-n tabular-nums">{{ b.count }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="fgroup">
+          <h4>{{ 'shop.rating' | translate }}</h4>
+          <div class="frows">
+            @for (r of ratingOptions; track r) {
+              <label class="frow" [class.is-on]="query().minRating === r">
+                <input
+                  type="radio"
+                  [name]="'rating-' + ns"
+                  [checked]="query().minRating === r"
+                  (change)="setRating(r)"
+                />
+                <span class="frow-name frow-stars">
+                  <lib-stars [rating]="r" />
+                  {{ 'shop.rating_min' | translate: { value: r } }}
+                </span>
+              </label>
+            }
+            <label class="frow" [class.is-on]="!query().minRating">
+              <input
+                type="radio"
+                [name]="'rating-' + ns"
+                [checked]="!query().minRating"
+                (change)="setRating(null)"
+              />
+              <span class="frow-name">{{ 'shop.all_ratings' | translate }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  

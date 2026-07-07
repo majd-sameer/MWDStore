@@ -10,72 +10,7 @@ import { statusLabel } from '../features/account/order-status';
   selector: 'app-order-detail-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MoneyPipe, DatePipe, TranslatePipe],
-  template: `
-    @if (order(); as order) {
-      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-        <div>
-          <h2 class="h5 mb-0">{{ 'account.order_no' | translate: { id: order.id } }}</h2>
-          <span class="text-body-secondary small">{{ order.createdOn | date: 'medium' : '' : locale() }}</span>
-        </div>
-        <span class="badge text-bg-secondary fs-6">{{
-          statusLabel(order.orderStatus, order.orderStatusName) | translate
-        }}</span>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table align-middle">
-          <thead>
-            <tr>
-              <th scope="col">{{ 'orderview.product' | translate }}</th>
-              <th scope="col" class="text-end">{{ 'orderview.price' | translate }}</th>
-              <th scope="col" class="text-center">{{ 'orderview.qty' | translate }}</th>
-              <th scope="col" class="text-end">{{ 'orderview.line_total' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of order.items ?? []; track item.productId) {
-              <tr>
-                <td>{{ item.productName }}</td>
-                <td class="text-end tabular-nums">{{ item.productPrice | money }}</td>
-                <td class="text-center tabular-nums">{{ item.quantity }}</td>
-                <td class="text-end tabular-nums">{{ item.productPrice * item.quantity | money }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-md-6">
-          <h3 class="h6 text-uppercase text-body-secondary">{{ 'orderview.shipping_address' | translate }}</h3>
-          <address class="mb-0">{{ formatAddress(order.shippingAddress) }}</address>
-        </div>
-        <div class="col-md-6">
-          <dl class="row mb-0">
-            <dt class="col-7 fw-normal text-body-secondary">{{ 'orderview.subtotal' | translate }}</dt>
-            <dd class="col-5 text-end tabular-nums">{{ order.subTotal | money }}</dd>
-            @if (order.discountAmount) {
-              <dt class="col-7 fw-normal text-body-secondary">{{ 'orderview.discount' | translate }}</dt>
-              <dd class="col-5 text-end text-success tabular-nums">−{{ order.discountAmount | money }}</dd>
-            }
-            <dt class="col-7 fw-normal text-body-secondary">
-              {{ 'orderview.shipping' | translate
-              }}{{ order.shippingMethod ? ' (' + order.shippingMethod + ')' : '' }}
-            </dt>
-            <dd class="col-5 text-end tabular-nums">{{ order.shippingFeeAmount | money }}</dd>
-            @if (order.taxAmount) {
-              <dt class="col-7 fw-normal text-body-secondary">{{ 'orderview.tax' | translate }}</dt>
-              <dd class="col-5 text-end tabular-nums">{{ order.taxAmount | money }}</dd>
-            }
-            <dt class="col-7 border-top pt-2">{{ 'orderview.total' | translate }}</dt>
-            <dd class="col-5 text-end border-top pt-2 fw-semibold tabular-nums">
-              {{ order.orderTotal | money }}
-            </dd>
-          </dl>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './order-detail-view.html',
 })
 export class OrderDetailView {
   private readonly language = inject(LanguageService);

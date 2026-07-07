@@ -18,82 +18,8 @@ import { TrackBar } from './track-bar';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, Icon, Tag, TrackBar],
   host: { class: 'order-card' },
-  template: `
-    <div class="oc-head">
-      <div>
-        <a class="oc-no" [routerLink]="['/account/orders', order().id]">
-          {{ 'account.order_no' | translate: { id: order().id } }}
-        </a>
-        <div class="oc-date">{{ order().createdOn | date: 'mediumDate' : '' : locale() }}</div>
-      </div>
-      <lib-tag tone="indigo">{{
-        statusLabel(order().orderStatus, order().orderStatusName) | translate
-      }}</lib-tag>
-    </div>
-
-    <app-track-bar [status]="order().orderStatus" />
-
-    <div class="oc-foot">
-      <span class="oc-meta">
-        {{ 'account.items' | translate: { count: order().itemCount } }} ·
-        <strong class="tabular-nums">{{ order().orderTotal | money }}</strong>
-      </span>
-      <a class="oc-view" routerLink="/track-order" [queryParams]="{ number: order().trackingNumber }">
-        {{ 'account.view' | translate }} <lib-icon name="arrowEnd" [size]="15" />
-      </a>
-    </div>
-  `,
-  styles: `
-    :host {
-      display: block;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--r-lg);
-      padding: 1.25rem 1.4rem;
-      box-shadow: var(--shadow-sm);
-    }
-    .oc-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-block-end: 1.25rem;
-    }
-    .oc-no {
-      font-weight: 700;
-      color: var(--ink);
-      text-decoration: none;
-    }
-    .oc-no:hover {
-      color: var(--accent);
-    }
-    .oc-date {
-      font-size: 0.85rem;
-      color: var(--ink-3);
-    }
-    .oc-foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-block-start: 1.25rem;
-      padding-block-start: 1rem;
-      border-block-start: 1px solid var(--line-2);
-    }
-    .oc-meta {
-      color: var(--ink-2);
-      font-size: 0.92rem;
-    }
-    .oc-view {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      color: var(--ink);
-      font-weight: 600;
-      text-decoration: none;
-    }
-    .oc-view:hover {
-      color: var(--accent);
-    }
-  `,
+  templateUrl: './order-card.html',
+  styleUrl: './order-card.scss',
 })
 export class OrderCard {
   private readonly language = inject(LanguageService);

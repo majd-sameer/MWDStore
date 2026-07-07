@@ -1,0 +1,132 @@
+
+    :host {
+      display: block;
+    }
+    .page-title {
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.02em;
+      margin-block: 1rem 2rem;
+    }
+    .state {
+      text-align: center;
+      padding-block: 4rem;
+    }
+    .empty .lead {
+      font-weight: 600;
+      margin-block-end: 0.25rem;
+    }
+    .cart {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 3rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .cart {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+    .line {
+      display: grid;
+      grid-template-columns: 84px 1fr auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      padding-block: 1.25rem;
+      border-block-end: 1px solid var(--line);
+    }
+    @media (max-width: 560px) {
+      .line {
+        grid-template-columns: 64px 1fr auto;
+        grid-template-areas: 'art info remove' 'art qty total';
+      }
+      .line-art { grid-area: art; }
+      .line-info { grid-area: info; }
+    }
+    .line-art {
+      display: block;
+      inline-size: 84px;
+    }
+    .line-name {
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .line-name:hover {
+      color: var(--accent);
+    }
+    .line-warn {
+      font-size: 0.82rem;
+      color: var(--danger, #d6455d);
+    }
+    .line-unit {
+      font-size: 0.88rem;
+      color: var(--ink-3);
+      margin-block-start: 0.2rem;
+    }
+    .line-total {
+      font-weight: 700;
+      min-inline-size: 5rem;
+      text-align: end;
+    }
+    .line-remove {
+      border: 0;
+      background: transparent;
+      color: var(--ink-3);
+      cursor: pointer;
+    }
+    .line-remove:hover {
+      color: var(--danger, #d6455d);
+    }
+    .summary {
+      position: sticky;
+      inset-block-start: 88px;
+      background: var(--surface-2);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+    }
+    .summary-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-block-end: 1rem;
+    }
+    .summary-rows {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem 1rem;
+      margin: 0;
+    }
+    .summary-rows dt {
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+    .summary-rows dd {
+      margin: 0;
+      text-align: end;
+    }
+    .summary-rows .ship {
+      font-size: 0.85rem;
+    }
+    .summary-total {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-block-start: 1rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--line);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .continue {
+      display: block;
+      text-align: center;
+      margin-block-start: 0.85rem;
+      color: var(--ink-2);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .continue:hover {
+      color: var(--accent);
+    }
+  

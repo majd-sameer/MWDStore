@@ -1,0 +1,85 @@
+
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <header class="auth-head">
+          <img class="auth-logo" src="logo-color.png" alt="" />
+          <h1 class="auth-title">{{ 'auth.register_title' | translate }}</h1>
+          <p class="auth-subtitle">{{ 'auth.register_subtitle' | translate }}</p>
+        </header>
+
+        @if (serverError(); as message) {
+          <div class="alert alert-danger" role="alert">{{ message | translate }}</div>
+        }
+
+        <form (submit)="onSubmit($event)" novalidate>
+          <lib-form-field
+            [label]="'auth.full_name' | translate"
+            controlId="fullName"
+            [error]="nameError() | translate"
+          >
+            <input
+              id="fullName"
+              type="text"
+              autocomplete="name"
+              dir="auto"
+              class="form-control form-control-lg"
+              [class.is-invalid]="!!nameError()"
+              [formField]="f.fullName"
+            />
+          </lib-form-field>
+
+          <lib-form-field
+            [label]="'auth.email' | translate"
+            controlId="email"
+            [required]="true"
+            [error]="emailError() | translate"
+          >
+            <input
+              id="email"
+              type="email"
+              autocomplete="email"
+              dir="ltr"
+              class="form-control form-control-lg"
+              [class.is-invalid]="!!emailError()"
+              [formField]="f.email"
+            />
+          </lib-form-field>
+
+          <lib-form-field
+            [label]="'auth.password' | translate"
+            controlId="password"
+            [required]="true"
+            [hint]="'auth.password_hint' | translate"
+            [error]="passwordError() | translate"
+          >
+            <input
+              id="password"
+              type="password"
+              autocomplete="new-password"
+              dir="ltr"
+              class="form-control form-control-lg"
+              [class.is-invalid]="!!passwordError()"
+              [formField]="f.password"
+            />
+          </lib-form-field>
+
+          <button
+            libButton
+            variant="primary"
+            size="lg"
+            [block]="true"
+            [disabled]="f().submitting()"
+          >
+            {{ (f().submitting() ? 'auth.creating' : 'auth.create_account') | translate }}
+          </button>
+        </form>
+
+        <p class="auth-alt">
+          {{ 'auth.has_account' | translate }}
+          <a routerLink="/login">{{ 'auth.sign_in' | translate }}</a>
+        </p>
+      </div>
+
+      <p class="auth-note">{{ 'auth.supports_note' | translate }}</p>
+    </div>
+  

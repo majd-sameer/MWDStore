@@ -1,0 +1,24 @@
+
+    <div class="lang-seg" role="group" [attr.aria-label]="'common.language_select' | translate">
+      <button
+        type="button"
+        class="seg"
+        [class.active]="language.lang() === 'en'"
+        [attr.aria-pressed]="language.lang() === 'en'"
+        aria-label="English"
+        (click)="language.use('en')"
+      >
+        EN
+      </button>
+      <button
+        type="button"
+        class="seg"
+        [class.active]="language.lang() === 'ar'"
+        [attr.aria-pressed]="language.lang() === 'ar'"
+        aria-label="العربية"
+        (click)="language.use('ar')"
+      >
+        ع
+      </button>
+    </div>
+  

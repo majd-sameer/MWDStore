@@ -1,0 +1,364 @@
+
+    <main class="wrap cart-screen">
+      <!-- Steps indicator (shown on every stage) -->
+      <ol class="steps" aria-hidden="true">
+        <li class="step" [class.is-on]="stage() === 'cart'" [class.is-done]="stage() !== 'cart'">
+          <span class="n">
+            @if (stage() !== 'cart') { <lib-icon name="check" [size]="15" /> } @else { 1 }
+          </span>
+          <span class="lbl">{{ 'checkout.step_cart' | translate }}</span>
+        </li>
+        <span class="bar"></span>
+        <li
+          class="step"
+          [class.is-on]="stage() === 'checkout'"
+          [class.is-done]="stage() === 'done'"
+        >
+          <span class="n">
+            @if (stage() === 'done') { <lib-icon name="check" [size]="15" /> } @else { 2 }
+          </span>
+          <span class="lbl">{{ 'checkout.step_checkout' | translate }}</span>
+        </li>
+        <span class="bar"></span>
+        <li class="step" [class.is-on]="stage() === 'done'">
+          <span class="n">3</span>
+          <span class="lbl">{{ 'checkout.step_done' | translate }}</span>
+        </li>
+      </ol>
+
+      <!-- ===== Confirmation stage ===== -->
+      @if (stage() === 'done') {
+        <div class="confirm">
+          <span class="confirm-ic"><lib-icon name="check" [size]="48" /></span>
+          <h1 class="confirm-title">{{ 'confirmation.confirmed' | translate }}</h1>
+          <p class="confirm-sub">{{ 'confirmation.support' | translate }}</p>
+
+          <div class="confirm-card">
+            <div class="sumrow">
+              <span>{{ 'confirmation.order_label' | translate }}</span>
+              <b class="tabular-nums">#{{ placedOrder()?.id }}</b>
+            </div>
+            @if (placedOrder()?.trackingNumber; as tn) {
+              <div class="sumrow">
+                <span>{{ 'confirmation.tracking_label' | translate }}</span>
+                <b class="tabular-nums">{{ tn }}</b>
+              </div>
+            }
+            <div class="sumrow">
+              <span>{{ 'confirmation.delivery' | translate }}</span>
+              <b>{{ 'confirmation.delivery_eta' | translate }}</b>
+            </div>
+            <div class="sumrow">
+              <span>{{ 'checkout.payment_method' | translate }}</span>
+              <b>{{ selectedMethodLabel() | translate }}</b>
+            </div>
+            <div class="sumrow total">
+              <span>{{ 'confirmation.total_paid' | translate }}</span>
+              <strong class="tabular-nums">{{ paidTotal() | money }}</strong>
+            </div>
+          </div>
+
+          @if (!auth.isAuthenticated() && placedOrder()?.trackingNumber) {
+            <p class="confirm-track-note">{{ 'confirmation.guest_track_note' | translate }}</p>
+          }
+
+          <div class="confirm-ctas">
+            @if (!auth.isAuthenticated() && placedOrder()?.trackingNumber; as tn) {
+              <a libButton variant="primary" size="lg" routerLink="/track-order"
+                [queryParams]="{ number: tn }">
+                <lib-icon name="search" [size]="18" /> {{ 'confirmation.track_cta' | translate }}
+              </a>
+              <button libButton variant="secondary" [outline]="true" size="lg" (click)="finish('/shop')">
+                {{ 'confirmation.continue' | translate }}
+              </button>
+            } @else {
+              <button libButton variant="primary" size="lg" (click)="finish('/')">
+                {{ 'confirmation.home' | translate }}
+              </button>
+              <button libButton variant="secondary" [outline]="true" size="lg" (click)="finish('/shop')">
+                {{ 'confirmation.continue' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ===== Empty cart (cart/checkout stages with no lines) ===== -->
+      @else if (cart.items().length === 0) {
+        <div class="emptycart">
+          <span class="emptycart-ic"><lib-icon name="bag" [size]="42" /></span>
+          <h2 class="emptycart-title">{{ 'cart.empty' | translate }}</h2>
+          <p class="emptycart-sub">{{ 'cart.empty_sub' | translate }}</p>
+          <a libButton variant="primary" size="lg" routerLink="/shop">
+            {{ 'cart.browse' | translate }} <lib-icon name="arrowEnd" [size]="18" />
+          </a>
+        </div>
+      }
+
+      <!-- ===== Cart + Checkout stages ===== -->
+      @else {
+        <div class="cartwrap">
+          <div class="cart-main">
+            <!-- Cart stage: line items -->
+            @if (stage() === 'cart') {
+              <div class="formcard formcard--lines">
+                @for (item of cart.items(); track item.id) {
+                  <div class="citem">
+                    <a class="citem-media" [routerLink]="['/products', item.productId]">
+                      <lib-tile [src]="item.productImageUrl" [seed]="item.productName ?? item.productId"
+                        [alt]="item.productName" ratio="1x1" />
+                    </a>
+                    <div class="citem-body">
+                      <a class="citem-name" [routerLink]="['/products', item.productId]">
+                        {{ item.productName }}
+                      </a>
+                      @if (!item.isProductAvailableToOrder) {
+                        <span class="citem-warn">{{ 'cart.unavailable' | translate }}</span>
+                      }
+                      <button type="button" class="citem-rm" [disabled]="busy()"
+                        (click)="remove(item.id)">
+                        <lib-icon name="trash" [size]="15" /> {{ 'cart.remove' | translate }}
+                      </button>
+                    </div>
+                    <div class="citem-end">
+                      <span class="citem-price tabular-nums">
+                        {{ item.calculatedProductPrice.price * item.quantity | money }}
+                      </span>
+                      <div class="qty">
+                        <button type="button" [disabled]="busy()"
+                          [attr.aria-label]="'cart.decrease' | translate"
+                          (click)="setQty(item.id, item.quantity - 1)">
+                          <lib-icon name="minus" [size]="16" />
+                        </button>
+                        <span class="tabular-nums">{{ item.quantity }}</span>
+                        <button type="button"
+                          [disabled]="busy() || item.quantity >= (item.productStockQuantity || 99)"
+                          [attr.aria-label]="'cart.increase' | translate"
+                          (click)="setQty(item.id, item.quantity + 1)">
+                          <lib-icon name="plus" [size]="16" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+                <div class="cart-continue">
+                  <a class="link-btn" routerLink="/shop">
+                    <lib-icon name="arrowStart" [size]="15" /> {{ 'cart.continue' | translate }}
+                  </a>
+                </div>
+              </div>
+            }
+
+            <!-- Checkout stage: forms (guest or signed-in) -->
+            @else {
+              @if (!auth.isAuthenticated()) {
+                <div class="guest-banner">
+                  <lib-icon name="user" [size]="18" />
+                  <span>
+                    {{ 'checkout.guest_note' | translate }}
+                    <a routerLink="/login" [queryParams]="{ returnUrl: '/checkout' }">
+                      {{ 'checkout.guest_signin' | translate }}
+                    </a>
+                  </span>
+                </div>
+              }
+              <!-- Card 1 — contact -->
+              <section class="formcard">
+                <h3 class="card-h"><span class="card-ic"><lib-icon name="user" [size]="18" /></span>
+                  {{ 'checkout.contact' | translate }}</h3>
+                <div class="field2">
+                  <div class="field">
+                    <label for="ck-name">{{ 'checkout.full_name' | translate }}
+                      <span class="req" aria-hidden="true">*</span></label>
+                    <input id="ck-name" dir="auto" [formField]="f.contactName"
+                      [placeholder]="'checkout.full_name' | translate" />
+                  </div>
+                  <div class="field">
+                    <label for="ck-phone">{{ 'checkout.phone' | translate }}
+                      <span class="req" aria-hidden="true">*</span></label>
+                    <input id="ck-phone" dir="auto" inputmode="tel" [formField]="f.phone"
+                      [placeholder]="'checkout.phone_ph' | translate" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="ck-email">{{ 'checkout.email' | translate }}</label>
+                  <input id="ck-email" type="email" dir="auto" placeholder="name@example.com"
+                    [value]="email()" (input)="email.set($any($event.target).value)" />
+                  @if (!auth.isAuthenticated()) {
+                    @if (email() && !emailValid()) {
+                      <small class="field-err">{{ 'checkout.email_invalid' | translate }}</small>
+                    } @else {
+                      <small class="field-hint">{{ 'checkout.email_guest_hint' | translate }}</small>
+                    }
+                  }
+                </div>
+              </section>
+
+              <!-- Card 2 — delivery address -->
+              <section class="formcard">
+                <h3 class="card-h"><span class="card-ic"><lib-icon name="truck" [size]="18" /></span>
+                  {{ 'checkout.address_title' | translate }}</h3>
+                <div class="field2">
+                  <div class="field">
+                    <label for="ck-gov">{{ 'checkout.state' | translate }}
+                      <span class="req" aria-hidden="true">*</span></label>
+                    <select id="ck-gov" [formField]="f.stateOrProvinceId">
+                      <option value="">{{ 'checkout.choose' | translate }}</option>
+                      @for (s of states(); track s.id) {
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="ck-area">{{ 'checkout.area' | translate }}
+                      <span class="req" aria-hidden="true">*</span></label>
+                    <input id="ck-area" dir="auto" [formField]="f.area"
+                      [placeholder]="'checkout.area_ph' | translate" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="ck-addr">{{ 'checkout.address_detail' | translate }}</label>
+                  <input id="ck-addr" dir="auto" [formField]="f.addressDetail"
+                    [placeholder]="'checkout.address_detail_ph' | translate" />
+                </div>
+                <div class="field">
+                  <label for="ck-note">{{ 'checkout.note' | translate }}</label>
+                  <textarea id="ck-note" rows="2" dir="auto"
+                    [placeholder]="'checkout.note_ph' | translate"
+                    [value]="orderNote()" (input)="orderNote.set($any($event.target).value)"></textarea>
+                </div>
+              </section>
+
+              <!-- Card 3 — shipping method (required: each carrier has its own rate table) -->
+              <section class="formcard">
+                <h3 class="card-h"><span class="card-ic"><lib-icon name="truck" [size]="18" /></span>
+                  {{ 'checkout.method' | translate }}</h3>
+                @if (!addressValid()) {
+                  <p class="pay-empty">{{ 'checkout.shipping_need_address' | translate }}</p>
+                } @else if (shippingOptions().length === 0) {
+                  <p class="pay-empty">{{ 'checkout.no_shipping' | translate }}</p>
+                } @else {
+                  <div class="field">
+                    <label for="ck-ship">{{ 'checkout.carrier' | translate }}
+                      <span class="req" aria-hidden="true">*</span></label>
+                    <select id="ck-ship" [value]="selectedShipping()?.id ?? ''"
+                      (change)="onShippingChange($any($event.target).value)">
+                      <option value="" disabled>{{ 'checkout.choose_shipping' | translate }}</option>
+                      @for (o of shippingOptions(); track o.id) {
+                        <option value="{{ o.id }}">
+                          {{ shipLabel(o) | translate }} — {{ o.price | money }}
+                        </option>
+                      }
+                    </select>
+                  </div>
+                }
+              </section>
+
+              <!-- Card 4 — payment method -->
+              <section class="formcard">
+                <h3 class="card-h"><span class="card-ic"><lib-icon name="lock" [size]="18" /></span>
+                  {{ 'checkout.payment_method' | translate }}</h3>
+                @if (paymentMethods.isLoading()) {
+                  <p class="pay-empty">{{ 'common.loading' | translate }}</p>
+                } @else if (payMethods().length === 0) {
+                  <p class="pay-empty">{{ 'checkout.no_payment_methods' | translate }}</p>
+                } @else {
+                  @for (m of payMethods(); track m.id) {
+                    <label class="payopt" [class.is-on]="pay() === m.id">
+                      <input type="radio" name="pay" [checked]="pay() === m.id"
+                        (change)="pay.set(m.id)" />
+                      <span class="payopt-txt">
+                        <b>{{ payLabel(m) | translate }}</b>
+                      </span>
+                      <lib-icon [name]="payIcon(m.id)" [size]="18" />
+                    </label>
+                  }
+                }
+                <button type="button" class="link-btn back-to-cart" (click)="goStage('cart')">
+                  <lib-icon name="arrowStart" [size]="15" /> {{ 'checkout.back' | translate }}
+                </button>
+              </section>
+            }
+          </div>
+
+          <!-- Shared order summary -->
+          <aside class="summary">
+            <h3 class="summary-h">{{ 'checkout.summary' | translate }}</h3>
+            <div class="sumrow">
+              <span>{{ 'cart.subtotal' | translate }}
+                ({{ 'cart.count' | translate: { count: cart.count() } }})</span>
+              <span class="tabular-nums">{{ cart.subTotal() | money }}</span>
+            </div>
+            <div class="sumrow">
+              <span>{{ 'cart.shipping' | translate }}</span>
+              @if (selectedShipping(); as s) {
+                @if (s.price === 0) {
+                  <b class="free">{{ 'cart.free' | translate }}</b>
+                } @else {
+                  <span class="tabular-nums">{{ s.price | money }}</span>
+                }
+              } @else {
+                <span class="muted">{{ 'cart.shipping_note' | translate }}</span>
+              }
+            </div>
+
+            @if (cart.discount() > 0) {
+              <div class="sumrow">
+                <span>{{ 'cart.discount' | translate }}</span>
+                <span class="free tabular-nums">−{{ cart.discount() | money }}</span>
+              </div>
+            }
+
+            @if (stage() === 'cart') {
+              @if (cart.discount() > 0) {
+                <div class="promo-applied">
+                  <span class="promo-code">
+                    <lib-icon name="check" [size]="15" /> {{ cart.appliedCoupon() }}
+                  </span>
+                  <button type="button" class="link-btn" (click)="removeCoupon()">
+                    {{ 'cart.remove' | translate }}
+                  </button>
+                </div>
+              } @else {
+                <div class="promo">
+                  <input [placeholder]="'cart.promo_ph' | translate" [value]="promo()"
+                    (input)="promo.set($any($event.target).value)"
+                    (keydown.enter)="applyCoupon()" />
+                  <button libButton variant="dark" type="button"
+                    [disabled]="!promo().trim() || cart.isLoading()" (click)="applyCoupon()">
+                    {{ 'cart.apply' | translate }}
+                  </button>
+                </div>
+                @if (cart.couponError(); as couponErr) {
+                  <p class="promo-error">{{ couponErr }}</p>
+                }
+              }
+            }
+
+            <div class="sumrow total">
+              <span>{{ 'cart.total' | translate }}</span>
+              <strong class="tabular-nums">{{ total() | money }}</strong>
+            </div>
+
+            @if (stage() === 'cart') {
+              <button libButton variant="primary" size="lg" [block]="true" class="summary-cta"
+                (click)="proceed()">
+                {{ 'checkout.proceed' | translate }} <lib-icon name="arrowEnd" [size]="18" />
+              </button>
+            } @else {
+              <button libButton variant="primary" size="lg" [block]="true" class="summary-cta"
+                [disabled]="!canPlaceOrder() || placing()" (click)="placeOrder()">
+                <lib-icon name="lock" [size]="18" />
+                {{ (placing() ? 'checkout.placing' : 'checkout.confirm_pay') | translate }}
+              </button>
+            }
+
+            <div class="note">
+              <lib-icon name="hands" [size]="18" />
+              <span>{{ 'checkout.mission_note' | translate }}</span>
+            </div>
+          </aside>
+        </div>
+      }
+    </main>
+  

@@ -30,7 +30,7 @@ export type ButtonSize = 'sm' | 'lg';
 @Component({
   selector: 'button[libButton], a[libButton]',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<ng-content />',
+  templateUrl: './button.html',
   host: {
     '[class]': 'classes()',
   },

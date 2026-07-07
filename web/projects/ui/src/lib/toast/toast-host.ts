@@ -18,19 +18,7 @@ import { ToastService } from './toast.service';
     'aria-live': 'polite',
     'aria-atomic': 'true',
   },
-  template: `
-    @for (toast of toastService.toasts(); track toast.id) {
-      <ngb-toast
-        [class]="toast.classname ?? ''"
-        [header]="toast.header ?? ''"
-        [autohide]="toast.autohide"
-        [delay]="toast.delay"
-        (hidden)="toastService.remove(toast.id)"
-      >
-        {{ toast.text }}
-      </ngb-toast>
-    }
-  `,
+  templateUrl: './toast-host.html',
 })
 export class ToastHost {
   protected readonly toastService = inject(ToastService);

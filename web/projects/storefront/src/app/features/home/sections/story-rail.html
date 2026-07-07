@@ -1,0 +1,47 @@
+
+    @if (items().length) {
+      <section class="sec">
+        <div class="sec-head">
+          <div>
+            <span class="eyebrow">{{ 'home.stories_eyebrow' | translate }}</span>
+            <h2 class="sec-title">{{ 'home.stories_title' | translate }}</h2>
+            <p class="sec-sub">{{ 'home.stories_sub' | translate }}</p>
+          </div>
+          <a class="sec-link" routerLink="/news">
+            {{ 'home.stories_all' | translate }}
+            <lib-icon name="arrowEnd" [size]="16" />
+          </a>
+        </div>
+
+        <div class="stories">
+          @for (story of items(); track story.id) {
+            <article class="story">
+              <a
+                class="story-media"
+                [routerLink]="['/news', story.slug]"
+                [attr.aria-label]="story.name"
+              >
+                <lib-tile
+                  [src]="story.thumbnailUrl"
+                  [seed]="story.name ?? story.id"
+                  [alt]="story.name"
+                  ratio="4x3"
+                />
+              </a>
+              <div class="story-body">
+                @if (story.shortContent) {
+                  <p class="story-quote">{{ story.shortContent }}</p>
+                }
+                <div class="story-by">
+                  <span class="story-av" aria-hidden="true">{{ initial(story) }}</span>
+                  <a class="story-name" [routerLink]="['/news', story.slug]">
+                    <b>{{ story.name }}</b>
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  

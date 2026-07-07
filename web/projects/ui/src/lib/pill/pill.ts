@@ -16,12 +16,7 @@ import {
   selector: 'lib-pill',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ui-pill' },
-  template: `
-    @if (dot()) {
-      <span class="ui-pill__dot" aria-hidden="true"></span>
-    }
-    <ng-content />
-  `,
+  templateUrl: './pill.html',
 })
 export class Pill {
   readonly dot = input(false, { transform: booleanAttribute });

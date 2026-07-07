@@ -1,0 +1,55 @@
+
+    <a class="pc-art" [routerLink]="['/products', product().id]" [attr.aria-label]="product().name">
+      <lib-tile [src]="product().thumbnailImageUrl" [seed]="product().name ?? product().id"
+        [alt]="product().name" ratio="1x1" />
+      @if (!canOrder()) {
+        <span class="pc-tag"><lib-tag tone="danger">{{ 'product.out_of_stock' | translate }}</lib-tag></span>
+      } @else if (price().oldPrice) {
+        <span class="pc-tag"><lib-tag tone="accent">{{ 'product.sale' | translate }}</lib-tag></span>
+      }
+    </a>
+
+    <div class="pc-body">
+      @if (product().categoryName; as categoryName) {
+        <span class="pc-cat">{{ product().categorySlug | categoryLabel: categoryName }}</span>
+      }
+      <a class="pc-name-link" [routerLink]="['/products', product().id]">
+        <h3 class="pc-name">{{ product().name }}</h3>
+      </a>
+
+      @if (product().ratingAverage; as rating) {
+        <lib-stars [rating]="rating" [count]="product().reviewsCount" />
+      } @else {
+        <span class="pc-no-rating">
+          <lib-stars [rating]="null" />
+          {{ 'product.no_reviews' | translate }}
+        </span>
+      }
+
+      <div class="pc-foot">
+        <div class="pc-price">
+          @if (product().isCallForPricing) {
+            <span class="pc-call">{{ 'product.call_for_pricing' | translate }}</span>
+          } @else {
+            <span class="pc-now tabular-nums">{{ price().price | money }}</span>
+            @if (price().oldPrice; as oldPrice) {
+              <span class="pc-old tabular-nums">{{ oldPrice | money }}</span>
+            }
+          }
+        </div>
+
+        @if (!product().isCallForPricing) {
+          <button
+            type="button"
+            class="pc-add"
+            [class.is-disabled]="!canOrder()"
+            [disabled]="!canOrder()"
+            [attr.aria-label]="(canOrder() ? 'product.add' : 'product.out_of_stock') | translate"
+            (click)="addToCart.emit(product())"
+          >
+            <lib-icon name="plus" [size]="18" />
+          </button>
+        }
+      </div>
+    </div>
+  

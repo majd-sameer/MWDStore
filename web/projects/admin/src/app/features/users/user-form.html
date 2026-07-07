@@ -1,0 +1,89 @@
+
+    <nav class="mb-3" aria-label="breadcrumb">
+      <a routerLink="/users" class="text-decoration-none">← {{ 'users.title' | translate }}</a>
+    </nav>
+    <app-page-header [title]="(isNew() ? 'users.new_title' : 'users.edit_title') | translate" />
+
+    @if (!isNew() && loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (!isNew() && loadError()) {
+      <div class="alert alert-danger">{{ 'users.load_one_failed' | translate }}</div>
+    } @else {
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              @if (serverError(); as message) {
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+              }
+              <form (submit)="onSubmit($event)" novalidate>
+                <lib-form-field [label]="'common.full_name' | translate" controlId="usr-name" [required]="true"
+                  [error]="err(f.fullName())">
+                  <input id="usr-name" type="text" class="form-control"
+                    [class.is-invalid]="!!err(f.fullName())" [formField]="f.fullName" />
+                </lib-form-field>
+                @if (isNew()) {
+                  <lib-form-field [label]="'common.email' | translate" controlId="usr-email" [required]="true"
+                    [error]="err(f.email())">
+                    <input id="usr-email" type="email" class="form-control"
+                      [class.is-invalid]="!!err(f.email())" [formField]="f.email" />
+                  </lib-form-field>
+                  <lib-form-field [label]="'login.password' | translate" controlId="usr-pass" [required]="true"
+                    [error]="err(f.password())">
+                    <input id="usr-pass" type="password" class="form-control"
+                      [class.is-invalid]="!!err(f.password())" [formField]="f.password" />
+                  </lib-form-field>
+                } @else {
+                  <lib-form-field [label]="'common.email' | translate" controlId="usr-email-ro"
+                    [hint]="'users.email_ro_hint' | translate">
+                    <input id="usr-email-ro" type="email" class="form-control" readonly
+                      [value]="model().email" />
+                  </lib-form-field>
+                }
+                <lib-form-field [label]="'common.phone' | translate" controlId="usr-phone">
+                  <input id="usr-phone" type="text" class="form-control" [formField]="f.phoneNumber" />
+                </lib-form-field>
+
+                <div class="form-label">{{ 'users.col_roles' | translate }}</div>
+                <div class="border rounded p-2 mb-3">
+                  @for (r of roles.value() ?? []; track r.id) {
+                    <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="usr-role-{{ r.id }}"
+                        [checked]="selectedRoles().includes(r.name ?? '')"
+                        (change)="toggleRole(r.name ?? '')" />
+                      <label class="form-check-label" for="usr-role-{{ r.id }}">{{ r.name }}</label>
+                    </div>
+                  }
+                </div>
+
+                <div class="form-label">{{ 'users.groups_title' | translate }}</div>
+                <div class="border rounded p-2 mb-3">
+                  @for (g of groups.value() ?? []; track g.id) {
+                    <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="usr-grp-{{ g.id }}"
+                        [checked]="selectedGroupIds().includes(g.id)"
+                        (change)="toggleGroup(g.id)" />
+                      <label class="form-check-label" for="usr-grp-{{ g.id }}">{{ g.name }}</label>
+                    </div>
+                  } @empty {
+                    <span class="text-body-secondary small">{{ 'users.no_groups_defined' | translate }}</span>
+                  }
+                </div>
+
+                <div class="form-actions">
+                  <button libButton variant="primary" [disabled]="f().submitting()">
+                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'users.create' : 'common.save_changes') | translate }}
+                  </button>
+                  <a routerLink="/users" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  

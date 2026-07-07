@@ -17,76 +17,7 @@ import { PageHeader } from '../../shared/page-header';
   selector: 'app-admin-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Button, TranslatePipe, PageHeader],
-  template: `
-    <app-page-header
-      [title]="'settings.title' | translate"
-      [subtitle]="'settings.subtitle' | translate"
-    />
-
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        @if (list.isLoading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
-        } @else {
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th style="width: 30%">{{ 'common.key' | translate }}</th>
-                <th style="width: 15%">{{ 'settings.col_module' | translate }}</th>
-                <th>{{ 'common.value' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (s of list.value() ?? []; track s.id) {
-                <tr>
-                  <td class="font-monospace small">{{ s.id }}</td>
-                  <td class="small text-body-secondary">{{ s.module }}</td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm"
-                      [value]="changes()[s.id] ?? s.value ?? ''"
-                      (input)="stage(s.id, $any($event.target).value)" />
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="3" class="text-center text-body-secondary py-4">
-                    {{ 'settings.empty' | translate }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-
-          <div class="row g-2 align-items-end mb-3">
-            <div class="col-md-4">
-              <label class="form-label small" for="set-key">{{ 'settings.new_key' | translate }}</label>
-              <input id="set-key" type="text" class="form-control form-control-sm" #newKey />
-            </div>
-            <div class="col-md-5">
-              <label class="form-label small" for="set-value">{{ 'common.value' | translate }}</label>
-              <input id="set-value" type="text" class="form-control form-control-sm" #newValue />
-            </div>
-            <div class="col-md-3">
-              <button type="button" libButton variant="secondary" size="sm" [outline]="true"
-                (click)="stageNew(newKey, newValue)">
-                {{ 'settings.add_setting' | translate }}
-              </button>
-            </div>
-          </div>
-
-          <button type="button" libButton variant="primary"
-            [disabled]="!hasChanges() || saving()"
-            (click)="save()">
-            {{ (saving() ? 'common.saving' : 'common.save_changes') | translate }}
-          </button>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './settings.html',
 })
 export class AdminSettings {
   private readonly service = inject(AdminSystemService);

@@ -23,22 +23,7 @@ import {
   host: {
     class: 'mb-3',
   },
-  template: `
-    @if (label()) {
-      <label class="form-label" [attr.for]="controlId()">
-        {{ label() }}
-        @if (required()) {
-          <span class="text-danger" aria-hidden="true">*</span>
-        }
-      </label>
-    }
-    <ng-content />
-    @if (error()) {
-      <div class="invalid-feedback d-block">{{ error() }}</div>
-    } @else if (hint()) {
-      <div class="form-text">{{ hint() }}</div>
-    }
-  `,
+  templateUrl: './form-field.html',
 })
 export class FormField {
   readonly label = input<string | null>(null);

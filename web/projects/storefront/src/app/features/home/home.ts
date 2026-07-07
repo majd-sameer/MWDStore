@@ -45,38 +45,7 @@ import { CtaBand } from './sections/cta-band';
     ValuesRow,
     CtaBand,
   ],
-  template: `
-    <app-hero [centers]="centerCount()" [products]="productCount()" />
-
-    <app-trust-strip />
-
-    <app-collection-rail
-      [categories]="categories.value() ?? []"
-      [counts]="categoryCounts()"
-    />
-
-    <app-featured-row
-      eyebrow="home.best_eyebrow"
-      title="home.best_title"
-      [products]="best.value()?.products ?? []"
-      (addToCart)="add($event)"
-    />
-
-    <app-mission-band />
-
-    <app-featured-row
-      eyebrow="home.fresh_eyebrow"
-      title="home.fresh_title"
-      [products]="fresh.value()?.products ?? []"
-      (addToCart)="add($event)"
-    />
-
-    <app-story-rail [items]="stories()" />
-
-    <app-values-row />
-
-    <app-cta-band />
-  `,
+  templateUrl: './home.html',
 })
 export class Home {
   private readonly catalog = inject(CatalogService);

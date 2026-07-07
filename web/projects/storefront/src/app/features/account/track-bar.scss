@@ -1,0 +1,63 @@
+
+    .track {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .step {
+      flex: 1 1 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--ink-3);
+      text-align: center;
+    }
+    /* connector line between dots, drawn on the start side of each step */
+    .step::before {
+      content: '';
+      position: absolute;
+      inset-block-start: 9px;
+      inset-inline-end: 50%;
+      inline-size: 100%;
+      block-size: 2px;
+      background: var(--line);
+    }
+    .step:first-child::before {
+      display: none;
+    }
+    .step.done::before {
+      background: var(--accent);
+    }
+    .dot {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 20px;
+      block-size: 20px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      color: var(--accent-ink);
+    }
+    .step.done .dot {
+      background: var(--accent);
+    }
+    .step.current .label,
+    .step.done .label {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .cancelled {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--danger, #d6455d);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  

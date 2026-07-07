@@ -10,25 +10,7 @@ import { OrderDetailView } from '../../shared/order-detail-view';
   selector: 'app-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, Breadcrumb, OrderDetailView],
-  template: `
-    <lib-breadcrumb [items]="crumbs()" />
-
-    @if (order.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (order.error()) {
-      <div class="alert alert-danger">{{ 'confirmation.load_error' | translate }}</div>
-    } @else {
-      <div class="card">
-        <div class="card-body">
-          <app-order-detail-view [order]="order.value()" />
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './order-detail.html',
 })
 export class OrderDetail {
   private readonly route = inject(ActivatedRoute);

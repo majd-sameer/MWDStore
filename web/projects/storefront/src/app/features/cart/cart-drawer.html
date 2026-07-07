@@ -1,0 +1,86 @@
+
+    @if (drawer.open()) {
+      <button
+        type="button"
+        class="backdrop"
+        [attr.aria-label]="'cart.title' | translate"
+        (click)="drawer.close()"
+      ></button>
+      <aside class="panel" role="dialog" [attr.aria-label]="'cart.title' | translate">
+        <header class="panel-head">
+          <h2 class="panel-title">{{ 'cart.title' | translate }}</h2>
+          <button type="button" class="icon-btn" aria-label="Close" (click)="drawer.close()">
+            <lib-icon name="x" [size]="22" />
+          </button>
+        </header>
+
+        @if (store.items().length === 0) {
+          <div class="empty">
+            <p class="empty-title">{{ 'cart.empty' | translate }}</p>
+            <a libButton variant="dark" routerLink="/shop" (click)="drawer.close()">
+              {{ 'cart.browse' | translate }}
+            </a>
+          </div>
+        } @else {
+          <div class="items">
+            @for (item of store.items(); track item.id) {
+              <div class="item">
+                <a
+                  class="item-art"
+                  [routerLink]="['/products', item.productId]"
+                  (click)="drawer.close()"
+                >
+                  <lib-tile [src]="item.productImageUrl" [seed]="item.productName ?? item.productId"
+                    [alt]="item.productName" ratio="1x1" />
+                </a>
+                <div class="item-body">
+                  <a
+                    class="item-name"
+                    [routerLink]="['/products', item.productId]"
+                    (click)="drawer.close()"
+                    >{{ item.productName }}</a
+                  >
+                  <div class="item-meta">
+                    <span class="tabular-nums">{{ item.quantity }} ×</span>
+                    <span class="tabular-nums">{{ item.calculatedProductPrice.price | money }}</span>
+                  </div>
+                </div>
+                <div class="item-total tabular-nums">
+                  {{ item.calculatedProductPrice.price * item.quantity | money }}
+                </div>
+              </div>
+            }
+          </div>
+
+          <footer class="panel-foot">
+            <div class="subtotal">
+              <span>{{ 'cart.subtotal' | translate }}</span>
+              <strong class="tabular-nums">{{ store.subTotal() | money }}</strong>
+            </div>
+            <p class="ship-note">{{ 'cart.shipping_note' | translate }}</p>
+            <a
+              libButton
+              variant="dark"
+              size="lg"
+              [block]="true"
+              routerLink="/checkout"
+              (click)="drawer.close()"
+            >
+              {{ 'cart.checkout' | translate }}
+            </a>
+            <a
+              libButton
+              variant="secondary"
+              [outline]="true"
+              [block]="true"
+              class="mt-2"
+              routerLink="/cart"
+              (click)="drawer.close()"
+            >
+              {{ 'cart.view_bag' | translate }}
+            </a>
+          </footer>
+        }
+      </aside>
+    }
+  

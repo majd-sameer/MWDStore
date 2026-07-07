@@ -1,0 +1,505 @@
+
+    :host {
+      display: block;
+    }
+    .cart-screen {
+      padding-block: 30px 60px;
+    }
+
+    /* ----- Steps indicator ----- */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      margin: 0 0 26px;
+      padding: 0;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink-3);
+      font-weight: 600;
+    }
+    .step.is-on {
+      color: var(--ink);
+    }
+    .step.is-done {
+      color: var(--green-strong);
+    }
+    .step .n {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 30px;
+      block-size: 30px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      font-size: 0.9rem;
+    }
+    .step.is-on .n {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+    .step.is-done .n {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .steps .bar {
+      flex: 1;
+      block-size: 2px;
+      min-inline-size: 20px;
+      background: var(--line-strong);
+    }
+    /* Keep all three steps on screen on narrow phones (no clipped "Confirm"). */
+    @media (max-width: 480px) {
+      .steps {
+        gap: 5px;
+      }
+      .step {
+        gap: 5px;
+        font-size: 0.78rem;
+      }
+      .step .n {
+        inline-size: 24px;
+        block-size: 24px;
+        font-size: 0.78rem;
+      }
+      .steps .bar {
+        min-inline-size: 4px;
+      }
+    }
+
+    /* ----- Layout ----- */
+    .cartwrap {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 34px;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .cartwrap {
+        grid-template-columns: 1fr;
+      }
+    }
+    .cart-main {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-inline-size: 0;
+    }
+    .formcard {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 24px 26px;
+    }
+    .formcard--lines {
+      padding-block: 6px;
+    }
+
+    /* ----- Cart line items ----- */
+    .citem {
+      display: grid;
+      grid-template-columns: 110px 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding-block: 18px;
+      border-block-end: 1px solid var(--line);
+    }
+    .citem:last-of-type {
+      border-block-end: 0;
+    }
+    .citem-media {
+      display: block;
+      inline-size: 110px;
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .citem-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .citem-name {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .citem-name:hover {
+      color: var(--accent);
+    }
+    .citem-warn {
+      font-size: 0.82rem;
+      color: var(--danger, #b0492c);
+    }
+    .citem-rm {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: var(--ink-3);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .citem-rm:hover {
+      color: #b0492c;
+    }
+    .citem-end {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 14px;
+    }
+    .citem-price {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .qty {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    .qty button {
+      display: inline-flex;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 0;
+    }
+    .qty button:disabled {
+      color: var(--ink-3);
+      cursor: not-allowed;
+    }
+    .cart-continue {
+      padding: 18px 0;
+    }
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: var(--navy);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .link-btn:hover {
+      color: var(--navy-deep);
+    }
+    .back-to-cart {
+      margin-block-start: 10px;
+    }
+
+    /* ----- Guest banner ----- */
+    .guest-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--r);
+      background: var(--surface-2);
+      color: var(--ink-2);
+      font-size: 0.9rem;
+    }
+    .guest-banner a {
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    /* ----- Field hints / errors ----- */
+    .field-hint {
+      display: block;
+      margin-block-start: 6px;
+      font-size: 0.8rem;
+      color: var(--ink-3);
+    }
+    .field-err {
+      display: block;
+      margin-block-start: 6px;
+      font-size: 0.8rem;
+      color: #b0492c;
+    }
+    .confirm-track-note {
+      color: var(--ink-2);
+      font-size: 0.92rem;
+      margin-block: 0.25rem 0;
+    }
+
+    /* ----- Form cards ----- */
+    .card-h {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-block-end: 1.1rem;
+    }
+    .card-ic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 34px;
+      block-size: 34px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+    .field {
+      margin-block-end: 14px;
+    }
+    .field:last-child {
+      margin-block-end: 0;
+    }
+    .field label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-block-end: 7px;
+    }
+    .req {
+      color: var(--danger, #b0492c);
+      font-weight: 700;
+      margin-inline-start: 2px;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      inline-size: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: var(--r-sm);
+      padding: 12px 14px;
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--navy);
+    }
+    .field2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) {
+      .field2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ----- Payment options ----- */
+    .payopt {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid var(--line);
+      border-radius: var(--r);
+      padding: 15px 16px;
+      cursor: pointer;
+      margin-block-end: 10px;
+    }
+    .payopt.is-on {
+      border-color: var(--green);
+      background: var(--green-soft);
+    }
+    .payopt input {
+      accent-color: var(--green-strong);
+    }
+    .payopt-txt {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.4;
+    }
+    .payopt-txt span {
+      font-size: 0.85rem;
+      color: var(--ink-2);
+    }
+    .pay-empty {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 0.9rem;
+    }
+
+    /* ----- Order summary ----- */
+    .summary {
+      position: sticky;
+      inset-block-start: calc(68px + 16px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 24px;
+    }
+    @media (max-width: 980px) {
+      .summary {
+        position: static;
+      }
+    }
+    .summary-h {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-block-end: 0.5rem;
+    }
+    .sumrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 9px;
+      color: var(--ink-2);
+    }
+    .sumrow .free {
+      color: var(--green-strong);
+    }
+    .sumrow .muted {
+      font-size: 0.85rem;
+      color: var(--ink-3);
+    }
+    .sumrow.total {
+      margin-block-start: 10px;
+      padding-block-start: 16px;
+      border-block-start: 1px solid var(--line);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .promo {
+      display: flex;
+      gap: 8px;
+      margin-block: 16px;
+    }
+    .promo input {
+      flex: 1;
+      min-inline-size: 0;
+      border: 1.5px solid var(--line);
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+    }
+    .promo input:focus {
+      outline: none;
+      border-color: var(--navy);
+    }
+    .promo-applied {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-block: 16px;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      background: var(--green-soft);
+      color: var(--green-strong);
+      font-weight: 600;
+    }
+    .promo-code {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .promo-error {
+      margin-block: 8px 0;
+      font-size: 0.85rem;
+      color: #b0492c;
+    }
+    .summary-cta {
+      margin-block-start: 18px;
+    }
+    .note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-block-start: 16px;
+      padding: 12px 14px;
+      border-radius: var(--r-sm);
+      background: var(--green-soft);
+      color: var(--green-strong);
+      font-size: 0.9rem;
+    }
+
+    /* ----- Empty cart ----- */
+    .emptycart {
+      text-align: center;
+      padding-block: 70px;
+    }
+    .emptycart-ic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 90px;
+      block-size: 90px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      color: var(--accent);
+      margin-block-end: 1.25rem;
+    }
+    .emptycart-title {
+      font-weight: 700;
+      font-size: 1.6rem;
+    }
+    .emptycart-sub {
+      color: var(--ink-2);
+      margin-block: 0.5rem 1.5rem;
+    }
+
+    /* ----- Confirmation ----- */
+    .confirm {
+      text-align: center;
+      max-inline-size: 560px;
+      margin-inline: auto;
+      padding-block: 40px;
+    }
+    .confirm-ic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 96px;
+      block-size: 96px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      box-shadow: var(--sh-green);
+      margin-block-end: 26px;
+    }
+    .confirm-title {
+      font-weight: 700;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+    }
+    .confirm-sub {
+      color: var(--ink-2);
+      margin-block: 0.75rem 1.75rem;
+    }
+    .confirm-card {
+      text-align: start;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 20px 24px;
+    }
+    .confirm-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-block-start: 28px;
+    }
+  

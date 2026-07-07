@@ -42,27 +42,7 @@ const TONES: readonly TileTone[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   host: { class: 'd-block' },
-  template: `
-    <div class="ui-tile ratio" [class]="ratioClass()">
-      @if (src() && !failed()) {
-        <img
-          [src]="src()"
-          [attr.alt]="alt()"
-          class="ui-tile__img"
-          loading="lazy"
-          (error)="failed.set(true)"
-        />
-      } @else {
-        <div class="ui-tile__art dt" [class]="toneClass()">
-          @if (glyph()) {
-            <lib-icon [name]="glyph()!" [size]="44" />
-          } @else if (initial()) {
-            <span class="ui-tile__initial">{{ initial() }}</span>
-          }
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './tile.html',
 })
 export class Tile {
   readonly src = input<string | null>(null);

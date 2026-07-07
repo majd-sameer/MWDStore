@@ -1,0 +1,92 @@
+
+    <nav class="mb-3" aria-label="breadcrumb">
+      <a routerLink="/warehouses" class="text-decoration-none">← {{ 'warehouses.title' | translate }}</a>
+    </nav>
+    <app-page-header [title]="(isNew() ? 'warehouses.new_title' : 'warehouses.edit_title') | translate" />
+
+    @if (!isNew() && list.isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (!isNew() && list.error()) {
+      <div class="alert alert-danger">{{ 'warehouses.load_one_failed' | translate }}</div>
+    } @else {
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              @if (serverError(); as message) {
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+              }
+              <form (submit)="onSubmit($event)" novalidate>
+                <lib-form-field [label]="'common.name' | translate" controlId="wh-name" [required]="true" [error]="err(f.name())">
+                  <input id="wh-name" type="text" class="form-control"
+                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <lib-form-field [label]="'warehouses.contact_name' | translate" controlId="wh-contact">
+                      <input id="wh-contact" type="text" class="form-control" [formField]="f.contactName" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-6">
+                    <lib-form-field [label]="'common.phone' | translate" controlId="wh-phone">
+                      <input id="wh-phone" type="text" class="form-control" [formField]="f.phone" />
+                    </lib-form-field>
+                  </div>
+                </div>
+                <lib-form-field [label]="'warehouses.address1' | translate" controlId="wh-addr1">
+                  <input id="wh-addr1" type="text" class="form-control" [formField]="f.addressLine1" />
+                </lib-form-field>
+                <lib-form-field [label]="'warehouses.address2' | translate" controlId="wh-addr2">
+                  <input id="wh-addr2" type="text" class="form-control" [formField]="f.addressLine2" />
+                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <lib-form-field [label]="'common.city' | translate" controlId="wh-city">
+                      <input id="wh-city" type="text" class="form-control" [formField]="f.city" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-6">
+                    <lib-form-field [label]="'common.zip' | translate" controlId="wh-zip">
+                      <input id="wh-zip" type="text" class="form-control" [formField]="f.zipCode" />
+                    </lib-form-field>
+                  </div>
+                </div>
+                <lib-form-field [label]="'common.country' | translate" controlId="wh-country" [required]="true"
+                  [error]="err(f.countryId())">
+                  <select id="wh-country" class="form-select"
+                    [class.is-invalid]="!!err(f.countryId())" [formField]="f.countryId"
+                    (change)="onCountryChange($any($event.target).value)">
+                    <option value="">{{ 'common.choose' | translate }}</option>
+                    @for (c of countries.value() ?? []; track c.id) {
+                      <option value="{{ c.id }}">{{ c.name }}</option>
+                    }
+                  </select>
+                </lib-form-field>
+                <lib-form-field [label]="'common.state' | translate" controlId="wh-state" [required]="true"
+                  [error]="err(f.stateOrProvinceId())">
+                  <select id="wh-state" class="form-select"
+                    [class.is-invalid]="!!err(f.stateOrProvinceId())" [formField]="f.stateOrProvinceId">
+                    <option value="">{{ 'common.choose' | translate }}</option>
+                    @for (s of states(); track s.id) {
+                      <option value="{{ s.id }}">{{ s.name }}</option>
+                    }
+                  </select>
+                </lib-form-field>
+
+                <div class="form-actions">
+                  <button libButton variant="primary" [disabled]="f().submitting()">
+                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'warehouses.create' : 'common.save_changes') | translate }}
+                  </button>
+                  <a routerLink="/warehouses" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  

@@ -1,0 +1,45 @@
+
+    <div class="pagehead">
+      <div class="ph-inner">
+        <lib-breadcrumb [items]="crumbs()" />
+        <h1 class="ph-title">{{ 'sections.title' | translate }}</h1>
+        <p class="ph-sub">{{ 'sections.subtitle' | translate }}</p>
+      </div>
+    </div>
+
+    <section class="sections-wrap">
+      @if (result.error()) {
+        <div class="alert alert-danger">{{ 'common.error' | translate }}</div>
+      } @else if (!categories().length && result.isLoading()) {
+        <div class="state">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (categories().length) {
+        <div class="sections">
+          @for (cat of categories(); track cat.id; let i = $index) {
+            <a
+              class="scard"
+              [routerLink]="['/shop']"
+              [queryParams]="{ category: cat.slug }"
+            >
+              <span class="scard-ic"><lib-icon [name]="glyphFor(i)" [size]="28" /></span>
+              <b class="scard-name">{{ cat.slug | categoryLabel: cat.name }}</b>
+              @if (countLabel(cat.slug); as count) {
+                <span class="scard-count tabular-nums">
+                  {{ 'sections.count' | translate: { count } }}
+                </span>
+              }
+              <span class="scard-go">
+                {{ 'sections.browse' | translate }}
+                <lib-icon name="arrowEnd" [size]="16" />
+              </span>
+            </a>
+          }
+        </div>
+      } @else {
+        <p class="empty">{{ 'sections.empty' | translate }}</p>
+      }
+    </section>
+  

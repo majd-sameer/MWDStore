@@ -1,0 +1,24 @@
+
+    @if (products().length) {
+      <section class="featured">
+        <div class="featured-head">
+          <div>
+            <div class="eyebrow">{{ eyebrow() | translate }}</div>
+            <h2 class="featured-title">{{ title() | translate }}</h2>
+          </div>
+          <a class="featured-all" [routerLink]="viewAllLink()" [queryParams]="viewAllParams()">
+            {{ 'home.view_all' | translate }}
+            <lib-icon name="arrowEnd" [size]="16" />
+          </a>
+        </div>
+
+        <div class="row row-cols-2 row-cols-md-4 g-4">
+          @for (product of products(); track product.id) {
+            <div class="col">
+              <app-product-card [product]="product" (addToCart)="addToCart.emit($event)" />
+            </div>
+          }
+        </div>
+      </section>
+    }
+  

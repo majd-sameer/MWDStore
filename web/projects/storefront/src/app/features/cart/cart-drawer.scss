@@ -1,0 +1,114 @@
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      border: 0;
+      padding: 0;
+      background: rgba(26, 23, 48, 0.4);
+      cursor: pointer;
+      z-index: 1050;
+    }
+    .panel {
+      position: fixed;
+      inset-block: 0;
+      inset-inline-end: 0;
+      inline-size: min(92vw, 420px);
+      z-index: 1055;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-inline-start: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-block-end: 1px solid var(--line);
+    }
+    .panel-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 38px;
+      block-size: 38px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .icon-btn:hover {
+      background: var(--surface-2);
+    }
+    .empty {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
+    }
+    .empty-title {
+      color: var(--ink-2);
+      margin: 0;
+    }
+    .items {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 1rem 1.5rem;
+    }
+    .item {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 0.85rem;
+      align-items: center;
+      padding-block: 0.85rem;
+      border-block-end: 1px solid var(--line-2);
+    }
+    .item-art {
+      display: block;
+      inline-size: 56px;
+    }
+    .item-name {
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .item-name:hover {
+      color: var(--accent);
+    }
+    .item-meta {
+      display: flex;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--ink-3);
+      margin-block-start: 0.2rem;
+    }
+    .item-total {
+      font-weight: 600;
+    }
+    .panel-foot {
+      padding: 1.25rem 1.5rem;
+      border-block-start: 1px solid var(--line);
+    }
+    .subtotal {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 1.05rem;
+      margin-block-end: 0.25rem;
+    }
+    .ship-note {
+      font-size: 0.82rem;
+      color: var(--ink-3);
+      margin-block-end: 1rem;
+    }
+  

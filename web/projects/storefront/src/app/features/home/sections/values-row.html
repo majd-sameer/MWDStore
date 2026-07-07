@@ -1,0 +1,17 @@
+
+    <section class="sec">
+      <div class="sec-head">
+        <span class="eyebrow">{{ 'about.values_eyebrow' | translate }}</span>
+        <h2 class="sec-title">{{ 'about.values_title' | translate }}</h2>
+      </div>
+      <div class="values">
+        @for (value of values; track value.key) {
+          <div class="value">
+            <span class="value-ic"><lib-icon [name]="value.icon" [size]="28" /></span>
+            <h3 class="value-title">{{ 'about.value_' + value.key + '_title' | translate }}</h3>
+            <p class="value-text">{{ 'about.value_' + value.key + '_text' | translate }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  

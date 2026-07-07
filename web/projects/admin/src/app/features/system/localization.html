@@ -1,0 +1,92 @@
+
+    <app-page-header
+      [title]="'localization.title' | translate"
+      [subtitle]="'localization.subtitle' | translate"
+    />
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-md-3">
+            <label class="form-label small" for="loc-culture">{{ 'localization.culture' | translate }}</label>
+            <select id="loc-culture" class="form-select form-select-sm"
+              (change)="cultureId.set($any($event.target).value)">
+              <option value="">{{ 'common.choose' | translate }}</option>
+              @for (c of cultures.value() ?? []; track c.id) {
+                <option value="{{ c.id }}" [selected]="cultureId() === c.id">
+                  {{ c.id }} — {{ c.name }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small" for="loc-search">{{ 'localization.search' | translate }}</label>
+            <input id="loc-search" type="text" class="form-control form-control-sm"
+              (input)="query.set($any($event.target).value)" />
+          </div>
+          <div class="col-md-5 d-flex gap-2 justify-content-end">
+            <input type="text" class="form-control form-control-sm w-auto"
+              [placeholder]="'localization.new_culture_id_ph' | translate" #cultId />
+            <input type="text" class="form-control form-control-sm w-auto"
+              [placeholder]="'common.name' | translate" #cultName />
+            <button type="button" libButton variant="secondary" size="sm" [outline]="true"
+              (click)="addCulture(cultId, cultName)">
+              {{ 'localization.add_culture' | translate }}
+            </button>
+          </div>
+        </div>
+
+        @if (cultureId()) {
+          <table class="table table-sm align-middle mb-3">
+            <thead>
+              <tr>
+                <th style="width: 40%">{{ 'common.key' | translate }}</th>
+                <th>{{ 'common.value' | translate }}</th>
+                <th style="width: 4rem"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of resources(); track r.id) {
+                <tr>
+                  <td class="font-monospace small">{{ r.key }}</td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" [value]="r.value ?? ''"
+                      (change)="saveResource(r.key, $any($event.target).value)" />
+                  </td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                      (click)="removeResource(r)">✕</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="text-center text-body-secondary py-4">
+                    {{ 'localization.no_resources' | translate }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label small" for="res-key">{{ 'localization.new_key' | translate }}</label>
+              <input id="res-key" type="text" class="form-control form-control-sm" #resKey />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small" for="res-value">{{ 'common.value' | translate }}</label>
+              <input id="res-value" type="text" class="form-control form-control-sm" #resValue />
+            </div>
+            <div class="col-md-2">
+              <button type="button" libButton variant="primary" size="sm"
+                (click)="addResource(resKey, resValue)">
+                {{ 'common.add' | translate }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="alert alert-light border mb-0">{{ 'localization.choose_culture' | translate }}</div>
+        }
+      </div>
+    </div>
+  

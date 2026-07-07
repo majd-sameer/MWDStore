@@ -1,0 +1,18 @@
+
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 0.3rem 0.85rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .lang-switch:hover {
+      background: var(--surface-2);
+    }
+  

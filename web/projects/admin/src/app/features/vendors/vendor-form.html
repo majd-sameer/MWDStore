@@ -1,0 +1,54 @@
+
+    <nav class="mb-3" aria-label="breadcrumb">
+      <a routerLink="/vendors" class="text-decoration-none">← {{ 'vendors.title' | translate }}</a>
+    </nav>
+    <app-page-header [title]="(isNew() ? 'vendors.new_title' : 'vendors.edit_title') | translate" />
+
+    @if (!isNew() && list.isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (!isNew() && list.error()) {
+      <div class="alert alert-danger">{{ 'vendors.load_one_failed' | translate }}</div>
+    } @else {
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              @if (serverError(); as message) {
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+              }
+              <form (submit)="onSubmit($event)" novalidate>
+                <lib-form-field [label]="'common.name' | translate" controlId="vn-name" [required]="true" [error]="err(f.name())">
+                  <input id="vn-name" type="text" class="form-control"
+                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                </lib-form-field>
+                <lib-form-field [label]="'common.slug' | translate" controlId="vn-slug" [hint]="'common.slug_hint' | translate">
+                  <input id="vn-slug" type="text" class="form-control" [formField]="f.slug" />
+                </lib-form-field>
+                <lib-form-field [label]="'common.email' | translate" controlId="vn-email">
+                  <input id="vn-email" type="email" class="form-control" [formField]="f.email" />
+                </lib-form-field>
+                <lib-form-field [label]="'common.description' | translate" controlId="vn-desc">
+                  <textarea id="vn-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
+                </lib-form-field>
+                <div class="form-check form-switch mb-3">
+                  <input id="vn-active" type="checkbox" class="form-check-input" [formField]="f.isActive" />
+                  <label for="vn-active" class="form-check-label">{{ 'common.active' | translate }}</label>
+                </div>
+
+                <div class="form-actions">
+                  <button libButton variant="primary" [disabled]="f().submitting()">
+                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'vendors.create' : 'common.save_changes') | translate }}
+                  </button>
+                  <a routerLink="/vendors" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  

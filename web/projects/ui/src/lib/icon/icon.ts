@@ -103,24 +103,7 @@ const ICONS: Record<IconName, IconDef> = {
   selector: 'lib-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'lib-icon d-inline-flex' },
-  template: `
-    <svg
-      [attr.width]="size()"
-      [attr.height]="size()"
-      viewBox="0 0 24 24"
-      [class.icon-directional]="def().directional"
-      [attr.fill]="def().fill ? 'currentColor' : 'none'"
-      stroke="currentColor"
-      stroke-width="1.7"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      [attr.role]="label() ? 'img' : null"
-      [attr.aria-label]="label()"
-      [attr.aria-hidden]="label() ? null : 'true'"
-    >
-      <path [attr.d]="def().d" />
-    </svg>
-  `,
+  templateUrl: './icon.html',
 })
 export class Icon {
   readonly name = input.required<IconName>();

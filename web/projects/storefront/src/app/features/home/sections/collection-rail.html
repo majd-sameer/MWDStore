@@ -1,0 +1,32 @@
+
+    <section class="sec">
+      <div class="sec-head">
+        <div>
+          <span class="eyebrow">{{ 'home.cats_eyebrow' | translate }}</span>
+          <h2 class="sec-title">{{ 'home.cats_title' | translate }}</h2>
+        </div>
+        <a class="sec-link" routerLink="/shop">
+          {{ 'home.cats_all' | translate }}
+          <lib-icon name="arrowEnd" [size]="16" />
+        </a>
+      </div>
+
+      <div class="cattiles">
+        @for (cat of visible(); track cat.id; let i = $index) {
+          <a
+            class="cattile"
+            [routerLink]="['/shop']"
+            [queryParams]="{ category: cat.slug }"
+          >
+            <span class="cattile-ic"><lib-icon [name]="glyphFor(i)" [size]="26" /></span>
+            <b class="cattile-name">{{ cat.slug | categoryLabel: cat.name }}</b>
+            @if (countLabel(cat.id); as count) {
+              <span class="cattile-count tabular-nums">
+                {{ 'home.cats_count' | translate: { count } }}
+              </span>
+            }
+          </a>
+        }
+      </div>
+    </section>
+  

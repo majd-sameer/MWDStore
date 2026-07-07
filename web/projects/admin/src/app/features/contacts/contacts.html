@@ -1,0 +1,71 @@
+
+    <app-page-header
+      [title]="'contacts.title' | translate"
+      [subtitle]="'contacts.subtitle' | translate"
+    />
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-body fw-semibold">{{ 'contacts.submissions' | translate }}</div>
+          <div class="card-body">
+            @if (list.isLoading()) {
+              <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+                </div>
+              </div>
+            } @else {
+              @for (c of list.value() ?? []; track c.id) {
+                <div class="border rounded p-3 mb-2">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <span class="fw-medium">{{ c.fullName }}</span>
+                      <span class="badge text-bg-light border ms-2">{{ c.contactAreaName }}</span>
+                      <div class="small text-body-secondary">
+                        {{ c.emailAddress }}@if (c.phoneNumber) { · {{ c.phoneNumber }}}
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <div class="small text-body-secondary">{{ c.createdOn | date: 'medium' }}</div>
+                      <button type="button" class="btn btn-sm btn-outline-danger mt-1"
+                        (click)="remove(c)">{{ 'common.delete' | translate }}</button>
+                    </div>
+                  </div>
+                  <p class="mb-0 mt-2 small">{{ c.content }}</p>
+                </div>
+              } @empty {
+                <p class="text-body-secondary mb-0">{{ 'contacts.no_submissions' | translate }}</p>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-body fw-semibold">{{ 'contacts.areas_title' | translate }}</div>
+          <div class="card-body">
+            @for (a of areas.value() ?? []; track a.id) {
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <input type="text" class="form-control form-control-sm" [value]="a.name"
+                  (change)="renameArea(a, $any($event.target).value)" />
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                  (click)="removeArea(a)">✕</button>
+              </div>
+            } @empty {
+              <p class="text-body-secondary small">{{ 'contacts.no_areas' | translate }}</p>
+            }
+            <div class="d-flex gap-2 mt-3">
+              <input type="text" class="form-control form-control-sm"
+                [placeholder]="'contacts.new_area_ph' | translate" #areaName />
+              <button type="button" libButton variant="secondary" [outline]="true"
+                (click)="addArea(areaName)">
+                {{ 'common.add' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  

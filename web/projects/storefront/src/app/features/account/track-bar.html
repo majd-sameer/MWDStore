@@ -1,0 +1,21 @@
+
+    @if (cancelled()) {
+      <div class="cancelled">
+        <lib-icon name="x" [size]="16" />
+        {{ 'track.cancelled' | translate }}
+      </div>
+    } @else {
+      <ol class="track">
+        @for (stage of stages; track stage; let i = $index) {
+          <li class="step" [class.done]="i <= current()" [class.current]="i === current()">
+            <span class="dot">
+              @if (i < current()) {
+                <lib-icon name="check" [size]="12" />
+              }
+            </span>
+            <span class="label">{{ 'track.' + stage | translate }}</span>
+          </li>
+        }
+      </ol>
+    }
+  

@@ -1,0 +1,27 @@
+
+    <section class="ctawrap">
+      <div class="ctaband">
+        <div>
+          <span class="eyebrow">{{ 'home.cta_eyebrow' | translate }}</span>
+          <h2 class="cta-title">{{ 'home.cta_title' | translate }}</h2>
+          <p class="cta-sub">{{ 'home.cta_sub' | translate }}</p>
+        </div>
+        <div>
+          <form class="subscribe" (submit)="subscribe($event)">
+            <input
+              type="email"
+              required
+              [value]="email()"
+              (input)="email.set($any($event.target).value)"
+              [placeholder]="'home.cta_email' | translate"
+              [attr.aria-label]="'home.cta_email_label' | translate"
+            />
+            <button class="subscribe-btn" type="submit">
+              {{ 'home.cta_btn' | translate }}
+            </button>
+          </form>
+          <p class="cta-note">{{ 'home.cta_note' | translate }}</p>
+        </div>
+      </div>
+    </section>
+  

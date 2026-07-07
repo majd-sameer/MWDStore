@@ -1,0 +1,25 @@
+
+    <div class="oc-head">
+      <div>
+        <a class="oc-no" [routerLink]="['/account/orders', order().id]">
+          {{ 'account.order_no' | translate: { id: order().id } }}
+        </a>
+        <div class="oc-date">{{ order().createdOn | date: 'mediumDate' : '' : locale() }}</div>
+      </div>
+      <lib-tag tone="indigo">{{
+        statusLabel(order().orderStatus, order().orderStatusName) | translate
+      }}</lib-tag>
+    </div>
+
+    <app-track-bar [status]="order().orderStatus" />
+
+    <div class="oc-foot">
+      <span class="oc-meta">
+        {{ 'account.items' | translate: { count: order().itemCount } }} ·
+        <strong class="tabular-nums">{{ order().orderTotal | money }}</strong>
+      </span>
+      <a class="oc-view" routerLink="/track-order" [queryParams]="{ number: order().trackingNumber }">
+        {{ 'account.view' | translate }} <lib-icon name="arrowEnd" [size]="15" />
+      </a>
+    </div>
+  

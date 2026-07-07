@@ -1,0 +1,59 @@
+
+    <div class="pagehead">
+      <div class="ph-inner">
+        <lib-breadcrumb [items]="crumbs()" />
+        <h1 class="ph-title">{{ 'news.title' | translate }}</h1>
+        <p class="ph-sub">{{ 'news.subtitle' | translate }}</p>
+      </div>
+    </div>
+
+    <section class="stories-wrap">
+      @if (result.error()) {
+        <div class="alert alert-danger">{{ 'common.error' | translate }}</div>
+      } @else if (!items().length && result.isLoading()) {
+        <div class="state">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (items().length) {
+        <div class="stories">
+          @for (n of items(); track n.id) {
+            <article class="story">
+              <a class="story-media" [routerLink]="['/news', n.slug]" [attr.aria-label]="n.name">
+                <lib-tile
+                  [src]="n.thumbnailUrl"
+                  [seed]="n.name ?? n.id"
+                  [alt]="n.name"
+                  ratio="4x3"
+                />
+              </a>
+              <div class="story-body">
+                <a class="story-link" [routerLink]="['/news', n.slug]">
+                  <h2 class="story-title">{{ n.name }}</h2>
+                </a>
+                @if (n.shortContent) {
+                  <p class="story-quote">{{ n.shortContent }}</p>
+                }
+                <div class="story-by">
+                  <span class="story-av" aria-hidden="true">{{ initial(n) }}</span>
+                  <span class="story-meta">
+                    @if (n.publishedOn) {
+                      <time [attr.datetime]="n.publishedOn">
+                        {{ n.publishedOn | date: 'mediumDate' : '' : locale() }}
+                      </time>
+                    }
+                  </span>
+                  <a class="story-more" [routerLink]="['/news', n.slug]">
+                    {{ 'news.read_more' | translate }}
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="empty">{{ 'news.empty' | translate }}</p>
+      }
+    </section>
+  

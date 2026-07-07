@@ -1,0 +1,13 @@
+
+    @for (toast of toastService.toasts(); track toast.id) {
+      <ngb-toast
+        [class]="toast.classname ?? ''"
+        [header]="toast.header ?? ''"
+        [autohide]="toast.autohide"
+        [delay]="toast.delay"
+        (hidden)="toastService.remove(toast.id)"
+      >
+        {{ toast.text }}
+      </ngb-toast>
+    }
+  

@@ -1,0 +1,22 @@
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-block-end: 1.25rem;
+    }
+    .cmp-attr {
+      inline-size: 12rem;
+    }
+    .cmp-col {
+      min-inline-size: 11rem;
+      max-inline-size: 14rem;
+    }
+    .cmp-name {
+      display: block;
+      margin-block-start: 0.4rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--ink, inherit);
+    }
+  

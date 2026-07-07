@@ -1,0 +1,67 @@
+
+    <aside class="admin-sidebar d-flex flex-column p-3">
+      <a
+        routerLink="/"
+        class="navbar-brand text-white d-flex align-items-center gap-2 mb-2 text-decoration-none"
+      >
+        <img class="brand-logo" src="logo-gold.png" alt="" />
+        <span class="brand-text d-flex flex-column">
+          <span class="brand-name">{{ 'brand.name' | translate }}</span>
+          <span class="brand-sub">{{ 'brand.console' | translate }}</span>
+        </span>
+      </a>
+
+      <nav class="admin-nav nav nav-pills flex-column flex-nowrap">
+        @for (section of sections; track section.key) {
+          @if (section.key) {
+            <div class="nav-section-label">{{ 'nav.' + section.key | translate }}</div>
+          }
+          @for (item of section.items; track item.key) {
+            <a
+              class="nav-link"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+              [title]="'nav.' + item.key | translate"
+            >
+              <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+              <span class="label">{{ 'nav.' + item.key | translate }}</span>
+            </a>
+          }
+        }
+      </nav>
+    </aside>
+
+    <div class="admin-main d-flex flex-column min-vh-100">
+      <header class="topbar navbar px-4 py-2 sticky-top">
+        <div class="container-fluid justify-content-end gap-3">
+          <button
+            type="button"
+            class="lang-switch"
+            [attr.aria-label]="'common.language' | translate"
+            (click)="language.toggle()"
+          >
+            <i class="bi bi-translate" aria-hidden="true"></i>
+            {{ 'common.language' | translate }}
+          </button>
+          <span class="user-chip">
+            <span class="user-avatar">{{ initials() }}</span>
+            <span class="user-name text-body-secondary small">
+              {{ auth.fullName() || auth.email() }}
+            </span>
+          </span>
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            (click)="logout()"
+          >
+            {{ 'topbar.signout' | translate }}
+          </button>
+        </div>
+      </header>
+
+      <main class="container-fluid px-4 py-4 flex-grow-1">
+        <router-outlet />
+      </main>
+    </div>
+  

@@ -20,54 +20,7 @@ type PageItem = number | 'ellipsis';
 @Component({
   selector: 'lib-pagination',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <nav aria-label="Pagination">
-      <ul class="pagination m-0" [class]="sizeClass()">
-        <li class="page-item" [class.disabled]="current() === 1">
-          <button
-            type="button"
-            class="page-link"
-            aria-label="Previous"
-            [disabled]="current() === 1"
-            (click)="select(current() - 1)"
-          >
-            <span aria-hidden="true">&laquo;</span>
-          </button>
-        </li>
-
-        @for (item of items(); track $index) {
-          @if (item === 'ellipsis') {
-            <li class="page-item disabled">
-              <span class="page-link">&hellip;</span>
-            </li>
-          } @else {
-            <li class="page-item" [class.active]="item === current()">
-              <button
-                type="button"
-                class="page-link"
-                [attr.aria-current]="item === current() ? 'page' : null"
-                (click)="select(item)"
-              >
-                {{ item }}
-              </button>
-            </li>
-          }
-        }
-
-        <li class="page-item" [class.disabled]="current() === pageCount()">
-          <button
-            type="button"
-            class="page-link"
-            aria-label="Next"
-            [disabled]="current() === pageCount()"
-            (click)="select(current() + 1)"
-          >
-            <span aria-hidden="true">&raquo;</span>
-          </button>
-        </li>
-      </ul>
-    </nav>
-  `,
+  templateUrl: './pagination.html',
 })
 export class Pagination {
   readonly page = input(1);

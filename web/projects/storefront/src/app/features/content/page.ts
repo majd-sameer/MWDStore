@@ -19,36 +19,8 @@ import { SeoService } from '../../core/seo.service';
   selector: 'app-cms-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, RouterLink],
-  template: `
-    <div class="container py-4 cms-page">
-      @if (loading()) {
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-          </div>
-        </div>
-      } @else if (page(); as p) {
-        <h1 class="page-title">{{ p.name }}</h1>
-        <div [innerHTML]="p.body"></div>
-      } @else {
-        <div class="text-center py-5">
-          <p class="text-body-secondary">{{ 'common.error' | translate }}</p>
-          <a routerLink="/">{{ 'common.home' | translate }}</a>
-        </div>
-      }
-    </div>
-  `,
-  styles: `
-    .page-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-block-end: 1.25rem;
-    }
-    .cms-page {
-      max-inline-size: 56rem;
-    }
-  `,
+  templateUrl: './page.html',
+  styleUrl: './page.scss',
 })
 export class CmsPage {
   private readonly route = inject(ActivatedRoute);

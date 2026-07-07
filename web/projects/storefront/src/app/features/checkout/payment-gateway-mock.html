@@ -1,0 +1,37 @@
+
+    <main class="wrap mock">
+      <section class="card">
+        <span class="badge"><lib-icon name="lock" [size]="15" /> {{ 'gateway.sandbox' | translate }}</span>
+        <h1 class="title">{{ 'gateway.title' | translate: { method: method() } }}</h1>
+        <p class="sub">{{ 'gateway.subtitle' | translate }}</p>
+
+        <div class="rows">
+          <div class="row">
+            <span>{{ 'gateway.order' | translate }}</span>
+            <b class="tabular-nums">#{{ orderId() }}</b>
+          </div>
+          <div class="row">
+            <span>{{ 'gateway.method' | translate }}</span>
+            <b>{{ method() }}</b>
+          </div>
+          <div class="row total">
+            <span>{{ 'gateway.amount' | translate }}</span>
+            <strong class="tabular-nums">{{ amount() | money }}</strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button libButton variant="primary" size="lg" [block]="true"
+            [disabled]="busy()" (click)="settle(true)">
+            <lib-icon name="check" [size]="18" /> {{ 'gateway.approve' | translate }}
+          </button>
+          <button libButton variant="secondary" [outline]="true" size="lg" [block]="true"
+            [disabled]="busy()" (click)="settle(false)">
+            {{ 'gateway.decline' | translate }}
+          </button>
+        </div>
+
+        <p class="note">{{ 'gateway.note' | translate }}</p>
+      </section>
+    </main>
+  

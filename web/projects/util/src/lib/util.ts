@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'lib-util',
   imports: [],
-  template: ` <p>util works!</p> `,
-  styles: ``,
+  templateUrl: './util.html',
+  styleUrl: './util.scss',
 })
 export class Util {}

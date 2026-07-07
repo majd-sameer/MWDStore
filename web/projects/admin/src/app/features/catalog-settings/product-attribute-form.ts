@@ -35,56 +35,7 @@ interface AttributeModel {
   selector: 'app-admin-product-attribute-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
-  template: `
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/product-attributes" class="text-decoration-none">← {{ 'attributes.title' | translate }}</a>
-    </nav>
-    <app-page-header [title]="(isNew() ? 'attributes.new_title' : 'attributes.edit_title') | translate" />
-
-    @if (!isNew() && list.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (!isNew() && list.error()) {
-      <div class="alert alert-danger">{{ 'attributes.load_one_failed' | translate }}</div>
-    } @else {
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              @if (serverError(); as message) {
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
-              }
-              <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="attr-name" [required]="true" [error]="err(f.name())">
-                  <input id="attr-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
-                <lib-form-field [label]="'attributes.col_group' | translate" controlId="attr-group" [required]="true" [error]="err(f.groupId())">
-                  <select id="attr-group" class="form-select"
-                    [class.is-invalid]="!!err(f.groupId())" [formField]="f.groupId">
-                    <option value="">{{ 'attributes.choose_group' | translate }}</option>
-                    @for (g of groups.value() ?? []; track g.id) {
-                      <option value="{{ g.id }}">{{ g.name }}</option>
-                    }
-                  </select>
-                </lib-form-field>
-
-                <div class="form-actions">
-                  <button libButton variant="primary" [disabled]="f().submitting()">
-                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'attributes.create' : 'common.save_changes') | translate }}
-                  </button>
-                  <a routerLink="/product-attributes" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './product-attribute-form.html',
 })
 export class AdminProductAttributeForm {
   private readonly route = inject(ActivatedRoute);

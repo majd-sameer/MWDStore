@@ -22,83 +22,8 @@ import { Icon, ToastService } from 'ui';
   selector: 'app-payment-stripe-return',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, Icon],
-  template: `
-    <main class="wrap return">
-      <section class="card">
-        @if (state() === 'verifying') {
-          <span class="spinner" aria-hidden="true"></span>
-          <h1 class="title">{{ 'stripe_return.verifying' | translate }}</h1>
-          <p class="sub">{{ 'stripe_return.verifying_sub' | translate }}</p>
-        } @else if (state() === 'paid') {
-          <span class="ic ok"><lib-icon name="check" [size]="40" /></span>
-          <h1 class="title">{{ 'stripe_return.paid' | translate }}</h1>
-          <p class="sub">{{ 'stripe_return.redirecting' | translate }}</p>
-        } @else {
-          <span class="ic bad"><lib-icon name="lock" [size]="40" /></span>
-          <h1 class="title">{{ 'stripe_return.failed' | translate }}</h1>
-          <p class="sub">{{ 'stripe_return.redirecting' | translate }}</p>
-        }
-      </section>
-    </main>
-  `,
-  styles: `
-    :host {
-      display: block;
-    }
-    .return {
-      padding-block: 70px;
-      display: flex;
-      justify-content: center;
-    }
-    .card {
-      inline-size: 100%;
-      max-inline-size: 460px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--r-lg);
-      padding: 40px 28px;
-      text-align: center;
-    }
-    .title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-block: 18px 6px;
-    }
-    .sub {
-      color: var(--ink-2);
-      margin: 0;
-    }
-    .ic {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      inline-size: 76px;
-      block-size: 76px;
-      border-radius: 50%;
-      color: #fff;
-    }
-    .ic.ok {
-      background: var(--green);
-      box-shadow: var(--sh-green);
-    }
-    .ic.bad {
-      background: var(--danger, #b0492c);
-    }
-    .spinner {
-      display: inline-block;
-      inline-size: 46px;
-      block-size: 46px;
-      border: 4px solid var(--line-strong);
-      border-block-start-color: var(--green);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  `,
+  templateUrl: './payment-stripe-return.html',
+  styleUrl: './payment-stripe-return.scss',
 })
 export class PaymentStripeReturn {
   private readonly route = inject(ActivatedRoute);

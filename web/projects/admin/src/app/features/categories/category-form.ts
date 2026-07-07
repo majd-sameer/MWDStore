@@ -53,77 +53,7 @@ function emptyModel(): CategoryModel {
   selector: 'app-admin-category-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
-  template: `
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/categories" class="text-decoration-none">← {{ 'categories.title' | translate }}</a>
-    </nav>
-    <app-page-header
-      [title]="(isNew() ? 'categories.new_title' : 'categories.edit_title') | translate"
-    />
-
-    @if (!isNew() && existing.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (!isNew() && existing.error()) {
-      <div class="alert alert-danger">{{ 'common.error_api' | translate }}</div>
-    } @else {
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              @if (serverError(); as message) {
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
-              }
-              <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field
-                  [label]="'categories.name' | translate"
-                  controlId="cat-name"
-                  [required]="true"
-                  [error]="err(f.name())"
-                >
-                  <input id="cat-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
-                <lib-form-field
-                  [label]="'categories.slug' | translate"
-                  controlId="cat-slug"
-                  [hint]="'categories.slug_hint' | translate"
-                >
-                  <input id="cat-slug" type="text" class="form-control" [formField]="f.slug" />
-                </lib-form-field>
-                <lib-form-field [label]="'categories.description' | translate" controlId="cat-desc">
-                  <textarea id="cat-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
-                </lib-form-field>
-                <lib-form-field [label]="'categories.display_order' | translate" controlId="cat-order">
-                  <input id="cat-order" type="number" class="form-control" [formField]="f.displayOrder" />
-                </lib-form-field>
-                <div class="form-check form-switch">
-                  <input id="cat-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
-                  <label for="cat-pub" class="form-check-label">{{ 'categories.published' | translate }}</label>
-                </div>
-                <div class="form-check form-switch mb-3">
-                  <input id="cat-menu" type="checkbox" class="form-check-input" [formField]="f.includeInMenu" />
-                  <label for="cat-menu" class="form-check-label">{{ 'categories.show_in_menu' | translate }}</label>
-                </div>
-
-                <div class="form-actions">
-                  <button libButton variant="primary" [disabled]="f().submitting()">
-                    {{ (f().submitting() ? 'categories.saving' : isNew() ? 'categories.create' : 'categories.save') | translate }}
-                  </button>
-                  <a routerLink="/categories" class="btn btn-outline-secondary">
-                    {{ 'common.cancel' | translate }}
-                  </a>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './category-form.html',
 })
 export class AdminCategoryForm {
   private readonly route = inject(ActivatedRoute);

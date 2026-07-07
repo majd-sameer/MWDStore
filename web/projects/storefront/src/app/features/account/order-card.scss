@@ -1,0 +1,51 @@
+
+    :host {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 1.25rem 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .oc-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-block-end: 1.25rem;
+    }
+    .oc-no {
+      font-weight: 700;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .oc-no:hover {
+      color: var(--accent);
+    }
+    .oc-date {
+      font-size: 0.85rem;
+      color: var(--ink-3);
+    }
+    .oc-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-block-start: 1.25rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--line-2);
+    }
+    .oc-meta {
+      color: var(--ink-2);
+      font-size: 0.92rem;
+    }
+    .oc-view {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .oc-view:hover {
+      color: var(--accent);
+    }
+  

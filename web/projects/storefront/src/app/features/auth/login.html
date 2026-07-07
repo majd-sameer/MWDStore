@@ -1,0 +1,68 @@
+
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <header class="auth-head">
+          <img class="auth-logo" src="logo-color.png" alt="" />
+          <h1 class="auth-title">{{ 'auth.login_title' | translate }}</h1>
+          <p class="auth-subtitle">{{ 'auth.login_subtitle' | translate }}</p>
+        </header>
+
+        @if (serverError(); as message) {
+          <div class="alert alert-danger" role="alert">{{ message | translate }}</div>
+        }
+
+        <form (submit)="onSubmit($event)" novalidate>
+          <lib-form-field
+            [label]="'auth.email' | translate"
+            controlId="email"
+            [required]="true"
+            [error]="emailError() | translate"
+          >
+            <input
+              id="email"
+              type="email"
+              autocomplete="email"
+              dir="ltr"
+              class="form-control form-control-lg"
+              [class.is-invalid]="!!emailError()"
+              [formField]="f.email"
+            />
+          </lib-form-field>
+
+          <lib-form-field
+            [label]="'auth.password' | translate"
+            controlId="password"
+            [required]="true"
+            [error]="passwordError() | translate"
+          >
+            <input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              dir="ltr"
+              class="form-control form-control-lg"
+              [class.is-invalid]="!!passwordError()"
+              [formField]="f.password"
+            />
+          </lib-form-field>
+
+          <button
+            libButton
+            variant="primary"
+            size="lg"
+            [block]="true"
+            [disabled]="f().submitting()"
+          >
+            {{ (f().submitting() ? 'auth.signing_in' : 'auth.sign_in') | translate }}
+          </button>
+        </form>
+
+        <p class="auth-alt">
+          {{ 'auth.no_account' | translate }}
+          <a routerLink="/register">{{ 'auth.create_account' | translate }}</a>
+        </p>
+      </div>
+
+      <p class="auth-note">{{ 'auth.supports_note' | translate }}</p>
+    </div>
+  

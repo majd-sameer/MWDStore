@@ -1,0 +1,427 @@
+
+    <nav class="mb-3" aria-label="breadcrumb">
+      <a routerLink="/products" class="text-decoration-none">← {{ 'products.title' | translate }}</a>
+    </nav>
+    <app-page-header [title]="(isNew() ? 'product_form.new_title' : 'product_form.edit_title') | translate" />
+
+    @if (!isNew() && existing.isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (!isNew() && existing.error()) {
+      <div class="alert alert-danger">{{ 'product_form.load_one_failed' | translate }}</div>
+    } @else {
+      @if (serverError(); as message) {
+        <div class="alert alert-danger" role="alert">{{ message }}</div>
+      }
+
+      <form (submit)="onSubmit($event)" novalidate>
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-body">
+                <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name())">
+                  <input id="name" type="text" class="form-control"
+                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                </lib-form-field>
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <lib-form-field [label]="'common.slug' | translate" controlId="slug" [hint]="'common.slug_hint' | translate">
+                      <input id="slug" type="text" class="form-control" [formField]="f.slug" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-4">
+                    <lib-form-field [label]="'product_form.sku' | translate" controlId="sku">
+                      <input id="sku" type="text" class="form-control" [formField]="f.sku" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-4">
+                    <lib-form-field [label]="'product_form.gtin' | translate" controlId="gtin">
+                      <input id="gtin" type="text" class="form-control" [formField]="f.gtin" />
+                    </lib-form-field>
+                  </div>
+                </div>
+
+                <lib-form-field [label]="'product_form.short_description' | translate" controlId="shortDescription">
+                  <textarea id="shortDescription" rows="2" class="form-control"
+                    [formField]="f.shortDescription"></textarea>
+                </lib-form-field>
+
+                <lib-form-field [label]="'common.description' | translate" controlId="description">
+                  <textarea id="description" rows="5" class="form-control"
+                    [formField]="f.description"></textarea>
+                </lib-form-field>
+
+                <lib-form-field [label]="'product_form.specification' | translate" controlId="specification">
+                  <textarea id="specification" rows="3" class="form-control"
+                    [formField]="f.specification"></textarea>
+                </lib-form-field>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.seo' | translate }}</div>
+              <div class="card-body">
+                <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
+                  <input id="metaTitle" type="text" class="form-control" [formField]="f.metaTitle" />
+                </lib-form-field>
+                <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="metaKeywords">
+                  <input id="metaKeywords" type="text" class="form-control" [formField]="f.metaKeywords" />
+                </lib-form-field>
+                <lib-form-field [label]="'pages.meta_description' | translate" controlId="metaDescription">
+                  <textarea id="metaDescription" rows="2" class="form-control"
+                    [formField]="f.metaDescription"></textarea>
+                </lib-form-field>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'nav.attributes' | translate }}</div>
+              <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                  <select class="form-select w-auto flex-grow-1" #attrSelect>
+                    <option value="">{{ 'product_form.choose_attribute' | translate }}</option>
+                    @for (a of availableAttributes(); track a.id) {
+                      <option value="{{ a.id }}">{{ a.groupName }} / {{ a.name }}</option>
+                    }
+                  </select>
+                  <button type="button" libButton variant="secondary" [outline]="true"
+                    (click)="addAttribute(attrSelect.value); attrSelect.value = ''">
+                    {{ 'common.add' | translate }}
+                  </button>
+                </div>
+
+                @for (row of attributeRows(); track row.attributeId) {
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge text-bg-light border" style="min-width: 10rem">{{ row.name }}</span>
+                    <input type="text" class="form-control" [placeholder]="'common.value' | translate"
+                      [value]="row.value"
+                      (input)="setAttributeValue(row.attributeId, $any($event.target).value)" />
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                      (click)="removeAttribute(row.attributeId)">✕</button>
+                  </div>
+                } @empty {
+                  <p class="text-body-secondary small mb-0">{{ 'product_form.no_attributes_added' | translate }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.options_title' | translate }}</div>
+              <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                  <select class="form-select w-auto flex-grow-1" #optSelect>
+                    <option value="">{{ 'product_form.choose_option' | translate }}</option>
+                    @for (o of availableOptions(); track o.id) {
+                      <option value="{{ o.id }}">{{ o.name }}</option>
+                    }
+                  </select>
+                  <button type="button" libButton variant="secondary" [outline]="true"
+                    (click)="addOption(optSelect.value); optSelect.value = ''">
+                    {{ 'product_form.add_option' | translate }}
+                  </button>
+                </div>
+
+                @for (row of optionRows(); track row.optionId) {
+                  <div class="border rounded p-3 mb-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                      <span class="fw-semibold">{{ row.name }}</span>
+                      <select class="form-select form-select-sm w-auto"
+                        [value]="row.displayType"
+                        (change)="setOptionDisplayType(row.optionId, $any($event.target).value)">
+                        <option value="text">{{ 'product_form.display_text' | translate }}</option>
+                        <option value="color">{{ 'product_form.display_color' | translate }}</option>
+                      </select>
+                      <button type="button" class="btn btn-sm btn-outline-danger ms-auto"
+                        (click)="removeOption(row.optionId)">{{ 'common.remove' | translate }}</button>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                      @for (v of row.values; track v.key) {
+                        <span class="badge text-bg-light border d-inline-flex align-items-center gap-1">
+                          @if (row.displayType === 'color') {
+                            <input type="color" class="form-control form-control-color p-0 border-0"
+                              style="width: 1.2rem; height: 1.2rem"
+                              [value]="v.display || '#000000'"
+                              (change)="setOptionValueDisplay(row.optionId, v.key, $any($event.target).value)" />
+                          }
+                          {{ v.key }}
+                          <button type="button" class="btn-close" style="font-size: 0.6rem"
+                            (click)="removeOptionValue(row.optionId, v.key)"
+                            [attr.aria-label]="'common.remove' | translate"></button>
+                        </span>
+                      }
+                      <input type="text" class="form-control form-control-sm w-auto"
+                        [placeholder]="'product_form.add_value_ph' | translate"
+                        (keydown.enter)="addOptionValue(row.optionId, $any($event.target)); $event.preventDefault()" />
+                    </div>
+                  </div>
+                }
+
+                @if (optionRows().length) {
+                  <button type="button" libButton variant="secondary" [outline]="true"
+                    (click)="generateVariations()">
+                    {{ 'product_form.generate_combinations' | translate }}
+                  </button>
+                }
+
+                @if (variationRows().length) {
+                  <div class="table-responsive mt-3">
+                    <table class="table table-sm align-middle">
+                      <thead>
+                        <tr>
+                          <th>{{ 'product_form.col_variation' | translate }}</th>
+                          <th style="width: 9rem">{{ 'product_form.sku' | translate }}</th>
+                          <th style="width: 8rem">{{ 'product_form.price' | translate }}</th>
+                          <th style="width: 8rem">{{ 'product_form.old_price' | translate }}</th>
+                          <th style="width: 3rem"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (v of variationRows(); track v.name) {
+                          <tr>
+                            <td>
+                              <span class="fw-medium">{{ v.name }}</span>
+                              <div class="small text-body-secondary">
+                                @for (c of v.optionCombinations; track c.optionId) {
+                                  <span class="me-2">{{ c.optionName }}: {{ c.value }}</span>
+                                }
+                              </div>
+                            </td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" [value]="v.sku"
+                                (input)="patchVariation(v.name, { sku: $any($event.target).value })" />
+                            </td>
+                            <td>
+                              <input type="number" step="0.01" class="form-control form-control-sm" [value]="v.price"
+                                (input)="patchVariation(v.name, { price: $any($event.target).valueAsNumber || 0 })" />
+                            </td>
+                            <td>
+                              <input type="number" step="0.01" class="form-control form-control-sm" [value]="v.oldPrice"
+                                (input)="patchVariation(v.name, { oldPrice: $any($event.target).value })" />
+                            </td>
+                            <td class="text-end">
+                              <button type="button" class="btn btn-sm btn-outline-danger"
+                                (click)="removeVariation(v.name)">✕</button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.related_title' | translate }}</div>
+              <div class="card-body">
+                <lib-form-field [label]="'product_form.search_products' | translate" controlId="linkSearch"
+                  [hint]="'product_form.search_products_hint' | translate">
+                  <input id="linkSearch" type="text" class="form-control"
+                    (input)="searchProducts($any($event.target).value)" />
+                </lib-form-field>
+
+                @if (searchResults().length) {
+                  <ul class="list-group mb-3">
+                    @for (r of searchResults(); track r.id) {
+                      <li class="list-group-item d-flex align-items-center justify-content-between">
+                        <span>{{ r.name }}</span>
+                        <span class="d-flex gap-1">
+                          <button type="button" class="btn btn-sm btn-outline-primary"
+                            (click)="addLink('related', r)">+ {{ 'product_form.related' | translate }}</button>
+                          <button type="button" class="btn btn-sm btn-outline-primary"
+                            (click)="addLink('crossSell', r)">+ {{ 'product_form.cross_sell' | translate }}</button>
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="small text-uppercase text-body-secondary">{{ 'product_form.related' | translate }}</h6>
+                    @for (p of relatedRows(); track p.id) {
+                      <div class="d-flex align-items-center justify-content-between border rounded px-2 py-1 mb-1">
+                        <span class="small">{{ p.name }}</span>
+                        <button type="button" class="btn-close" style="font-size: 0.6rem"
+                          (click)="removeLink('related', p.id)"
+                          [attr.aria-label]="'common.remove' | translate"></button>
+                      </div>
+                    } @empty {
+                      <p class="text-body-secondary small">{{ 'product_form.none' | translate }}</p>
+                    }
+                  </div>
+                  <div class="col-md-6">
+                    <h6 class="small text-uppercase text-body-secondary">{{ 'product_form.cross_sell' | translate }}</h6>
+                    @for (p of crossSellRows(); track p.id) {
+                      <div class="d-flex align-items-center justify-content-between border rounded px-2 py-1 mb-1">
+                        <span class="small">{{ p.name }}</span>
+                        <button type="button" class="btn-close" style="font-size: 0.6rem"
+                          (click)="removeLink('crossSell', p.id)"
+                          [attr.aria-label]="'common.remove' | translate"></button>
+                      </div>
+                    } @empty {
+                      <p class="text-body-secondary small">{{ 'product_form.none' | translate }}</p>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.images_title' | translate }}</div>
+              <div class="card-body">
+                <label class="form-label" for="thumbnailFile">{{ 'product_form.thumbnail' | translate }}</label>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  @if (thumbnail(); as t) {
+                    <img [src]="t.url" [alt]="'product_form.thumbnail' | translate" class="rounded border"
+                      style="width: 64px; height: 64px; object-fit: cover" />
+                    <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearThumbnail()">
+                      {{ 'common.remove' | translate }}
+                    </button>
+                  } @else {
+                    <span class="text-body-secondary small">{{ 'product_form.no_thumbnail' | translate }}</span>
+                  }
+                </div>
+                <input id="thumbnailFile" type="file" class="form-control form-control-sm mb-4" accept="image/*"
+                  [disabled]="uploading()"
+                  (change)="onThumbnailSelected($event)" />
+
+                <label class="form-label" for="galleryFiles">{{ 'product_form.gallery' | translate }}</label>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  @for (g of gallery(); track g.mediaId) {
+                    <div class="position-relative">
+                      <img [src]="g.url" [alt]="g.caption ?? ('product_form.product_image' | translate)" class="rounded border"
+                        style="width: 64px; height: 64px; object-fit: cover" />
+                      <button type="button"
+                        class="btn-close position-absolute top-0 end-0 bg-white rounded-circle"
+                        style="font-size: 0.55rem"
+                        (click)="removeGalleryItem(g.mediaId)"
+                        [attr.aria-label]="'common.remove' | translate"></button>
+                    </div>
+                  } @empty {
+                    <span class="text-body-secondary small">{{ 'product_form.no_images' | translate }}</span>
+                  }
+                </div>
+                <input id="galleryFiles" type="file" class="form-control form-control-sm" accept="image/*" multiple
+                  [disabled]="uploading()"
+                  (change)="onGallerySelected($event)" />
+                @if (uploading()) {
+                  <div class="small text-body-secondary mt-2">{{ 'product_form.uploading' | translate }}</div>
+                }
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.pricing_title' | translate }}</div>
+              <div class="card-body">
+                <lib-form-field [label]="'product_form.price' | translate" controlId="price" [required]="true" [error]="err(f.price())">
+                  <input id="price" type="number" step="0.01" class="form-control"
+                    [class.is-invalid]="!!err(f.price())" [formField]="f.price" />
+                </lib-form-field>
+                <lib-form-field [label]="'product_form.old_price' | translate" controlId="oldPrice">
+                  <input id="oldPrice" type="number" step="0.01" class="form-control" [formField]="f.oldPrice" />
+                </lib-form-field>
+                <lib-form-field [label]="'product_form.special_price' | translate" controlId="specialPrice">
+                  <input id="specialPrice" type="number" step="0.01" class="form-control"
+                    [formField]="f.specialPrice" />
+                </lib-form-field>
+                <div class="row">
+                  <div class="col-6">
+                    <lib-form-field [label]="'product_form.special_start' | translate" controlId="specialPriceStart">
+                      <input id="specialPriceStart" type="date" class="form-control"
+                        [formField]="f.specialPriceStart" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-6">
+                    <lib-form-field [label]="'product_form.special_end' | translate" controlId="specialPriceEnd">
+                      <input id="specialPriceEnd" type="date" class="form-control"
+                        [formField]="f.specialPriceEnd" />
+                    </lib-form-field>
+                  </div>
+                </div>
+                <lib-form-field [label]="'product_form.stock_quantity' | translate" controlId="stockQuantity" [error]="err(f.stockQuantity())">
+                  <input id="stockQuantity" type="number" class="form-control"
+                    [class.is-invalid]="!!err(f.stockQuantity())" [formField]="f.stockQuantity" />
+                </lib-form-field>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'product_form.organisation_title' | translate }}</div>
+              <div class="card-body">
+                <lib-form-field [label]="'products.brand' | translate" controlId="brandId">
+                  <select id="brandId" class="form-select" [formField]="f.brandId">
+                    <option value="">{{ 'product_form.none_option' | translate }}</option>
+                    @for (b of brands.value() ?? []; track b.id) {
+                      <option value="{{ b.id }}">{{ b.name }}</option>
+                    }
+                  </select>
+                </lib-form-field>
+
+                <div class="form-label">{{ 'nav.categories' | translate }}</div>
+                <div class="border rounded p-2 mb-3" style="max-height: 12rem; overflow-y: auto">
+                  @for (c of categories.value() ?? []; track c.id) {
+                    <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="cat-{{ c.id }}"
+                        [checked]="categoryIds().includes(c.id)"
+                        (change)="toggleCategory(c.id)" />
+                      <label class="form-check-label" for="cat-{{ c.id }}">{{ c.name }}</label>
+                    </div>
+                  } @empty {
+                    <span class="text-body-secondary small">{{ 'product_form.no_categories_defined' | translate }}</span>
+                  }
+                </div>
+
+                <div class="form-check form-switch">
+                  <input id="isPublished" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
+                  <label for="isPublished" class="form-check-label">{{ 'common.published' | translate }}</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input id="isFeatured" type="checkbox" class="form-check-input" [formField]="f.isFeatured" />
+                  <label for="isFeatured" class="form-check-label">{{ 'product_form.featured' | translate }}</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input id="isAllowToOrder" type="checkbox" class="form-check-input" [formField]="f.isAllowToOrder" />
+                  <label for="isAllowToOrder" class="form-check-label">{{ 'product_form.allow_ordering' | translate }}</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input id="isCallForPricing" type="checkbox" class="form-check-input"
+                    [formField]="f.isCallForPricing" />
+                  <label for="isCallForPricing" class="form-check-label">{{ 'product_form.call_for_pricing' | translate }}</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input id="stockTrackingIsEnabled" type="checkbox" class="form-check-input"
+                    [formField]="f.stockTrackingIsEnabled" />
+                  <label for="stockTrackingIsEnabled" class="form-check-label">{{ 'product_form.track_stock' | translate }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button libButton variant="primary" [disabled]="f().submitting() || uploading()">
+            {{ (f().submitting() ? 'common.saving' : isNew() ? 'product_form.create' : 'common.save_changes') | translate }}
+          </button>
+          <a routerLink="/products" libButton variant="secondary" [outline]="true">{{ 'common.cancel' | translate }}</a>
+          @if (uploading()) {
+            <span class="ms-auto small text-body-secondary">{{ 'product_form.uploading_images' | translate }}</span>
+          } @else {
+            <span class="ms-auto small text-body-secondary d-none d-sm-inline">
+              @if (isNew()) {
+                {{ 'product_form.new_title' | translate }}
+              } @else {
+                {{ 'product_form.editing_label' | translate: { id: productIdLabel() } }}
+              }
+            </span>
+          }
+        </div>
+      </form>
+    }
+  

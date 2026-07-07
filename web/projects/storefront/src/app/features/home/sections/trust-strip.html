@@ -1,0 +1,15 @@
+
+    <div class="trust">
+      <div class="wrap trust-inner">
+        @for (item of items; track item.key) {
+          <div class="trust-cell">
+            <span class="trust-icon"><lib-icon [name]="item.icon" [size]="22" /></span>
+            <div>
+              <div class="trust-h">{{ 'home.' + item.key + '_h' | translate }}</div>
+              <div class="trust-s">{{ 'home.' + item.key + '_s' | translate }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  

@@ -15,20 +15,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   host: {
     class: 'card',
   },
-  template: `
-    @if (header()) {
-      <div class="card-header">{{ header() }}</div>
-    }
-    <div class="card-body">
-      @if (title()) {
-        <h5 class="card-title">{{ title() }}</h5>
-      }
-      <ng-content />
-    </div>
-    @if (footer()) {
-      <div class="card-footer text-body-secondary">{{ footer() }}</div>
-    }
-  `,
+  templateUrl: './card.html',
 })
 export class Card {
   readonly header = input<string | null>(null);

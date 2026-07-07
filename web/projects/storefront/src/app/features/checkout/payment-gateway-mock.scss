@@ -1,0 +1,73 @@
+
+    :host {
+      display: block;
+    }
+    .mock {
+      padding-block: 60px;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      inline-size: 100%;
+      max-inline-size: 460px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-block: 16px 6px;
+    }
+    .sub {
+      color: var(--ink-2);
+      margin-block-end: 22px;
+    }
+    .rows {
+      text-align: start;
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 6px 18px;
+      margin-block-end: 22px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 11px;
+      color: var(--ink-2);
+      border-block-end: 1px solid var(--line);
+    }
+    .row:last-child {
+      border-block-end: 0;
+    }
+    .row.total {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .note {
+      margin-block-start: 18px;
+      font-size: 0.82rem;
+      color: var(--ink-3);
+    }
+  

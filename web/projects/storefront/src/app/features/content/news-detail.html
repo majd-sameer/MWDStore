@@ -1,0 +1,28 @@
+
+    <div class="container py-4 article">
+      <nav class="mb-3">
+        <a routerLink="/news">← {{ 'news.back' | translate }}</a>
+      </nav>
+
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          </div>
+        </div>
+      } @else if (item(); as n) {
+        <h1 class="page-title">{{ n.name }}</h1>
+        @if (n.publishedOn) {
+          <time class="article-date" [attr.datetime]="n.publishedOn">
+            {{ n.publishedOn | date: 'mediumDate' : '' : locale() }}
+          </time>
+        }
+        @if (n.thumbnailUrl) {
+          <img class="article-hero" [src]="n.thumbnailUrl" [alt]="n.name" />
+        }
+        <div class="article-body" [innerHTML]="n.fullContent"></div>
+      } @else {
+        <p class="text-body-secondary text-center py-5">{{ 'common.error' | translate }}</p>
+      }
+    </div>
+  

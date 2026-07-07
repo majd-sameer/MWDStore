@@ -36,62 +36,8 @@ function emptyModel(): ContactModel {
   selector: 'app-contact',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, TranslatePipe, Button],
-  template: `
-    <div class="container py-4 contact">
-      <h1 class="page-title">{{ 'contact.title' | translate }}</h1>
-      <p class="text-body-secondary">{{ 'contact.subtitle' | translate }}</p>
-
-      @if (sent()) {
-        <div class="alert alert-success">{{ 'contact.sent' | translate }}</div>
-      } @else {
-        <form (submit)="onSubmit($event)" novalidate>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label" for="ct-name">{{ 'contact.name' | translate }}</label>
-              <input id="ct-name" type="text" class="form-control" [formField]="f.fullName" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="ct-email">{{ 'contact.email' | translate }}</label>
-              <input id="ct-email" type="email" class="form-control" [formField]="f.emailAddress" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="ct-phone">{{ 'contact.phone' | translate }}</label>
-              <input id="ct-phone" type="text" class="form-control" [formField]="f.phoneNumber" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="ct-area">{{ 'contact.area' | translate }}</label>
-              <select id="ct-area" class="form-select" [formField]="f.contactAreaId">
-                <option value="">—</option>
-                @for (a of areas(); track a.id) {
-                  <option value="{{ a.id }}">{{ a.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label" for="ct-message">{{ 'contact.message' | translate }}</label>
-              <textarea id="ct-message" rows="5" class="form-control" [formField]="f.content"></textarea>
-            </div>
-            <div class="col-12">
-              <button libButton variant="dark" [disabled]="f().submitting()">
-                {{ 'contact.send' | translate }}
-              </button>
-            </div>
-          </div>
-        </form>
-      }
-    </div>
-  `,
-  styles: `
-    .contact {
-      max-inline-size: 44rem;
-    }
-    .page-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-block-end: 0.25rem;
-    }
-  `,
+  templateUrl: './contact.html',
+  styleUrl: './contact.scss',
 })
 export class Contact {
   private readonly service = inject(StorefrontFeaturesService);

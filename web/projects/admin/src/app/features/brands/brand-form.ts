@@ -44,57 +44,7 @@ function emptyModel(): BrandModel {
   selector: 'app-admin-brand-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
-  template: `
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/brands" class="text-decoration-none">← {{ 'brands.title' | translate }}</a>
-    </nav>
-    <app-page-header [title]="(isNew() ? 'brands.new_title' : 'brands.edit_title') | translate" />
-
-    @if (!isNew() && existing.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (!isNew() && existing.error()) {
-      <div class="alert alert-danger">{{ 'brands.load_one_failed' | translate }}</div>
-    } @else {
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              @if (serverError(); as message) {
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
-              }
-              <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="brand-name" [required]="true" [error]="err(f.name())">
-                  <input id="brand-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
-                <lib-form-field [label]="'common.slug' | translate" controlId="brand-slug" [hint]="'common.slug_hint' | translate">
-                  <input id="brand-slug" type="text" class="form-control" [formField]="f.slug" />
-                </lib-form-field>
-                <lib-form-field [label]="'common.description' | translate" controlId="brand-desc">
-                  <textarea id="brand-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
-                </lib-form-field>
-                <div class="form-check form-switch mb-3">
-                  <input id="brand-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
-                  <label for="brand-pub" class="form-check-label">{{ 'common.published' | translate }}</label>
-                </div>
-
-                <div class="form-actions">
-                  <button libButton variant="primary" [disabled]="f().submitting()">
-                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'brands.create' : 'common.save_changes') | translate }}
-                  </button>
-                  <a routerLink="/brands" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './brand-form.html',
 })
 export class AdminBrandForm {
   private readonly route = inject(ActivatedRoute);
