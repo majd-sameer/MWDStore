@@ -65,6 +65,12 @@ public sealed class AuditActionFilter : IAsyncActionFilter
             return;
         }
 
+        // Endpoints that write their own audit entry (e.g. stock-out) opt out here.
+        if (context.ActionDescriptor.EndpointMetadata.OfType<SkipAuditAttribute>().Any())
+        {
+            return;
+        }
+
         if (executed.Exception is { } || !IsSuccess(executed))
         {
             return;

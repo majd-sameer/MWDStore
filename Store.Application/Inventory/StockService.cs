@@ -1,4 +1,7 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Store.Application.Auditing;
+using Store.Application.Common;
 using Store.Data;
 using Store.Domain;
 
@@ -14,12 +17,22 @@ public sealed class StockService : IStockService
     private readonly StoreDbContext _db;
     private readonly IProductBackInStockNotifier _backInStockNotifier;
     private readonly TimeProvider _timeProvider;
+    private readonly IAuditService? _auditService;
 
-    public StockService(StoreDbContext db, IProductBackInStockNotifier backInStockNotifier, TimeProvider timeProvider)
+    /// <summary>
+    /// The audit service is optional so the many existing constructions of this service (tests, the
+    /// order flow) keep working; at runtime DI supplies it so stock-outs are audited.
+    /// </summary>
+    public StockService(
+        StoreDbContext db,
+        IProductBackInStockNotifier backInStockNotifier,
+        TimeProvider timeProvider,
+        IAuditService? auditService = null)
     {
         _db = db;
         _backInStockNotifier = backInStockNotifier;
         _timeProvider = timeProvider;
+        _auditService = auditService;
     }
 
     public async Task UpdateStockAsync(StockUpdateRequest request, CancellationToken cancellationToken = default)
@@ -59,6 +72,91 @@ public sealed class StockService : IStockService
         {
             await _backInStockNotifier.NotifyAsync(product.Id, cancellationToken);
         }
+    }
+
+    public async Task<Result> StockOutAsync(
+        StockOutRequest request, AuditActor actor, CancellationToken cancellationToken = default)
+    {
+        if (request.Quantity <= 0)
+        {
+            return Result.Fail("Quantity must be greater than zero.");
+        }
+
+        if (request.Reason == StockOutReason.Sale && request.Channel is null)
+        {
+            return Result.Fail("A sales channel is required when the reason is Sale.");
+        }
+
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+        if (product is null)
+        {
+            return Result.Fail($"Product {request.ProductId} cannot be found.");
+        }
+
+        var stock = await _db.Set<Stock>().FirstOrDefaultAsync(
+            s => s.ProductId == request.ProductId && s.WarehouseId == request.WarehouseId, cancellationToken);
+        if (stock is null)
+        {
+            return Result.Fail($"No stock record for product {request.ProductId} in warehouse {request.WarehouseId}.");
+        }
+
+        if (request.Quantity > stock.Quantity)
+        {
+            return Result.Fail($"Only {stock.Quantity} units are on hand in this warehouse.");
+        }
+
+        var recordedById = actor.UserId
+            ?? throw new InvalidOperationException("A stock-out requires an authenticated user.");
+        var performedById = request.PerformedById ?? recordedById;
+
+        stock.Quantity -= request.Quantity;
+        product.StockQuantity -= request.Quantity;
+
+        _db.Set<StockHistory>().Add(new StockHistory
+        {
+            ProductId = request.ProductId,
+            WarehouseId = request.WarehouseId,
+            AdjustedQuantity = -request.Quantity,
+            Reason = request.Reason,
+            Channel = request.Channel,
+            PerformedById = performedById,
+            RecipientOrRef = request.RecipientOrRef,
+            Note = request.Note,
+            CreatedById = recordedById,
+            CreatedOn = _timeProvider.GetUtcNow(),
+        });
+
+        await _db.SaveChangesAsync(cancellationToken);
+
+        if (_auditService is not null)
+        {
+            var values = new Dictionary<string, object?>
+            {
+                ["Quantity"] = request.Quantity,
+                ["Reason"] = request.Reason.ToString(),
+                ["Channel"] = request.Channel?.ToString(),
+                ["WarehouseId"] = request.WarehouseId,
+                ["PerformedById"] = performedById,
+                ["RecipientOrRef"] = request.RecipientOrRef,
+            };
+
+            await _auditService.LogAsync(new AuditEntry
+            {
+                UserId = actor.UserId,
+                UserName = actor.UserName,
+                Role = actor.Role,
+                Action = "StockOut",
+                EntityType = "Product",
+                EntityId = product.Id,
+                EntityName = product.Name,
+                NewValuesJson = JsonSerializer.Serialize(values),
+                Area = "Inventory",
+                IpAddress = actor.IpAddress,
+                CorrelationId = actor.CorrelationId,
+            }, cancellationToken);
+        }
+
+        return Result.Ok();
     }
 
     public async Task AddAllProductAsync(Warehouse warehouse, CancellationToken cancellationToken = default)

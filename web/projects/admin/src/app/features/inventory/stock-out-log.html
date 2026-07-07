@@ -1,0 +1,177 @@
+
+    <app-page-header
+      [title]="'stockoutlog.title' | translate"
+      [subtitle]="'stockoutlog.subtitle' | translate"
+    >
+      <button
+        type="button"
+        class="btn btn-outline-secondary d-inline-flex align-items-center gap-1"
+        [disabled]="!(logs.value()?.length)"
+        (click)="exportCsv()"
+      >
+        <lib-icon name="box" [size]="16" />
+        {{ 'stockoutlog.export' | translate }}
+      </button>
+    </app-page-header>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+            <input
+              type="search"
+              class="form-control"
+              [attr.placeholder]="'stockoutlog.search_ph' | translate"
+              (input)="onSearchInput($event)"
+              [attr.aria-label]="'stockoutlog.search_ph' | translate"
+            />
+          </div>
+          <select class="form-select w-auto" (change)="setReason($event)" [attr.aria-label]="'stockout.reason' | translate">
+            <option value="">{{ 'stockoutlog.all_reasons' | translate }}</option>
+            @for (r of reasonOptions; track r.value) {
+              <option [value]="r.value">{{ 'stock.reason.' + r.key | translate }}</option>
+            }
+          </select>
+          <select class="form-select w-auto" (change)="setChannel($event)" [attr.aria-label]="'stockout.channel' | translate">
+            <option value="">{{ 'stockoutlog.all_channels' | translate }}</option>
+            @for (c of channelOptions; track c.value) {
+              <option [value]="c.value">{{ 'stock.channel.' + c.key | translate }}</option>
+            }
+          </select>
+          @if (warehouses().length) {
+            <select class="form-select w-auto" (change)="setWarehouse($event)" [attr.aria-label]="'inventory.warehouse' | translate">
+              <option value="">{{ 'stockoutlog.all_warehouses' | translate }}</option>
+              @for (w of warehouses(); track w.id) {
+                <option [value]="w.id">{{ w.name }}</option>
+              }
+            </select>
+          }
+          @if (performers().length) {
+            <select class="form-select w-auto" (change)="setPerformer($event)" [attr.aria-label]="'stockoutlog.col_performed_by' | translate">
+              <option value="">{{ 'stockoutlog.all_performers' | translate }}</option>
+              @for (p of performers(); track p.id) {
+                <option [value]="p.id">{{ p.name }}</option>
+              }
+            </select>
+          }
+          <input type="date" class="form-control w-auto" [value]="from()" (change)="setFrom($event)" [attr.aria-label]="'audit.from' | translate" />
+          <input type="date" class="form-control w-auto" [value]="to()" (change)="setTo($event)" [attr.aria-label]="'audit.to' | translate" />
+          @if (hasFilters()) {
+            <button
+              type="button"
+              class="btn btn-link btn-sm p-0 ms-auto d-inline-flex align-items-center gap-1"
+              (click)="clearFilters()"
+            >
+              <lib-icon name="x" [size]="14" />
+              {{ 'stockoutlog.clear_filters' | translate }}
+            </button>
+          }
+        </div>
+
+        @if (logs.isLoading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else if (logs.error()) {
+          <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
+        } @else if (logs.value(); as rows) {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'audit.col_time' | translate }}</th>
+                  <th scope="col">{{ 'stockoutlog.col_product' | translate }}</th>
+                  <th scope="col" class="text-end">{{ 'stockoutlog.col_qty' | translate }}</th>
+                  <th scope="col">{{ 'stockout.reason' | translate }}</th>
+                  <th scope="col">{{ 'stockout.channel' | translate }}</th>
+                  <th scope="col">{{ 'stockoutlog.col_performed_by' | translate }}</th>
+                  <th scope="col">{{ 'stockoutlog.col_recipient' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows; track row.id) {
+                  <tr>
+                    <td class="small" [attr.title]="row.createdOn">{{ row.createdOn | date: 'medium' }}</td>
+                    <td>
+                      <div class="fw-medium">{{ row.productName }}</div>
+                      <div class="small text-body-secondary">
+                        #{{ row.productId }} · {{ row.warehouseName }}
+                      </div>
+                    </td>
+                    <td class="text-end tabular-nums">{{ row.quantity }}</td>
+                    <td>
+                      @if (row.reason !== null) {
+                        <span class="badge" [class]="reasonBadge(row.reason)">
+                          {{ 'stock.reason.' + reasonKeys[row.reason] | translate }}
+                        </span>
+                      }
+                    </td>
+                    <td>
+                      @if (row.channel !== null) {
+                        <span class="badge text-bg-light">
+                          {{ 'stock.channel.' + channelKeys[row.channel] | translate }}
+                        </span>
+                      } @else {
+                        <span class="text-body-secondary">—</span>
+                      }
+                    </td>
+                    <td>{{ row.performedByName ?? '—' }}</td>
+                    <td>
+                      <div>{{ row.recipientOrRef ?? '—' }}</div>
+                      @if (row.note) {
+                        <div class="small text-body-secondary text-truncate" style="max-inline-size: 220px" [attr.title]="row.note">
+                          {{ row.note }}
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
+                        <div class="empty-title">
+                          {{ (hasFilters() ? 'stockoutlog.empty_filtered' : 'stockoutlog.empty') | translate }}
+                        </div>
+                        @if (hasFilters()) {
+                          <button type="button" class="btn btn-link btn-sm" (click)="clearFilters()">
+                            {{ 'stockoutlog.clear_filters' | translate }}
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (rows.length || page() > 1) {
+            <div class="list-pager">
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                [disabled]="page() === 1"
+                (click)="prev()"
+              >
+                <lib-icon name="chevStart" [size]="15" />
+                {{ 'common.previous' | translate }}
+              </button>
+              <span class="page-chip">{{ 'common.page_info' | translate: { page: page(), count: rows.length } }}</span>
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                [disabled]="!hasMore()"
+                (click)="next()"
+              >
+                {{ 'common.next' | translate }}
+                <lib-icon name="chevEnd" [size]="15" />
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </div>

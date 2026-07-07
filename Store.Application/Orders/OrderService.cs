@@ -153,6 +153,7 @@ public sealed class OrderService : IOrderService
             if (product.StockTrackingIsEnabled)
             {
                 product.StockQuantity -= checkoutItem.Quantity;
+                await StampOnlineSaleAsync(product.Id, checkoutItem.Quantity, checkout.CreatedById, now, cancellationToken);
             }
         }
 
@@ -241,6 +242,44 @@ public sealed class OrderService : IOrderService
         await _db.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(order);
+    }
+
+    /// <summary>
+    /// Records an online-store sale against the product's primary warehouse stock so the movement
+    /// shows in the stock-out log stamped Sale / OnlineStore (performer null — no staff removed it).
+    /// No-op when the product has no per-warehouse <c>Stock</c> row. Does not touch
+    /// <c>Product.StockQuantity</c> (the caller already did) and does not save — the order's single
+    /// <c>SaveChanges</c> persists it atomically.
+    /// </summary>
+    private async Task StampOnlineSaleAsync(
+        long productId, int quantity, long createdById, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var stock = await _db.Set<Stock>()
+            .Where(s => s.ProductId == productId)
+            .OrderByDescending(s => s.Quantity)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (stock is null)
+        {
+            return;
+        }
+
+        stock.Quantity -= quantity;
+        if (stock.Quantity < 0)
+        {
+            stock.Quantity = 0;
+        }
+
+        _db.Set<StockHistory>().Add(new StockHistory
+        {
+            ProductId = productId,
+            WarehouseId = stock.WarehouseId,
+            AdjustedQuantity = -quantity,
+            Reason = StockOutReason.Sale,
+            Channel = SalesChannel.OnlineStore,
+            PerformedById = null,
+            CreatedById = createdById,
+            CreatedOn = now,
+        });
     }
 
     public async Task CancelOrderAsync(Order order, CancellationToken cancellationToken = default)

@@ -250,6 +250,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'stock-out',
+        title: 'Stock out · MadeWithDetermination Admin',
+        canActivate: [roleGuard(...AREA.inventory)],
+        loadComponent: () =>
+          import('./features/inventory/stock-out').then((m) => m.AdminStockOut),
+      },
+      {
+        path: 'stock-out-log',
+        title: 'Stock-out log · MadeWithDetermination Admin',
+        canActivate: [roleGuard(...AREA.inventory)],
+        loadComponent: () =>
+          import('./features/inventory/stock-out-log').then(
+            (m) => m.AdminStockOutLog,
+          ),
+      },
+      {
         path: 'settings',
         title: 'Settings · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.settings)],

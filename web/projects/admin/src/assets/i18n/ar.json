@@ -17,6 +17,8 @@
     "attributes": "السمات",
     "templates": "القوالب",
     "inventory": "المخزون",
+    "stockOut": "إخراج مخزون",
+    "stockOutLog": "سجل إخراج المخزون",
     "warehouses": "المستودعات",
     "sales": "المبيعات",
     "orders": "الطلبات",
@@ -75,6 +77,61 @@
     "new": "بعد",
     "no_changes": "لم تُسجَّل تغييرات على مستوى الحقول لهذا السجل."
   },
+  "stock": {
+    "reason": {
+      "sale": "بيع",
+      "gift": "هدية",
+      "matched": "مطابقة / تسوية",
+      "thirdParty": "طرف ثالث",
+      "externalEvent": "فعالية خارجية",
+      "reserved": "محجوز",
+      "displayOnly": "للعرض فقط"
+    },
+    "channel": {
+      "showroom": "صالة العرض",
+      "externalExhibition": "معرض خارجي",
+      "externalBroker": "وسيط خارجي",
+      "localBroker": "وسيط محلي",
+      "onlineStore": "المتجر الإلكتروني"
+    }
+  },
+  "stockout": {
+    "title": "إخراج مخزون",
+    "subtitle": "سجّل الوحدات الخارجة من المستودع مع السبب، وقناة البيع عند البيع.",
+    "form_title": "تسجيل إخراج مخزون",
+    "on_hand": "{{count}} متوفر",
+    "quantity": "الكمية المُخرَجة",
+    "reason": "السبب",
+    "channel": "قناة البيع",
+    "no_channel": "بدون قناة",
+    "recipient": "المستلم / المرجع",
+    "recipient_hint": "الوسيط أو الفعالية أو مستلم الهدية (اختياري).",
+    "submit": "تسجيل الإخراج",
+    "saving": "جارٍ التسجيل…",
+    "done": "تم تسجيل الإخراج.",
+    "failed": "تعذّر تسجيل الإخراج.",
+    "err_product": "ابحث عن منتج واختر مستودعًا أولًا.",
+    "err_qty": "أدخل كمية لا تقل عن 1.",
+    "err_overstock": "يتوفّر {{count}} وحدة فقط في هذا المستودع.",
+    "err_channel": "قناة البيع مطلوبة عند البيع."
+  },
+  "stockoutlog": {
+    "title": "سجل إخراج المخزون",
+    "subtitle": "كل عملية إخراج مُتتبَّعة — السبب والقناة والمُنفِّذ والمرجع.",
+    "export": "تصدير CSV",
+    "search_ph": "ابحث بالمنتج أو المرجع…",
+    "all_reasons": "كل الأسباب",
+    "all_channels": "كل القنوات",
+    "all_warehouses": "كل المستودعات",
+    "all_performers": "كل المنفِّذين",
+    "clear_filters": "مسح عوامل التصفية",
+    "col_product": "المنتج",
+    "col_qty": "الكمية",
+    "col_performed_by": "نفّذها",
+    "col_recipient": "المستلم / ملاحظة",
+    "empty": "لا توجد عمليات إخراج بعد.",
+    "empty_filtered": "لا توجد عمليات تطابق عوامل التصفية."
+  },
   "roles": {
     "super-admin": "مدير عام",
     "admin": "مدير",
@@ -101,6 +158,7 @@
     "view": "عرض",
     "cancel": "إلغاء",
     "close": "إغلاق",
+    "optional": "اختياري",
     "previous": "السابق",
     "next": "التالي",
     "page_info": "صفحة {{page}} · {{count}} معروض",

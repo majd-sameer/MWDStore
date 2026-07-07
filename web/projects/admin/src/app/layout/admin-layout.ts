@@ -61,11 +61,13 @@ export class AdminLayout {
         { path: '/dashboard', key: 'dashboard', icon: 'bi-grid-1x2', roles: AREA.reports },
       ],
     },
-    // Stock management — inventory ∪ fulfillment. Phase 3 adds stock-out + log here.
+    // Stock management — inventory ∪ fulfillment.
     {
       key: 'stock',
       items: [
         { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
+        { path: '/stock-out', key: 'stockOut', icon: 'bi-box-arrow-up', roles: AREA.inventory },
+        { path: '/stock-out-log', key: 'stockOutLog', icon: 'bi-journal-arrow-up', roles: AREA.inventory },
         { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },
         { path: '/shipping', key: 'shipping', icon: 'bi-truck', roles: AREA.fulfillment },
       ],

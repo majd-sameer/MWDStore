@@ -1,0 +1,184 @@
+
+    <app-page-header
+      [title]="'stockout.title' | translate"
+      [subtitle]="'stockout.subtitle' | translate"
+    />
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <form class="row g-2 align-items-center mb-3" (submit)="lookup($event)">
+              <div class="col-sm-4">
+                <input
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  [placeholder]="'inventory.product_id' | translate"
+                  [value]="productId() ?? ''"
+                  [attr.aria-label]="'inventory.product_id' | translate"
+                />
+              </div>
+              <div class="col-sm-auto">
+                <button class="btn btn-primary" type="submit">{{ 'inventory.look_up' | translate }}</button>
+              </div>
+            </form>
+
+            @if (productId() === null) {
+              <div class="alert alert-info mb-0">{{ 'inventory.enter_id' | translate }}</div>
+            } @else if (stock.isLoading()) {
+              <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+                </div>
+              </div>
+            } @else if (stock.error()) {
+              <div class="alert alert-danger mb-0">
+                {{ 'inventory.no_stock' | translate: { id: productId() } }}
+              </div>
+            } @else if (stock.value(); as s) {
+              <h2 class="h5">{{ s.productName }}</h2>
+              <p class="text-body-secondary">
+                {{ 'inventory.total_on_hand' | translate }} <strong>{{ s.productStockQuantity }}</strong>
+              </p>
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'inventory.warehouse' | translate }}</th>
+                      <th scope="col" class="text-end">{{ 'inventory.col_on_hand' | translate }}</th>
+                      <th scope="col" class="text-end">{{ 'inventory.col_available' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (w of s.warehouses ?? []; track w.warehouseId) {
+                      <tr>
+                        <td>{{ w.warehouseName }} <span class="text-body-secondary">#{{ w.warehouseId }}</span></td>
+                        <td class="text-end">{{ w.quantity }}</td>
+                        <td class="text-end">{{ w.quantity - w.reservedQuantity }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="3" class="text-center text-body-secondary py-4">
+                          {{ 'inventory.no_warehouse_rows' | translate }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-body fw-semibold">{{ 'stockout.form_title' | translate }}</div>
+          <div class="card-body">
+            @if (!stock.value()?.warehouses?.length) {
+              <p class="text-body-secondary mb-0">{{ 'inventory.lookup_hint' | translate }}</p>
+            } @else {
+              <div class="mb-3">
+                <label for="so-wh" class="form-label">{{ 'inventory.warehouse' | translate }}</label>
+                <select
+                  id="so-wh"
+                  class="form-select"
+                  [value]="selectedWarehouse() ?? ''"
+                  (change)="setWarehouse($event)"
+                >
+                  @for (w of stock.value()?.warehouses ?? []; track w.warehouseId) {
+                    <option [value]="w.warehouseId">{{ w.warehouseName }} (#{{ w.warehouseId }})</option>
+                  }
+                </select>
+                <div class="form-text">{{ 'stockout.on_hand' | translate: { count: onHand() } }}</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="so-qty" class="form-label">{{ 'stockout.quantity' | translate }}</label>
+                <input
+                  id="so-qty"
+                  type="number"
+                  min="1"
+                  [max]="onHand()"
+                  class="form-control"
+                  [value]="quantity()"
+                  (input)="quantity.set(+$any($event.target).value)"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="so-reason" class="form-label">{{ 'stockout.reason' | translate }}</label>
+                <select id="so-reason" class="form-select" [value]="reason()" (change)="setReason($event)">
+                  @for (r of reasons; track r.value) {
+                    <option [value]="r.value">{{ 'stock.reason.' + r.key | translate }}</option>
+                  }
+                </select>
+              </div>
+
+              @if (channelVisible()) {
+                <div class="mb-3">
+                  <label for="so-channel" class="form-label">
+                    {{ 'stockout.channel' | translate }}
+                    @if (!channelRequired()) {
+                      <span class="text-body-secondary">({{ 'common.optional' | translate }})</span>
+                    }
+                  </label>
+                  <select
+                    id="so-channel"
+                    class="form-select"
+                    [value]="channel() ?? ''"
+                    (change)="setChannel($event)"
+                  >
+                    @if (!channelRequired()) {
+                      <option value="">{{ 'stockout.no_channel' | translate }}</option>
+                    }
+                    @for (c of channels; track c.value) {
+                      <option [value]="c.value">{{ 'stock.channel.' + c.key | translate }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <div class="mb-3">
+                <label for="so-recipient" class="form-label">{{ 'stockout.recipient' | translate }}</label>
+                <input
+                  id="so-recipient"
+                  type="text"
+                  maxlength="256"
+                  class="form-control"
+                  [value]="recipient()"
+                  (input)="recipient.set($any($event.target).value)"
+                />
+                <div class="form-text">{{ 'stockout.recipient_hint' | translate }}</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="so-note" class="form-label">{{ 'common.note' | translate }}</label>
+                <textarea
+                  id="so-note"
+                  rows="2"
+                  maxlength="1000"
+                  class="form-control"
+                  [value]="note()"
+                  (input)="note.set($any($event.target).value)"
+                ></textarea>
+              </div>
+
+              @if (errorKey(); as key) {
+                <div class="alert alert-warning py-2">{{ key | translate: { count: onHand() } }}</div>
+              }
+
+              <button
+                type="button"
+                class="btn btn-primary w-100"
+                [disabled]="saving() || errorKey() !== null"
+                (click)="submit()"
+              >
+                {{ (saving() ? 'stockout.saving' : 'stockout.submit') | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>

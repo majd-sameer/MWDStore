@@ -16,10 +16,20 @@ public sealed class StockHistoryConfiguration : IEntityTypeConfiguration<StockHi
 
         builder.HasIndex(e => e.WarehouseId, "IX_Inventory_StockHistory_WarehouseId");
 
+        builder.HasIndex(e => e.PerformedById, "IX_Inventory_StockHistory_PerformedById");
+
+        builder.HasIndex(e => e.Reason, "IX_Inventory_StockHistory_Reason");
+
         builder.Property(e => e.Note).HasMaxLength(1000);
+
+        builder.Property(e => e.RecipientOrRef).HasMaxLength(256);
 
         builder.HasOne(d => d.CreatedBy).WithMany(p => p.StockHistories)
             .HasForeignKey(d => d.CreatedById)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasOne(d => d.PerformedBy).WithMany()
+            .HasForeignKey(d => d.PerformedById)
             .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(d => d.Product).WithMany(p => p.StockHistories)
