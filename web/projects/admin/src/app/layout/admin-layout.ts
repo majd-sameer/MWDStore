@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   RouterLink,
   RouterLinkActive,
@@ -28,7 +28,8 @@ interface NavSection {
 
 /**
  * Authenticated admin chrome: a fixed navy sidebar with the feature links
- * grouped into sections (Catalog / Sales / People / Content / System) plus a
+ * grouped into the five business sections (Stock management / Content management
+ * / Sales / People / System) plus a
  * topbar with a language toggle (en ⇄ ar via the shared core LanguageService),
  * the signed-in user and a sign-out action. All copy keyed through
  * ngx-translate; positioning uses logical properties so RTL mirrors cleanly.
@@ -60,8 +61,18 @@ export class AdminLayout {
         { path: '/dashboard', key: 'dashboard', icon: 'bi-grid-1x2', roles: AREA.reports },
       ],
     },
+    // Stock management — inventory ∪ fulfillment. Phase 3 adds stock-out + log here.
     {
-      key: 'catalog',
+      key: 'stock',
+      items: [
+        { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
+        { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },
+        { path: '/shipping', key: 'shipping', icon: 'bi-truck', roles: AREA.fulfillment },
+      ],
+    },
+    // Content management — catalog ∪ content. Phase 5 adds content-blocks here.
+    {
+      key: 'content',
       items: [
         { path: '/products', key: 'products', icon: 'bi-box-seam', roles: AREA.catalog },
         { path: '/categories', key: 'categories', icon: 'bi-folder2', roles: AREA.catalog },
@@ -69,49 +80,58 @@ export class AdminLayout {
         { path: '/product-options', key: 'options', icon: 'bi-sliders', roles: AREA.catalog },
         { path: '/product-attributes', key: 'attributes', icon: 'bi-list-check', roles: AREA.catalog },
         { path: '/product-templates', key: 'templates', icon: 'bi-clipboard', roles: AREA.catalog },
-        { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
-        { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },
+        { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
+        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation },
       ],
     },
+    // Sales — sales ∪ marketing ∪ reports.
     {
       key: 'sales',
       items: [
         { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.sales },
+        { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
         { path: '/promotions', key: 'promotions', icon: 'bi-ticket-perforated', roles: AREA.marketing },
-        { path: '/shipping', key: 'shipping', icon: 'bi-truck', roles: AREA.fulfillment },
-        { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.settings },
         { path: '/taxes', key: 'taxes', icon: 'bi-percent', roles: AREA.marketing },
+        { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.settings },
+        { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.settings },
       ],
     },
+    // People — users (staff + roles) / customers (same route as Sales, intentionally duplicated).
     {
       key: 'people',
       items: [
-        { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
         { path: '/users', key: 'users', icon: 'bi-person-badge', roles: AREA.users },
-        { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.settings },
-        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation }
-        /*,
-        { path: '/contacts', key: 'contacts', icon: 'bi-envelope', roles: AREA.sales },*/
+        { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
       ],
     },
-    {
-      key: 'content',
-      items: [
-      /*  { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text', roles: AREA.content },
-        { path: '/menus', key: 'menus', icon: 'bi-list-ul', roles: AREA.content },*/
-        { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
-      ],
-    },
+    // System — settings. Phase 2 adds audit-log here.
     {
       key: 'system',
       items: [
         { path: '/locations', key: 'countries', icon: 'bi-globe2', roles: AREA.settings },
-       /* { path: '/localization', key: 'localization', icon: 'bi-translate', roles: AREA.settings },*/
         { path: '/settings', key: 'settings', icon: 'bi-gear', roles: AREA.settings },
-      /*  { path: '/logs', key: 'logs', icon: 'bi-journal-text', roles: AREA.settings },*/
       ],
     },
   ];
+
+  /** Section keys the user has collapsed in the sidebar (all expanded by default). */
+  private readonly collapsedSections = signal<ReadonlySet<string>>(new Set());
+
+  protected isCollapsed(key: string): boolean {
+    return this.collapsedSections().has(key);
+  }
+
+  protected toggleSection(key: string): void {
+    this.collapsedSections.update((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
 
   /**
    * Sections/items the signed-in user may reach, recomputed from their roles.

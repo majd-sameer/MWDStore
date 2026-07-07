@@ -37,12 +37,18 @@ export const AREA = {
   users: [Role.superAdmin],
 } as const;
 
-/** Picks the landing section for a signed-in user, most-privileged area first. */
+/**
+ * Picks the landing section for a signed-in user, following the sidebar order:
+ * dashboard → orders → stock (inventory) → products → cms → users → settings.
+ */
 export function adminHomePath(auth: AuthService): string {
   if (auth.hasAnyRole(AREA.reports)) return '/dashboard';
   if (auth.hasAnyRole(AREA.sales)) return '/orders';
   if (auth.hasAnyRole(AREA.inventory)) return '/inventory';
   if (auth.hasAnyRole(AREA.catalog)) return '/products';
+  if (auth.hasAnyRole(AREA.content)) return '/news';
+  if (auth.hasAnyRole(AREA.users)) return '/users';
+  if (auth.hasAnyRole(AREA.settings)) return '/settings';
   return '/forbidden';
 }
 

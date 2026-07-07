@@ -13,20 +13,34 @@
 
       <nav class="admin-nav nav nav-pills flex-column flex-nowrap">
         @for (section of visibleSections(); track section.key) {
-          @if (section.key) {
-            <div class="nav-section-label">{{ 'nav.' + section.key | translate }}</div>
-          }
-          @for (item of section.items; track item.key) {
-            <a
-              class="nav-link"
-              [routerLink]="item.path"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-              [title]="'nav.' + item.key | translate"
+          @if (section.key; as sectionKey) {
+            <button
+              type="button"
+              class="nav-section-label"
+              [attr.aria-expanded]="!isCollapsed(sectionKey)"
+              (click)="toggleSection(sectionKey)"
             >
-              <i class="bi {{ item.icon }}" aria-hidden="true"></i>
-              <span class="label">{{ 'nav.' + item.key | translate }}</span>
-            </a>
+              <span>{{ 'nav.sections.' + sectionKey | translate }}</span>
+              <i
+                class="bi bi-chevron-down chevron"
+                [class.collapsed]="isCollapsed(sectionKey)"
+                aria-hidden="true"
+              ></i>
+            </button>
+          }
+          @if (!section.key || !isCollapsed(section.key)) {
+            @for (item of section.items; track item.key) {
+              <a
+                class="nav-link"
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                [title]="'nav.' + item.key | translate"
+              >
+                <i class="bi {{ item.icon }}" aria-hidden="true"></i>
+                <span class="label">{{ 'nav.' + item.key | translate }}</span>
+              </a>
+            }
           }
         }
       </nav>

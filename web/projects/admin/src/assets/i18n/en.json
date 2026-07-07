@@ -1,6 +1,13 @@
 {
   "brand": { "name": "Made With Determination", "console": "Admin Console" },
   "nav": {
+    "sections": {
+      "stock": "Stock management",
+      "content": "Content management",
+      "sales": "Sales",
+      "people": "People",
+      "system": "System"
+    },
     "dashboard": "Dashboard",
     "catalog": "Catalog",
     "products": "Products",
