@@ -162,13 +162,38 @@ confined to their areas, and **only `super-admin` can manage users/roles**.
 
 | Area (policy) → controllers | super-admin | admin | sales-manager | sales | warehouse-keeper | content-writer |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|
-| **Catalog** — products, categories, brands, options, attributes, templates | ✅ | ✅ | | | | ✅ |
-| **Content** — pages, menus, news · **Moderation** — reviews, comments · **Media** | ✅ | ✅ | | | | ✅ |
-| **Inventory** — inventory, warehouses · **Fulfillment** — shipping, shipments | ✅ | ✅ | | | ✅ | |
+| **Catalog** — products (incl. **signature** flag/sort), categories, brands, options, attributes, templates | ✅ | ✅ | | | | ✅ |
+| **Content** — pages, menus, news, **site content (content-blocks)** · **Moderation** — reviews, comments · **Media** | ✅ | ✅ | | | | ✅ |
+| **Inventory** — inventory, warehouses, **stock-out**, **stock-out log** · **Fulfillment** — shipping, shipments | ✅ | ✅ | | | ✅ | |
 | **Sales** — orders, customers, contacts, customer-groups | ✅ | ✅ | ✅ | ✅ | | |
 | **Marketing** — promotions, tax · **Reports** — dashboard | ✅ | ✅ | ✅ | | | |
-| **Settings** — settings, localization, locations, payments, vendors, logs | ✅ | ✅ | | | | |
+| **Settings** — settings, localization, locations, payments, vendors, logs, **audit log** | ✅ | ✅ | | | | |
 | **Users** — user & role management | ✅ | | | | | |
+
+> **Admin-upgrade endpoints (Phases 1–5):** `GET /api/admin/audit-logs` → **Settings**;
+> `POST /api/admin/inventory/stock-out` + `GET …/stock-out-log` → **Inventory**;
+> `GET|PUT /api/admin/content-blocks` → **Content**; the product `IsSignature`/`SignatureSortOrder`
+> fields + `PATCH /api/admin/products/{id}/signature` → **Catalog**. Login is audited (`Action=Login`,
+> `Area=Account`); stock-out is audited explicitly (`Action=StockOut`), every other admin
+> POST/PUT/PATCH/DELETE via the global `AuditActionFilter`.
+
+**Server ↔ client parity checklist** (keep `AuthPolicies.cs` and `roles.ts` in lock-step):
+
+- [x] Every `AuthPolicies.<Area>` constant has a matching `AREA.<area>` set in `roles.ts` with the
+      same roles (Catalog/Content/Moderation/Inventory/Fulfillment/Sales/Marketing/Reports/Settings/Users).
+      **Exception:** `AuthPolicies.Media` has no dedicated client `AREA.media` — media upload
+      (`POST /api/admin/media`) has no standalone nav/route; it is invoked inline by the Catalog/Content
+      editors (product form, news form, site-content editor), whose own guards cover the same roles.
+- [x] Each admin controller's `[Authorize(Policy = AuthPolicies.X)]` has a route `roleGuard(...AREA.x)`
+      and an `admin-layout.ts` nav link with the same role set — audit-logs, stock-out(+log),
+      content-blocks and the signature toggle all follow this.
+- [x] New areas introduced: none — the four features reuse existing policies (Settings / Inventory /
+      Content / Catalog), so no `AuthPolicies` ↔ `roles.ts` drift was possible.
+
+**Production migration order** (all additive, no backfill): `AddAuditLog` → `AddStockOutTracking` →
+`AddProductSignature` → `AddContentBlocks`. Apply with `dotnet ef database update` before the app
+starts. The audit and stock-out logs paginate server-side and grow unbounded; a retention/rotation
+job is out of scope for now.
 
 **Frontend mirror:** `web/projects/admin/src/app/core/roles.ts` holds `STAFF_ROLES`, the per-area
 role sets (`AREA.*`, which must stay in sync with `AuthPolicies`), and `adminHomeGuard`. The admin
