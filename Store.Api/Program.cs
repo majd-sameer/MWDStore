@@ -134,6 +134,8 @@ await LocationSeeder.SeedAsync(app.Services);
 await CatalogSeeder.SeedAsync(app.Services);
 // English content overrides from translations.en.json (no-op when the file is absent).
 await LocalizationSeeder.SeedAsync(app.Services);
+// Editable CMS content blocks for the storefront (insert-by-key only; additive).
+await ContentBlockSeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

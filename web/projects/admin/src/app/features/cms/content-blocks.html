@@ -1,0 +1,120 @@
+
+    <app-page-header
+      [title]="'cms.title' | translate"
+      [subtitle]="'cms.subtitle' | translate"
+    >
+      <a href="/" target="_blank" rel="noopener" class="btn btn-outline-secondary">
+        {{ 'cms.preview' | translate }}
+      </a>
+    </app-page-header>
+
+    <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
+      <div>
+        <label for="cms-page" class="form-label small mb-1">{{ 'cms.page' | translate }}</label>
+        <select id="cms-page" class="form-select w-auto" [value]="page()" (change)="setPage($event)">
+          @for (p of pages; track p) {
+            <option [value]="p">{{ 'cms.pages.' + p | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="ms-auto">
+        <div class="btn-group" role="group" [attr.aria-label]="'cms.language' | translate">
+          <button type="button" class="btn btn-outline-secondary" [class.active]="lang() === 'ar'"
+            (click)="lang.set('ar')">{{ 'cms.ar' | translate }}</button>
+          <button type="button" class="btn btn-outline-secondary" [class.active]="lang() === 'en'"
+            (click)="lang.set('en')">{{ 'cms.en' | translate }}</button>
+        </div>
+      </div>
+    </div>
+
+    @if (list.isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+        </div>
+      </div>
+    } @else if (list.error()) {
+      <div class="alert alert-danger">{{ 'common.error_api' | translate }}</div>
+    } @else if (list.value(); as sections) {
+      @for (section of sections; track section.sectionKey) {
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-body fw-semibold d-flex justify-content-between align-items-center">
+            <span>{{ 'cms.sections.' + section.sectionKey | translate }}</span>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="savingSection() === section.sectionKey"
+              (click)="saveSection(section)"
+            >
+              {{ (savingSection() === section.sectionKey ? 'cms.saving' : 'cms.save_section') | translate }}
+            </button>
+          </div>
+          <div class="card-body">
+            @for (block of section.blocks; track block.id) {
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label [attr.for]="'block-' + block.id" class="form-label mb-0 fw-medium">
+                    {{ label(block.blockKey) }}
+                    <span class="badge text-bg-light ms-1">{{ block.type }}</span>
+                  </label>
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [id]="'active-' + block.id"
+                      [checked]="edit(block.id).isActive"
+                      (change)="setActive(block.id, $event)"
+                    />
+                    <label class="form-check-label small" [attr.for]="'active-' + block.id">
+                      {{ 'cms.active' | translate }}
+                    </label>
+                  </div>
+                </div>
+
+                @switch (block.type) {
+                  @case ('image') {
+                    <div class="d-flex align-items-center gap-3">
+                      @if (edit(block.id).mediaUrl; as url) {
+                        <img [src]="url" alt="" class="rounded border" style="width: 96px; height: 72px; object-fit: cover" />
+                      } @else {
+                        <span class="text-body-secondary small">{{ 'cms.no_image' | translate }}</span>
+                      }
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="form-control form-control-sm w-auto"
+                        [disabled]="uploadingId() === block.id"
+                        (change)="onImageSelected(block.id, $event)"
+                      />
+                    </div>
+                  }
+                  @case ('link') {
+                    <input
+                      [id]="'block-' + block.id"
+                      type="text"
+                      class="form-control"
+                      [placeholder]="'cms.link_ph' | translate"
+                      [value]="edit(block.id).linkUrl"
+                      (input)="setLink(block.id, $event)"
+                    />
+                  }
+                  @default {
+                    <textarea
+                      [id]="'block-' + block.id"
+                      class="form-control"
+                      [rows]="block.type === 'richtext' ? 4 : 2"
+                      [dir]="lang() === 'ar' ? 'rtl' : 'ltr'"
+                      [value]="lang() === 'ar' ? edit(block.id).valueAr : edit(block.id).valueEn"
+                      (input)="setText(block.id, $event)"
+                    ></textarea>
+                    @if (block.type === 'richtext') {
+                      <div class="form-text">{{ 'cms.richtext_hint' | translate }}</div>
+                    }
+                  }
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }

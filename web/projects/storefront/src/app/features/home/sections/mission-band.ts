@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Icon, type IconName } from 'ui';
+import { ContentBlocksStore } from '../../../core/content-blocks.store';
 
 /**
  * Mission band per supported-doc/HOME-PAGE.md §5: full-bleed navy gradient
@@ -18,6 +19,8 @@ import { Icon, type IconName } from 'ui';
   styleUrl: './mission-band.scss',
 })
 export class MissionBand {
+  protected readonly content = inject(ContentBlocksStore);
+
   protected readonly values: ReadonlyArray<{ icon: IconName; key: string }> = [
     { icon: 'shield', key: 'trust' },
     { icon: 'hands', key: 'empower' },

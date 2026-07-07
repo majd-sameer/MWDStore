@@ -376,6 +376,13 @@ export const routes: Routes = [
           import('./features/cms/news').then((m) => m.AdminNews),
       },
       {
+        path: 'site-content',
+        title: 'Site content · MadeWithDetermination Admin',
+        canActivate: [roleGuard(...AREA.content)],
+        loadComponent: () =>
+          import('./features/cms/content-blocks').then((m) => m.AdminContentBlocks),
+      },
+      {
         path: 'news/:id',
         title: 'Edit article · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.content)],

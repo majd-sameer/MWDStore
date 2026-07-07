@@ -10,6 +10,7 @@ import { DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService } from 'core';
 import { Button, Icon } from 'ui';
+import { ContentBlocksStore } from '../../../core/content-blocks.store';
 
 /**
  * Home hero per supported-doc/HOME-PAGE.md §1: ivory band with a soft gold
@@ -28,6 +29,7 @@ import { Button, Icon } from 'ui';
 })
 export class Hero {
   private readonly language = inject(LanguageService);
+  protected readonly content = inject(ContentBlocksStore);
 
   /** Number of reform & rehabilitation centers (active vendor count from the API). */
   readonly centers = input<number | null>(null);

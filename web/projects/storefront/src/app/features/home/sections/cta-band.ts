@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
+import { ContentBlocksStore } from '../../../core/content-blocks.store';
 
 /**
  * CTA / newsletter band per supported-doc/HOME-PAGE.md §9: ivory rounded card,
@@ -24,6 +25,7 @@ import { ToastService } from 'ui';
 export class CtaBand {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  protected readonly content = inject(ContentBlocksStore);
 
   protected readonly email = signal('');
 

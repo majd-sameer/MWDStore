@@ -20,6 +20,7 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
     }
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<ContentBlock> ContentBlocks => Set<ContentBlock>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
     public DbSet<Brand> Brands => Set<Brand>();

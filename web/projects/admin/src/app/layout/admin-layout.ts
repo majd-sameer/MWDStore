@@ -83,6 +83,7 @@ export class AdminLayout {
         { path: '/product-attributes', key: 'attributes', icon: 'bi-list-check', roles: AREA.catalog },
         { path: '/product-templates', key: 'templates', icon: 'bi-clipboard', roles: AREA.catalog },
         { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
+        { path: '/site-content', key: 'siteContent', icon: 'bi-card-text', roles: AREA.content },
         { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation },
       ],
     },

@@ -104,6 +104,49 @@ public sealed class ContentController : ControllerBase
             item.MetaTitle, item.MetaKeywords, item.MetaDescription, item.PublishedOn));
     }
 
+    // ----- Content blocks (editable static text/media, fixed design) -------------------------------
+
+    /// <summary>
+    /// Active content blocks for a storefront page, with each block's <c>Value</c> overlaid to the
+    /// requested culture and image blocks resolved to a <c>/user-content/…</c> URL. Anonymous and
+    /// cacheable; the storefront renders these over hard-coded fallbacks.
+    /// </summary>
+    [HttpGet("content/blocks/{pageKey}")]
+    public async Task<ActionResult<IReadOnlyList<PublicContentBlockDto>>> ContentBlocks(
+        string pageKey, CancellationToken cancellationToken)
+    {
+        var blocks = await _db.ContentBlocks
+            .Where(b => b.PageKey == pageKey && b.IsActive)
+            .OrderBy(b => b.SectionKey).ThenBy(b => b.SortOrder).ThenBy(b => b.Id)
+            .Select(b => new
+            {
+                b.Id,
+                b.SectionKey,
+                b.BlockKey,
+                b.Type,
+                b.Value,
+                b.LinkUrl,
+                MediumFileName = b.Medium != null ? b.Medium.FileName : null,
+            })
+            .ToListAsync(cancellationToken);
+
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.ContentBlock, blocks.Select(b => b.Id).ToList(), cultureId, cancellationToken);
+
+        var result = blocks
+            .Select(b => new PublicContentBlockDto(
+                b.SectionKey,
+                b.BlockKey,
+                b.Type,
+                overlay.Apply(b.Id, LocalizedProperty.Value, b.Value),
+                _mediaUrl.GetUrl(b.MediumFileName),
+                b.LinkUrl))
+            .ToList();
+
+        return Ok(result);
+    }
+
     // ----- Contact ---------------------------------------------------------------------------------
 
     [HttpGet("contact/areas")]
@@ -143,3 +186,7 @@ public sealed class ContentController : ControllerBase
         return NoContent();
     }
 }
+
+/// <summary>One active content block for the storefront (value culture-overlaid, media resolved).</summary>
+public sealed record PublicContentBlockDto(
+    string SectionKey, string BlockKey, string Type, string? Value, string? MediaUrl, string? LinkUrl);

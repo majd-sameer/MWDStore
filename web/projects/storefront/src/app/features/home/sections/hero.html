@@ -4,17 +4,28 @@
       <div class="wrap hero-grid">
         <div class="hero-copy">
           <span class="eyebrow">{{ 'home.hero_eyebrow' | translate }}</span>
-          <h1 class="hero-title">
-            {{ 'home.hero_title_pre' | translate }}
-            <span class="accent">{{ 'home.hero_title_accent' | translate }}</span>
-            <br />
-            {{ 'home.hero_title_post' | translate }}
-          </h1>
-          <p class="hero-lead">{{ 'home.hero_lead' | translate }}</p>
+          @if (content.block('hero-grid', 'hero-copy.title')?.value; as heroTitle) {
+            <h1 class="hero-title">{{ heroTitle }}</h1>
+          } @else {
+            <h1 class="hero-title">
+              {{ 'home.hero_title_pre' | translate }}
+              <span class="accent">{{ 'home.hero_title_accent' | translate }}</span>
+              <br />
+              {{ 'home.hero_title_post' | translate }}
+            </h1>
+          }
+          <p class="hero-lead">
+            {{ content.block('hero-grid', 'hero-copy.subtitle')?.value || ('home.hero_lead' | translate) }}
+          </p>
 
           <div class="hero-ctas">
-            <a libButton variant="primary" size="lg" routerLink="/shop">
-              {{ 'home.hero_cta_shop' | translate }}
+            <a
+              libButton
+              variant="primary"
+              size="lg"
+              [routerLink]="content.block('hero-grid', 'hero-copy.cta')?.linkUrl || '/shop'"
+            >
+              {{ content.block('hero-grid', 'hero-copy.cta-label')?.value || ('home.hero_cta_shop' | translate) }}
               <lib-icon name="arrowEnd" [size]="18" class="ms-1" />
             </a>
             <a
@@ -53,7 +64,7 @@
         <div class="hero-media">
           <img
             class="hero-photo"
-            src="/home-hero.jpg"
+            [src]="content.block('hero-grid', 'hero-media')?.mediaUrl || '/home-hero.jpg'"
             [alt]="'home.hero_photo' | translate"
             width="900"
             height="1125"

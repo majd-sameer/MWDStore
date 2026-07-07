@@ -36,12 +36,46 @@
     "pages": "Pages",
     "menus": "Menus",
     "news": "News",
+    "siteContent": "Site Content",
     "system": "System",
     "countries": "Countries",
     "localization": "Localization",
     "settings": "Settings",
     "logs": "Logs",
     "auditLog": "Audit Log"
+  },
+  "cms": {
+    "title": "Site Content",
+    "subtitle": "Edit the words and images of the storefront — the design stays fixed.",
+    "preview": "Preview storefront",
+    "page": "Page",
+    "pages": { "home": "Home" },
+    "language": "Language",
+    "ar": "Arabic",
+    "en": "English",
+    "save_section": "Save section",
+    "saving": "Saving…",
+    "saved": "Content saved.",
+    "save_failed": "Could not save the content.",
+    "active": "Active",
+    "no_image": "No image set",
+    "upload_failed": "Could not upload the image.",
+    "link_ph": "https://…  or  /shop",
+    "richtext_hint": "Basic formatting only (bold, italic, line breaks); scripts are removed.",
+    "sections": {
+      "hero-grid": "Hero",
+      "mission-band": "Mission band",
+      "cta-band": "Call-to-action band"
+    },
+    "keys": {
+      "hero_title": "Hero title",
+      "hero_subtitle": "Hero subtitle",
+      "hero_cta_label": "Hero button label",
+      "hero_cta": "Hero button link",
+      "hero_media": "Hero image",
+      "mission_title": "Mission title",
+      "cta_title": "CTA title"
+    }
   },
   "audit": {
     "title": "Audit Log",

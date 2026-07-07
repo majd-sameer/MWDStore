@@ -25,6 +25,7 @@ public static class LocalizedEntity
 {
     public const string Product = "Product";
     public const string NewsItem = "NewsItem";
+    public const string ContentBlock = "ContentBlock";
 }
 
 /// <summary>Property-name keys used in <c>LocalizedContentProperty.ProperyName</c>.</summary>
@@ -35,6 +36,7 @@ public static class LocalizedProperty
     public const string Description = "Description";
     public const string ShortContent = "ShortContent";
     public const string FullContent = "FullContent";
+    public const string Value = "Value";
 }
 
 /// <summary>An immutable bag of (entityId, property) → translated value for one culture.</summary>

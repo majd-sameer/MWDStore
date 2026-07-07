@@ -3,7 +3,9 @@
       <div class="ctaband">
         <div>
           <span class="eyebrow">{{ 'home.cta_eyebrow' | translate }}</span>
-          <h2 class="cta-title">{{ 'home.cta_title' | translate }}</h2>
+          <h2 class="cta-title">
+            {{ content.block('cta-band', 'cta.title')?.value || ('home.cta_title' | translate) }}
+          </h2>
           <p class="cta-sub">{{ 'home.cta_sub' | translate }}</p>
         </div>
         <div>
