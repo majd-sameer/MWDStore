@@ -10,6 +10,7 @@ import type {
   BrandDto,
   CategoryDto,
   ProductDetailModel,
+  ProductListItem,
   ProductListResult,
 } from './models';
 
@@ -58,6 +59,16 @@ export class CatalogService {
       httpResource<ProductDetailModel>(() => ({
         url: `${API_ROOT}/catalog/products/${id()}`,
         params: { culture: this.locale.language() },
+      })),
+    );
+  }
+
+  /** GET /api/catalog/signature — curated signature products for the home rail. */
+  signatureResource(take: () => number = () => 8) {
+    return runInInjectionContext(this.injector, () =>
+      httpResource<ProductListItem[]>(() => ({
+        url: `${API_ROOT}/catalog/signature`,
+        params: { take: take(), culture: this.locale.language() },
       })),
     );
   }

@@ -83,7 +83,11 @@
               @if (effectiveView() === 'grid') {
                 <div class="pgrid">
                   @for (product of products(); track product.id) {
-                    <app-product-card [product]="product" (addToCart)="add($event)" />
+                    @if (product.isSignature) {
+                      <app-product-card-signature [product]="product" (addToCart)="add($event)" />
+                    } @else {
+                      <app-product-card [product]="product" (addToCart)="add($event)" />
+                    }
                   }
                 </div>
               } @else {

@@ -20,6 +20,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasIndex(e => e.ThumbnailImageId, "IX_Catalog_Product_ThumbnailImageId");
 
+        // Curated signature products only — filtered so the index stays tiny.
+        builder.HasIndex(e => new { e.IsSignature, e.SignatureSortOrder }, "IX_Catalog_Product_Signature")
+            .HasFilter("[IsSignature] = 1");
+
         builder.Property(e => e.Gtin).HasMaxLength(450);
         builder.Property(e => e.MetaKeywords).HasMaxLength(450);
         builder.Property(e => e.MetaTitle).HasMaxLength(450);

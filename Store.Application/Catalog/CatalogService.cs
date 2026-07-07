@@ -151,6 +151,29 @@ public sealed class CatalogService : ICatalogService
         return result;
     }
 
+    public async Task<IList<ProductListItem>> GetSignatureProductsAsync(
+        int take, CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 24);
+
+        var products = await _db.Products
+            .Where(x => x.IsPublished && x.IsVisibleIndividually && x.IsSignature)
+            .OrderBy(x => x.SignatureSortOrder).ThenBy(x => x.Id)
+            .Include(x => x.ThumbnailImage)
+            .Include(x => x.ProductCategories).ThenInclude(c => c.Category)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        var items = products.Select(ToListItem).ToList();
+        foreach (var item in items)
+        {
+            item.CalculatedProductPrice = _pricing.CalculateProductPrice(
+                item.Price, item.OldPrice, item.SpecialPrice, item.SpecialPriceStart, item.SpecialPriceEnd);
+        }
+
+        return items;
+    }
+
     private static IQueryable<Product> ApplySort(ProductListOptions options, IQueryable<Product> query)
     {
         // In-stock (orderable) products always lead, whatever sort is chosen, so sold-out items
@@ -169,8 +192,13 @@ public sealed class CatalogService : ICatalogService
             // SQL Server sorts NULLs last in DESC order, so unrated products trail.
             "rating" => available.ThenByDescending(x => x.RatingAverage).ThenByDescending(x => x.ReviewsCount),
             "newest" => available.ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id),
-            // "featured" (default): featured products first, then stable catalog order.
-            _ => available.ThenByDescending(x => x.IsFeatured).ThenBy(x => x.Id),
+            // "featured" (default / relevance): signature products lead, then featured, then stable
+            // catalog order. Explicit sorts above (price/rating/newest) intentionally skip this boost.
+            _ => available
+                .ThenByDescending(x => x.IsSignature)
+                .ThenBy(x => x.SignatureSortOrder)
+                .ThenByDescending(x => x.IsFeatured)
+                .ThenBy(x => x.Id),
         };
     }
 

@@ -29,6 +29,7 @@ import {
 import { CartStore } from '../../core/cart.store';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
+import { ProductCardSignature } from '../../shared/product-card-signature';
 import { CategoryLabelPipe } from '../../shared/category-label.pipe';
 
 const PAGE_SIZE = 12;
@@ -60,6 +61,7 @@ function toNumber(value: string | null): number | undefined {
     RouterLink,
     TranslatePipe,
     ProductCard,
+    ProductCardSignature,
     Pagination,
     Breadcrumb,
     Icon,

@@ -17,6 +17,10 @@ public interface ICatalogService
     Task<ProductListResult> SearchAsync(
         ProductListOptions options, CancellationToken cancellationToken = default);
 
+    /// <summary>Published, individually-visible signature products ordered by their sort order (home rail).</summary>
+    Task<IList<ProductListItem>> GetSignatureProductsAsync(
+        int take, CancellationToken cancellationToken = default);
+
     /// <summary>Product detail with attributes and variations — port of <c>ProductController.ProductDetail</c>.</summary>
     Task<ProductDetailModel?> GetProductDetailAsync(
         long id, CancellationToken cancellationToken = default);

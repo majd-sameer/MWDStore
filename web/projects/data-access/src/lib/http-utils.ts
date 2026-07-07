@@ -71,6 +71,7 @@ export interface AdminProductQuery {
   /** Narrow to soft-deleted products only (implies includeDeleted). */
   deletedOnly?: boolean;
   isPublished?: boolean;
+  isSignature?: boolean;
   brandId?: number;
   categoryId?: number;
   page?: number;

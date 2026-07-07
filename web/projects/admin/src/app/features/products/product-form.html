@@ -387,6 +387,24 @@
                   <label for="isFeatured" class="form-check-label">{{ 'product_form.featured' | translate }}</label>
                 </div>
                 <div class="form-check form-switch">
+                  <input id="isSignature" type="checkbox" class="form-check-input" [formField]="f.isSignature" />
+                  <label for="isSignature" class="form-check-label">{{ 'product_form.signature' | translate }}</label>
+                </div>
+                @if (f.isSignature().value()) {
+                  <div class="mb-2 ps-4">
+                    <label for="signatureSortOrder" class="form-label small">
+                      {{ 'product_form.signature_sort' | translate }}
+                    </label>
+                    <input
+                      id="signatureSortOrder"
+                      type="number"
+                      class="form-control form-control-sm w-auto"
+                      [formField]="f.signatureSortOrder"
+                    />
+                    <div class="form-text">{{ 'product_form.signature_sort_hint' | translate }}</div>
+                  </div>
+                }
+                <div class="form-check form-switch">
                   <input id="isAllowToOrder" type="checkbox" class="form-check-input" [formField]="f.isAllowToOrder" />
                   <label for="isAllowToOrder" class="form-check-label">{{ 'product_form.allow_ordering' | translate }}</label>
                 </div>

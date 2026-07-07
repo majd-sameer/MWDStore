@@ -99,6 +99,8 @@ export interface ProductListItem {
   categoryName: string | null;
   /** First category slug — used to translate the category label by slug. */
   categorySlug: string | null;
+  /** Curated "Signature" flag — the storefront swaps in the distinct card. */
+  isSignature: boolean;
   calculatedProductPrice: CalculatedProductPrice;
 }
 
@@ -502,6 +504,7 @@ export interface AdminProductListItem {
   brandId: number | null;
   hasOptions: boolean;
   isVisibleIndividually: boolean;
+  isSignature: boolean;
   thumbnailUrl: string | null;
 }
 
@@ -585,6 +588,8 @@ export interface AdminProductDetail {
   gtin: string | null;
   isPublished: boolean;
   isFeatured: boolean;
+  isSignature: boolean;
+  signatureSortOrder: number;
   isAllowToOrder: boolean;
   isCallForPricing: boolean;
   stockTrackingIsEnabled: boolean;
@@ -650,6 +655,8 @@ export interface ProductUpsertRequest {
   gtin?: string | null;
   isPublished?: boolean;
   isFeatured?: boolean;
+  isSignature?: boolean;
+  signatureSortOrder?: number;
   isAllowToOrder?: boolean;
   isCallForPricing?: boolean;
   stockTrackingIsEnabled?: boolean;

@@ -8,6 +8,11 @@
       [counts]="categoryCounts()"
     />
 
+    <app-signature-rail
+      [products]="signature.value() ?? []"
+      (addToCart)="add($event)"
+    />
+
     <app-featured-row
       eyebrow="home.best_eyebrow"
       title="home.best_title"

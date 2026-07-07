@@ -43,6 +43,7 @@ public sealed class AdminProductsController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminProductListItem>>> List(
         [FromQuery] string? query, [FromQuery] bool includeDeleted = false, [FromQuery] bool includeVariations = false,
         [FromQuery] bool deletedOnly = false, [FromQuery] bool? isPublished = null,
+        [FromQuery] bool? isSignature = null,
         [FromQuery] long? brandId = null, [FromQuery] long? categoryId = null,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
@@ -69,6 +70,11 @@ public sealed class AdminProductsController : ControllerBase
             products = products.Where(p => p.IsPublished == isPublished.Value);
         }
 
+        if (isSignature.HasValue)
+        {
+            products = products.Where(p => p.IsSignature == isSignature.Value);
+        }
+
         if (brandId.HasValue)
         {
             products = products.Where(p => p.BrandId == brandId.Value);
@@ -89,7 +95,8 @@ public sealed class AdminProductsController : ControllerBase
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new AdminProductListItem(
                 p.Id, p.Name, p.Slug, p.Price, p.OldPrice, p.StockQuantity, p.IsPublished, p.IsDeleted, p.BrandId,
-                p.HasOptions, p.IsVisibleIndividually, p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null))
+                p.HasOptions, p.IsVisibleIndividually, p.IsSignature,
+                p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null))
             .ToListAsync(cancellationToken);
 
         return Ok(items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList());
@@ -226,6 +233,30 @@ public sealed class AdminProductsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Quick list-page toggle for the Signature flag (and optional sort order). Audited as Update.</summary>
+    [HttpPatch("{id:long}/signature")]
+    public async Task<IActionResult> SetSignature(
+        long id, ProductSignatureRequest request, CancellationToken cancellationToken)
+    {
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        product.IsSignature = request.IsSignature;
+        if (request.SignatureSortOrder.HasValue)
+        {
+            product.SignatureSortOrder = request.SignatureSortOrder.Value;
+        }
+
+        product.LatestUpdatedById = User.GetUserId();
+        product.LatestUpdatedOn = _timeProvider.GetUtcNow();
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
     // ----- Save pipeline ----------------------------------------------------------------------
 
     private Task<Product?> LoadAggregateAsync(long id, CancellationToken cancellationToken) =>
@@ -262,6 +293,8 @@ public sealed class AdminProductsController : ControllerBase
         product.IsPublished = request.IsPublished;
         product.PublishedOn ??= request.IsPublished ? _timeProvider.GetUtcNow() : null;
         product.IsFeatured = request.IsFeatured;
+        product.IsSignature = request.IsSignature;
+        product.SignatureSortOrder = request.SignatureSortOrder;
         product.IsAllowToOrder = request.IsAllowToOrder;
         product.IsCallForPricing = request.IsCallForPricing;
         product.IsVisibleIndividually = true;
@@ -562,7 +595,8 @@ public sealed class AdminProductsController : ControllerBase
             p.Id, p.Name, p.Slug, p.ShortDescription, p.Description, p.Specification,
             p.MetaTitle, p.MetaKeywords, p.MetaDescription,
             p.Price, p.OldPrice, p.SpecialPrice, p.SpecialPriceStart, p.SpecialPriceEnd,
-            p.Sku, p.Gtin, p.IsPublished, p.IsFeatured, p.IsAllowToOrder, p.IsCallForPricing,
+            p.Sku, p.Gtin, p.IsPublished, p.IsFeatured, p.IsSignature, p.SignatureSortOrder,
+            p.IsAllowToOrder, p.IsCallForPricing,
             p.StockTrackingIsEnabled, p.StockQuantity, p.DisplayOrder, p.BrandId, p.TaxClassId,
             p.IsDeleted, p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
             p.ThumbnailImageId, _mediaStorage.GetUrl(p.ThumbnailImage?.FileName),

@@ -18,6 +18,7 @@ import { SeoService } from '../../core/seo.service';
 import { Hero } from './sections/hero';
 import { TrustStrip } from './sections/trust-strip';
 import { CollectionRail } from './sections/collection-rail';
+import { SignatureRail } from './sections/signature-rail';
 import { FeaturedRow } from './sections/featured-row';
 import { MissionBand } from './sections/mission-band';
 import { StoryRail } from './sections/story-rail';
@@ -39,6 +40,7 @@ import { CtaBand } from './sections/cta-band';
     Hero,
     TrustStrip,
     CollectionRail,
+    SignatureRail,
     FeaturedRow,
     MissionBand,
     StoryRail,
@@ -57,6 +59,8 @@ export class Home {
 
   protected readonly categories = this.catalog.categoriesResource();
   private readonly vendorCount = this.catalog.vendorCountResource();
+  /** Curated signature products for the rail above best sellers. */
+  protected readonly signature = this.catalog.signatureResource(() => 8);
   /** Top-rated products stand in for "best sellers" (the API has no sales rank). */
   protected readonly best = this.catalog.productsResource(() => ({
     pageSize: 4,

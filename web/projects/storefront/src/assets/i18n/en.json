@@ -94,6 +94,10 @@
     "fresh_eyebrow": "Just arrived",
     "fresh_title": "Newest products",
     "view_all": "View all",
+    "signature": {
+      "eyebrow": "Curated",
+      "title": "Signature Pieces"
+    },
     "mission_eyebrow": "Our mission",
     "mission_title": "Behind every piece… a person reclaiming their dignity",
     "mission_body": "“Made with Determination” is a Public Security Directorate initiative that lets inmates of the Reform & Rehabilitation Centers showcase and sell their handmade work online — turning skill into a dignified livelihood and a path back into society.",
@@ -130,6 +134,7 @@
     "call_for_pricing": "Call for pricing",
     "call_for_pricing_long": "Please call us for pricing on this item.",
     "sale": "Sale",
+    "signature": "Signature",
     "save": "Save {{percent}}%",
     "not_found": "This product couldn't be found.",
     "back_to_shop": "Back to shop",

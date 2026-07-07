@@ -29,6 +29,12 @@ public class Product
 
     public bool IsFeatured { get; set; }
 
+    /// <summary>Curated "Signature" flag — boosts the product first in default listings and the home rail.</summary>
+    public bool IsSignature { get; set; }
+
+    /// <summary>Lower sorts earlier among signature products; only meaningful when <see cref="IsSignature"/>.</summary>
+    public int SignatureSortOrder { get; set; }
+
     public bool IsCallForPricing { get; set; }
 
     public bool IsAllowToOrder { get; set; }

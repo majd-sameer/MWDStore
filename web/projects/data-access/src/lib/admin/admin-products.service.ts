@@ -27,6 +27,7 @@ export class AdminProductsService {
             includeDeleted: q.includeDeleted,
             deletedOnly: q.deletedOnly,
             isPublished: q.isPublished,
+            isSignature: q.isSignature,
             brandId: q.brandId,
             categoryId: q.categoryId,
             page: q.page,
@@ -65,6 +66,17 @@ export class AdminProductsService {
   /** DELETE /api/admin/products/{id} */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${API_ROOT}/admin/products/${id}`);
+  }
+
+  /** PATCH /api/admin/products/{id}/signature — quick list-page toggle. */
+  setSignature(
+    id: number,
+    body: { isSignature: boolean; signatureSortOrder?: number },
+  ): Observable<void> {
+    return this.http.patch<void>(
+      `${API_ROOT}/admin/products/${id}/signature`,
+      body,
+    );
   }
 
   /** GET /api/admin/products/quick-search — picker for related/cross-sell products. */

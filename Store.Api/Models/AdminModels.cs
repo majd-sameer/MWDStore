@@ -11,7 +11,7 @@ public sealed record MediaDto(long Id, string? FileName, string Url, string? Cap
 public sealed record AdminProductListItem(
     long Id, string Name, string Slug, decimal Price, decimal? OldPrice,
     int StockQuantity, bool IsPublished, bool IsDeleted, long? BrandId,
-    bool HasOptions, bool IsVisibleIndividually, string? ThumbnailUrl);
+    bool HasOptions, bool IsVisibleIndividually, bool IsSignature, string? ThumbnailUrl);
 
 /// <summary>One value of a product option (mirrors SimplCommerce's <c>ProductOptionValueVm</c>;
 /// the list is JSON-serialized into <c>ProductOptionValue.Value</c>).</summary>
@@ -100,6 +100,8 @@ public sealed class ProductUpsertRequest
 
     public bool IsPublished { get; set; } = true;
     public bool IsFeatured { get; set; }
+    public bool IsSignature { get; set; }
+    public int SignatureSortOrder { get; set; }
     public bool IsAllowToOrder { get; set; } = true;
     public bool IsCallForPricing { get; set; }
     public bool StockTrackingIsEnabled { get; set; }
@@ -145,7 +147,8 @@ public sealed record AdminProductDetail(
     long Id, string Name, string Slug, string? ShortDescription, string? Description, string? Specification,
     string? MetaTitle, string? MetaKeywords, string? MetaDescription,
     decimal Price, decimal? OldPrice, decimal? SpecialPrice, DateTimeOffset? SpecialPriceStart, DateTimeOffset? SpecialPriceEnd,
-    string? Sku, string? Gtin, bool IsPublished, bool IsFeatured, bool IsAllowToOrder, bool IsCallForPricing,
+    string? Sku, string? Gtin, bool IsPublished, bool IsFeatured, bool IsSignature, int SignatureSortOrder,
+    bool IsAllowToOrder, bool IsCallForPricing,
     bool StockTrackingIsEnabled, int StockQuantity, int DisplayOrder, long? BrandId, long? TaxClassId,
     bool IsDeleted, IReadOnlyList<long> CategoryIds,
     long? ThumbnailImageId, string? ThumbnailUrl,
@@ -155,6 +158,14 @@ public sealed record AdminProductDetail(
     IReadOnlyList<AdminProductVariationDto> Variations,
     IReadOnlyList<AdminProductLinkDto> RelatedProducts,
     IReadOnlyList<AdminProductLinkDto> CrossSellProducts);
+
+/// <summary>Body for the list-page quick toggle (PATCH /api/admin/products/{id}/signature).</summary>
+public sealed class ProductSignatureRequest
+{
+    public bool IsSignature { get; set; }
+
+    public int? SignatureSortOrder { get; set; }
+}
 
 /// <summary>Lightweight result for the related/cross-sell product picker.</summary>
 public sealed record ProductQuickSearchItem(long Id, string Name, string? Sku, bool IsPublished);

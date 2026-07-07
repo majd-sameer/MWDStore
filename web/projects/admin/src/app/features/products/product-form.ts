@@ -52,6 +52,8 @@ interface ProductFormModel {
   brandId: string;
   isPublished: boolean;
   isFeatured: boolean;
+  isSignature: boolean;
+  signatureSortOrder: number;
   isAllowToOrder: boolean;
   isCallForPricing: boolean;
   stockTrackingIsEnabled: boolean;
@@ -78,6 +80,8 @@ function emptyModel(): ProductFormModel {
     brandId: '',
     isPublished: true,
     isFeatured: false,
+    isSignature: false,
+    signatureSortOrder: 0,
     isAllowToOrder: true,
     isCallForPricing: false,
     stockTrackingIsEnabled: true,
@@ -240,6 +244,8 @@ export class AdminProductForm {
       brandId: p.brandId === null ? '' : String(p.brandId),
       isPublished: p.isPublished,
       isFeatured: p.isFeatured,
+      isSignature: p.isSignature,
+      signatureSortOrder: p.signatureSortOrder,
       isAllowToOrder: p.isAllowToOrder,
       isCallForPricing: p.isCallForPricing,
       stockTrackingIsEnabled: p.stockTrackingIsEnabled,
@@ -561,6 +567,8 @@ export class AdminProductForm {
         brandId: m.brandId.trim() === '' ? null : Number(m.brandId),
         isPublished: m.isPublished,
         isFeatured: m.isFeatured,
+        isSignature: m.isSignature,
+        signatureSortOrder: Number(m.signatureSortOrder) || 0,
         isAllowToOrder: m.isAllowToOrder,
         isCallForPricing: m.isCallForPricing,
         stockTrackingIsEnabled: m.stockTrackingIsEnabled,

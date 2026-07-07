@@ -34,26 +34,41 @@ public sealed class CatalogController : ControllerBase
     }
 
     /// <summary>Overlays English product fields onto a listing when the request asks for English.</summary>
-    private async Task LocalizeAsync(ProductListResult result, CancellationToken cancellationToken)
+    private Task LocalizeAsync(ProductListResult result, CancellationToken cancellationToken) =>
+        LocalizeProductsAsync(result.Products, cancellationToken);
+
+    /// <summary>Overlays English name/short-description onto a set of list items when English is requested.</summary>
+    private async Task LocalizeProductsAsync(
+        IList<ProductListItem> products, CancellationToken cancellationToken)
     {
         var cultureId = RequestCulture.OverlayCultureId(Request);
-        if (cultureId is null || result.Products.Count == 0)
+        if (cultureId is null || products.Count == 0)
         {
             return;
         }
 
-        var ids = result.Products.Select(p => p.Id).ToList();
+        var ids = products.Select(p => p.Id).ToList();
         var overlay = await _localization.GetOverlayAsync(LocalizedEntity.Product, ids, cultureId, cancellationToken);
         if (overlay.IsEmpty)
         {
             return;
         }
 
-        foreach (var product in result.Products)
+        foreach (var product in products)
         {
             product.Name = overlay.Apply(product.Id, LocalizedProperty.Name, product.Name) ?? product.Name;
             product.ShortDescription = overlay.Apply(product.Id, LocalizedProperty.ShortDescription, product.ShortDescription);
         }
+    }
+
+    /// <summary>Curated signature products for the home rail (published + in-catalog, sorted).</summary>
+    [HttpGet("signature")]
+    public async Task<ActionResult<IList<ProductListItem>>> Signature(
+        [FromQuery] int take = 8, CancellationToken cancellationToken = default)
+    {
+        var products = await _catalog.GetSignatureProductsAsync(take, cancellationToken);
+        await LocalizeProductsAsync(products, cancellationToken);
+        return Ok(products);
     }
 
     /// <summary>Search/browse products with optional query, brand/category facets, price range, sort and paging.</summary>

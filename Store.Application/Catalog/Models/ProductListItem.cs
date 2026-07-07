@@ -25,6 +25,9 @@ public sealed class ProductListItem
     public string? ThumbnailImageUrl { get; set; }
     public string? ShortDescription { get; set; }
 
+    /// <summary>Curated "Signature" product — the storefront swaps in the distinct card for these.</summary>
+    public bool IsSignature { get; set; }
+
     /// <summary>First category name — the storefront card eyebrow / list-row label. Requires the
     /// source query to include <c>ProductCategories.Category</c>; null otherwise.</summary>
     public string? CategoryName { get; set; }
@@ -51,6 +54,7 @@ public sealed class ProductListItem
         ReviewsCount = product.ReviewsCount,
         RatingAverage = product.RatingAverage,
         ShortDescription = product.ShortDescription,
+        IsSignature = product.IsSignature,
         CategoryName = product.ProductCategories?.FirstOrDefault()?.Category?.Name,
         CategorySlug = product.ProductCategories?.FirstOrDefault()?.Category?.Slug
     };

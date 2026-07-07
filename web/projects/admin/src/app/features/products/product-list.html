@@ -55,6 +55,8 @@
             <button type="button" class="filter-chip" [class.active]="status() === 'deleted'"
               (click)="setStatus('deleted')">{{ 'products.deleted' | translate }}</button>
           </div>
+          <button type="button" class="filter-chip" [class.active]="signatureOnly()"
+            (click)="toggleSignatureFilter()">{{ 'products.signature' | translate }}</button>
           @if (hasFilters()) {
             <button
               type="button"
@@ -138,9 +140,22 @@
                       } @else {
                         <span class="badge text-bg-secondary">{{ 'products.draft' | translate }}</span>
                       }
+                      @if (p.isSignature) {
+                        <span class="badge text-bg-warning ms-1">{{ 'products.signature' | translate }}</span>
+                      }
                     </td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
+                        @if (!p.isDeleted) {
+                          <button
+                            type="button"
+                            class="action-btn"
+                            [title]="'products.toggle_signature' | translate"
+                            (click)="toggleSignature(p.id, p.isSignature)"
+                          >
+                            <lib-icon name="star" [size]="15" [label]="'products.toggle_signature' | translate" />
+                          </button>
+                        }
                         <a
                           [routerLink]="['/products', p.id]"
                           class="action-btn"

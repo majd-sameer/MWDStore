@@ -44,6 +44,7 @@ export class AdminProductList {
 
   protected readonly term = signal('');
   protected readonly status = signal<StatusFilter>('all');
+  protected readonly signatureOnly = signal(false);
   protected readonly brandId = signal<number | null>(null);
   protected readonly categoryId = signal<number | null>(null);
   protected readonly page = signal(1);
@@ -61,6 +62,7 @@ export class AdminProductList {
       deletedOnly: status === 'deleted' || undefined,
       isPublished:
         status === 'published' ? true : status === 'draft' ? false : undefined,
+      isSignature: this.signatureOnly() || undefined,
       brandId: this.brandId() ?? undefined,
       categoryId: this.categoryId() ?? undefined,
       page: this.page(),
@@ -79,6 +81,7 @@ export class AdminProductList {
     () =>
       Boolean(this.term()) ||
       this.status() !== 'all' ||
+      this.signatureOnly() ||
       this.brandId() !== null ||
       this.categoryId() !== null,
   );
@@ -115,6 +118,22 @@ export class AdminProductList {
     this.page.set(1);
   }
 
+  protected toggleSignatureFilter(): void {
+    this.signatureOnly.update((v) => !v);
+    this.page.set(1);
+  }
+
+  /** Quick list-page toggle of the Signature flag (audited server-side as an Update). */
+  protected toggleSignature(id: number, current: boolean): void {
+    this.service.setSignature(id, { isSignature: !current }).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('products.signature_updated'));
+        this.products.reload();
+      },
+      error: () => this.toast.error(this.translate.instant('products.signature_failed')),
+    });
+  }
+
   protected setBrand(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.brandId.set(value === '' ? null : Number(value));
@@ -130,6 +149,7 @@ export class AdminProductList {
   protected clearFilters(): void {
     this.term.set('');
     this.status.set('all');
+    this.signatureOnly.set(false);
     this.brandId.set(null);
     this.categoryId.set(null);
     this.page.set(1);
