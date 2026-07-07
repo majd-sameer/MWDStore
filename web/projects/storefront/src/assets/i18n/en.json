@@ -4,6 +4,9 @@
     "shop": "Shop",
     "store": "Store",
     "home" : "Home",
+    "sections": "Store Sections",
+    "news": "Our News",
+    "new_arrivals": "New Arrivals",
     "success_story": "Success Story",
     "categories": "Categories",
     "about_us": "About Us",
@@ -39,6 +42,13 @@
     "register_error": "We couldn’t create your account. The email may already be in use.",
     "welcome_toast": "Welcome to MadeWithDetermination!",
     "supports_note": "Every order supports inmate rehabilitation and dignity."
+  },
+  "sections": {
+    "title": "Store Sections",
+    "subtitle": "Browse our handmade crafts by section, then explore its products",
+    "count": "{{count}} products",
+    "browse": "Browse section",
+    "empty": "No sections are available yet."
   },
   "categories": {
     "textiles": "Textiles",

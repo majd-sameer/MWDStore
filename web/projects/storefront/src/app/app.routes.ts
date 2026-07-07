@@ -16,6 +16,12 @@ export const routes: Routes = [
       import('./features/home/home').then((m) => m.Home),
   },
   {
+    // Store Sections hub — pick a category first, then land on /shop?category=…
+    path: 'categories',
+    loadComponent: () =>
+      import('./features/catalog/category-list').then((m) => m.CategoryList),
+  },
+  {
     path: 'shop',
     loadComponent: () =>
       import('./features/catalog/product-list').then((m) => m.ProductList),

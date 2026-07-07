@@ -18,6 +18,7 @@ import { LanguageSwitcher } from './language-switcher';
 interface MainLink {
   readonly key: string;
   readonly link: string;
+  readonly queryParams?: Record<string, string>;
 }
 
 interface CategoryLink {
@@ -27,8 +28,8 @@ interface CategoryLink {
 
 /**
  * Storefront chrome: announce bar, wordmark, a hardcoded primary nav
- * (Store / Success story / Categories / About us), a secondary sub-nav of the
- * backend categories, and the search / account / cart icon actions (with a live
+ * (Store Sections / Our News / About Us / New Arrivals), a secondary sub-nav of
+ * the backend categories, and the search / account / cart icon actions (with a live
  * cart-count badge). On small screens both navs collapse into a logical-side
  * drawer. All copy is keyed through ngx-translate.
  */
@@ -70,6 +71,7 @@ interface CategoryLink {
             <a
               class="nav-link"
               [routerLink]="link.link"
+              [queryParams]="link.queryParams ?? null"
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: true }"
               >{{ 'nav.' + link.key | translate }}</a
@@ -109,21 +111,7 @@ interface CategoryLink {
       </div>
     </header>
 
-    @if (categoryLinks().length) {
-      <nav class="sub-nav d-none d-md-block" [attr.aria-label]="'nav.categories' | translate">
-        <div class="wrap sub-nav-row">
-          @for (link of categoryLinks(); track link.category) {
-            <a
-              class="sub-link"
-              [routerLink]="['/shop']"
-              [queryParams]="{ category: link.category }"
-              routerLinkActive="active"
-              >{{ link.category | categoryLabel: link.name }}</a
-            >
-          }
-        </div>
-      </nav>
-    }
+
 
     @if (menuOpen()) {
       <button
@@ -147,8 +135,9 @@ interface CategoryLink {
           @for (link of mainLinks; track link.key) {
             <a
               [routerLink]="link.link"
+              [queryParams]="link.queryParams ?? null"
               routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: link.link === '' }"
+              [routerLinkActiveOptions]="{ exact: true }"
               (click)="menuOpen.set(false)"
             >
               {{ 'nav.' + link.key | translate }}
@@ -444,12 +433,16 @@ export class Header {
 
   private readonly categories = this.catalog.categoriesResource();
 
-  /** Hardcoded primary nav (destinations are placeholders for now). */
+  /**
+   * Hardcoded primary nav. "Store Sections" opens the category hub (/categories)
+   * so shoppers pick a section before seeing products; "New Arrivals" jumps to the
+   * shop sorted newest-first.
+   */
   protected readonly mainLinks: readonly MainLink[] = [
-    { key: 'home', link: '' },
-    { key: 'shop', link: '/shop' },
-    { key: 'success_story', link: '/news' },
+    { key: 'sections', link: '/categories' },
+    { key: 'news', link: '/news' },
     { key: 'about_us', link: '/pages/about-us' },
+    { key: 'new_arrivals', link: '/shop', queryParams: { sort: 'newest' } },
   ];
 
   /**
