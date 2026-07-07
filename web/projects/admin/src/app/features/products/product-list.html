@@ -11,49 +11,40 @@
 
     <div class="card border-0 shadow-sm">
       <div class="card-body">
-        <div class="row g-2 align-items-center mb-2">
-          <div class="col-md">
-            <div class="search-box" style="max-width: 420px">
-              <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
-              <input
-                type="search"
-                class="form-control"
-                [attr.placeholder]="'products.search_ph' | translate"
-                [value]="term()"
-                (input)="onSearchInput($event)"
-                [attr.aria-label]="'products.search_ph' | translate"
-              />
-            </div>
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+            <input
+              type="search"
+              class="form-control"
+              [attr.placeholder]="'products.search_ph' | translate"
+              [value]="term()"
+              (input)="onSearchInput($event)"
+              [attr.aria-label]="'products.search_ph' | translate"
+            />
           </div>
-          <div class="col-6 col-md-auto">
-            <select
-              class="form-select w-auto"
-              [attr.aria-label]="'products.brand' | translate"
-              [value]="brandId() ?? ''"
-              (change)="setBrand($event)"
-            >
-              <option value="">{{ 'products.all_brands' | translate }}</option>
-              @for (b of brands.value() ?? []; track b.id) {
-                <option [value]="b.id">{{ b.name }}</option>
-              }
-            </select>
-          </div>
-          <div class="col-6 col-md-auto">
-            <select
-              class="form-select w-auto"
-              [attr.aria-label]="'products.category' | translate"
-              [value]="categoryId() ?? ''"
-              (change)="setCategory($event)"
-            >
-              <option value="">{{ 'products.all_categories' | translate }}</option>
-              @for (c of categories.value() ?? []; track c.id) {
-                <option [value]="c.id">{{ c.name }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <select
+            class="form-select w-auto"
+            [attr.aria-label]="'products.brand' | translate"
+            [value]="brandId() ?? ''"
+            (change)="setBrand($event)"
+          >
+            <option value="">{{ 'products.all_brands' | translate }}</option>
+            @for (b of brands.value() ?? []; track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
+          <select
+            class="form-select w-auto"
+            [attr.aria-label]="'products.category' | translate"
+            [value]="categoryId() ?? ''"
+            (change)="setCategory($event)"
+          >
+            <option value="">{{ 'products.all_categories' | translate }}</option>
+            @for (c of categories.value() ?? []; track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
           <div class="filter-chips" role="group" [attr.aria-label]="'common.status' | translate">
             <button type="button" class="filter-chip" [class.active]="status() === 'all'"
               (click)="setStatus('all')">{{ 'common.all' | translate }}</button>

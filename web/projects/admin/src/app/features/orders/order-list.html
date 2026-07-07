@@ -6,25 +6,27 @@
 
     <div class="card border-0 shadow-sm">
       <div class="card-body">
-        <div class="filter-chips mb-3" role="group" [attr.aria-label]="'common.status' | translate">
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="status() === null"
-            (click)="setStatus(null)"
-          >
-            {{ 'common.all' | translate }}
-          </button>
-          @for (opt of statusOptions; track opt.value) {
+        <div class="list-toolbar">
+          <div class="filter-chips" role="group" [attr.aria-label]="'common.status' | translate">
             <button
               type="button"
               class="filter-chip"
-              [class.active]="status() === opt.value"
-              (click)="setStatus(opt.value)"
+              [class.active]="status() === null"
+              (click)="setStatus(null)"
             >
-              {{ 'orders.status_' + opt.value | translate }}
+              {{ 'common.all' | translate }}
             </button>
-          }
+            @for (opt of statusOptions; track opt.value) {
+              <button
+                type="button"
+                class="filter-chip"
+                [class.active]="status() === opt.value"
+                (click)="setStatus(opt.value)"
+              >
+                {{ 'orders.status_' + opt.value | translate }}
+              </button>
+            }
+          </div>
         </div>
 
         @if (orders.isLoading()) {

@@ -12,11 +12,13 @@
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
           <div class="card-body">
-            <div class="search-box mb-3" style="max-width: 360px">
-              <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
-              <input type="text" class="form-control" [placeholder]="'users.search_ph' | translate"
-                [attr.aria-label]="'users.search_label' | translate"
-                (input)="search.set($any($event.target).value)" />
+            <div class="list-toolbar">
+              <div class="search-box">
+                <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+                <input type="text" class="form-control" [placeholder]="'users.search_ph' | translate"
+                  [attr.aria-label]="'users.search_label' | translate"
+                  (input)="search.set($any($event.target).value)" />
+              </div>
             </div>
 
             @if (list.isLoading()) {

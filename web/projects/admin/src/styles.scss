@@ -39,22 +39,37 @@ h1.h3 {
 // hover wash, hairline dividers.
 .table {
   --bs-table-bg: transparent;
-  --bs-table-hover-bg: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  --bs-table-hover-bg: color-mix(in srgb, var(--surface-2) 70%, transparent);
   --bs-table-active-bg: color-mix(in srgb, var(--green-soft) 60%, transparent);
   border-color: var(--line-2);
 }
+// Quiet uppercase headers on a faint tinted strip so columns stay scannable
+// without a heavy rule; the strip rounds into the leading/trailing corners.
 .table > thead th {
   font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--ink-3);
-  border-block-end: 1px solid var(--line);
-  padding-block: 0.55rem;
+  background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+  border-block-end: 1px solid var(--line-strong);
+  padding-block: 0.62rem;
   white-space: nowrap;
+}
+.table > thead th:first-child {
+  border-start-start-radius: var(--r-sm);
+  border-end-start-radius: var(--r-sm);
+}
+.table > thead th:last-child {
+  border-start-end-radius: var(--r-sm);
+  border-end-end-radius: var(--r-sm);
+}
+.table > tbody > tr {
+  transition: background-color 0.13s ease;
 }
 .table > tbody > tr > td {
   padding-block: 0.8rem;
+  border-block-end-color: var(--line-2);
 }
 .table > tbody > tr:last-child > td {
   border-block-end: 0;
@@ -129,6 +144,25 @@ h1.h3 {
 }
 
 // Toolbar helpers ---------------------------------------------------------------
+// One tidy filter bar above a list: search, dropdowns and status chips sit on a
+// single wrapping row with even spacing, so every list page lines its controls
+// up the same way. The search field flexes to fill, the rest hug their content,
+// and a trailing item (a "clear filters" link) can push itself out with .ms-auto.
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.6rem;
+  margin-block-end: 1rem;
+}
+.list-toolbar > .search-box {
+  flex: 1 1 220px;
+  max-inline-size: 420px;
+}
+.list-toolbar > .filter-chips {
+  gap: 0.35rem;
+}
+
 // Search input with a leading icon (wrap input in .search-box and add the icon).
 .search-box {
   position: relative;
@@ -145,33 +179,66 @@ h1.h3 {
 .search-box > .form-control {
   padding-inline-start: 2.5rem;
   border-radius: 999px;
+  background-color: var(--surface-2);
+  border-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.search-box > .form-control:focus {
+  background-color: var(--surface);
+  border-color: var(--green);
+}
+.search-box:focus-within > .search-box-icon {
+  color: var(--green);
+}
+
+// Toolbar dropdowns (brand / category / status selects that sit beside the
+// search field) take the same soft filled pill so the filter row reads as one
+// calm bar; they light to white on focus like the search box.
+.form-select.w-auto {
+  border-radius: 999px;
+  background-color: var(--surface-2);
+  border-color: transparent;
+  padding-inline: 0.95rem 2.2rem;
+}
+.form-select.w-auto:focus {
+  background-color: var(--surface);
+  border-color: var(--green);
 }
 
 // Filter chips (segmented status filters on list pages).
 .filter-chips {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 .filter-chip {
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
   color: var(--ink-2);
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   font-weight: 500;
-  padding: 0.3rem 0.85rem;
+  line-height: 1.35;
+  padding: 0.32rem 0.9rem;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .filter-chip:hover {
   background: var(--surface-2);
+  border-color: var(--line-strong);
   color: var(--ink);
 }
 .filter-chip.active {
   background: var(--navy);
   border-color: var(--navy);
   color: #fff;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--navy) 30%, transparent);
+}
+.filter-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 22%, transparent);
 }
 
 // Icon-only row action buttons.
@@ -202,20 +269,27 @@ h1.h3 {
   pointer-events: none;
 }
 
-// List pager (prev / page chip / next).
+// List pager (prev / page chip / next) — a quiet footer row, split off from the
+// table by a hairline, with pill prev/next buttons that echo the filter chips.
 .list-pager {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   margin-block-start: 1rem;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid var(--line-2);
+}
+.list-pager .btn {
+  border-radius: 999px;
 }
 .list-pager .page-chip {
   font-size: 0.85rem;
+  font-weight: 500;
   color: var(--ink-2);
   background: var(--surface-2);
   border-radius: 999px;
-  padding: 0.25rem 0.9rem;
+  padding: 0.3rem 0.95rem;
 }
 
 // Table row art ------------------------------------------------------------------
