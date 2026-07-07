@@ -50,7 +50,7 @@
                         </td>
                         <td>
                           @for (r of u.roles; track r) {
-                            <span class="badge text-bg-secondary me-1">{{ r }}</span>
+                            <span class="badge text-bg-secondary me-1">{{ 'roles.' + r | translate }}</span>
                           }
                         </td>
                         <td>

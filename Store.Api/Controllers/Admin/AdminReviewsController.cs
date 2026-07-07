@@ -12,7 +12,7 @@ namespace Store.Api.Controllers.Admin;
 /// 1 = Pending, 5 = Approved, 8 = NotApproved.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Moderation)]
 [Route("api/admin/reviews")]
 public sealed class AdminReviewsController : ControllerBase
 {

@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for menus and their items (old Cms module's menu admin).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/menus")]
 public sealed class AdminMenusController : ControllerBase
 {

@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/pages")]
 public sealed class AdminPagesController : ControllerBase
 {

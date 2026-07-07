@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for product attributes and their groups (spec sheet building blocks).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/product-attributes")]
 public sealed class AdminProductAttributesController : ControllerBase
 {

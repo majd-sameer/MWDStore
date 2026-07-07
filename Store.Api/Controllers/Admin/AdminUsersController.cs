@@ -15,7 +15,7 @@ namespace Store.Api.Controllers.Admin;
 /// <see cref="UserManager{TUser}"/> so Identity's security stamp stays consistent.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Users)]
 [Route("api/admin/users")]
 public sealed class AdminUsersController : ControllerBase
 {

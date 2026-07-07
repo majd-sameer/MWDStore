@@ -6,6 +6,7 @@ import {
 } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService, LanguageService } from 'core';
+import { AREA } from '../core/roles';
 
 interface NavItem {
   readonly path: string;
@@ -13,6 +14,8 @@ interface NavItem {
   readonly key: string;
   /** Bootstrap Icons class, e.g. `bi-box-seam`. */
   readonly icon: string;
+  /** Roles allowed to see this link (mirrors the route's `roleGuard`). */
+  readonly roles: readonly string[];
   /** `true` to highlight only on the exact path (the dashboard root). */
   readonly exact?: boolean;
 }
@@ -50,63 +53,79 @@ export class AdminLayout {
     return source.slice(0, 2).toUpperCase() || '·';
   });
 
-  protected readonly sections: readonly NavSection[] = [
+  private readonly sections: readonly NavSection[] = [
     {
       key: null,
-      items: [{ path: '/', key: 'dashboard', icon: 'bi-grid-1x2', exact: true }],
+      items: [
+        { path: '/dashboard', key: 'dashboard', icon: 'bi-grid-1x2', roles: AREA.reports },
+      ],
     },
     {
       key: 'catalog',
       items: [
-        { path: '/products', key: 'products', icon: 'bi-box-seam' },
-        { path: '/categories', key: 'categories', icon: 'bi-folder2' },
-        { path: '/brands', key: 'brands', icon: 'bi-tag' },
-        { path: '/product-options', key: 'options', icon: 'bi-sliders' },
-        { path: '/product-attributes', key: 'attributes', icon: 'bi-list-check' },
-        { path: '/product-templates', key: 'templates', icon: 'bi-clipboard' },
-        { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data' },
-        { path: '/warehouses', key: 'warehouses', icon: 'bi-building' },
+        { path: '/products', key: 'products', icon: 'bi-box-seam', roles: AREA.catalog },
+        { path: '/categories', key: 'categories', icon: 'bi-folder2', roles: AREA.catalog },
+        { path: '/brands', key: 'brands', icon: 'bi-tag', roles: AREA.catalog },
+        { path: '/product-options', key: 'options', icon: 'bi-sliders', roles: AREA.catalog },
+        { path: '/product-attributes', key: 'attributes', icon: 'bi-list-check', roles: AREA.catalog },
+        { path: '/product-templates', key: 'templates', icon: 'bi-clipboard', roles: AREA.catalog },
+        { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
+        { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },
       ],
     },
     {
       key: 'sales',
       items: [
-        { path: '/orders', key: 'orders', icon: 'bi-receipt' },
-        { path: '/promotions', key: 'promotions', icon: 'bi-ticket-perforated' },
-        { path: '/shipping', key: 'shipping', icon: 'bi-truck' },
-        { path: '/payments', key: 'payments', icon: 'bi-credit-card' },
-        { path: '/taxes', key: 'taxes', icon: 'bi-percent' },
+        { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.sales },
+        { path: '/promotions', key: 'promotions', icon: 'bi-ticket-perforated', roles: AREA.marketing },
+        { path: '/shipping', key: 'shipping', icon: 'bi-truck', roles: AREA.fulfillment },
+        { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.settings },
+        { path: '/taxes', key: 'taxes', icon: 'bi-percent', roles: AREA.marketing },
       ],
     },
     {
       key: 'people',
       items: [
-        { path: '/customers', key: 'customers', icon: 'bi-people' },
-        { path: '/users', key: 'users', icon: 'bi-person-badge' },
-        { path: '/vendors', key: 'vendors', icon: 'bi-shop' },
-        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check' }
+        { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
+        { path: '/users', key: 'users', icon: 'bi-person-badge', roles: AREA.users },
+        { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.settings },
+        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation }
         /*,
-        { path: '/contacts', key: 'contacts', icon: 'bi-envelope' },*/
+        { path: '/contacts', key: 'contacts', icon: 'bi-envelope', roles: AREA.sales },*/
       ],
     },
     {
       key: 'content',
       items: [
-      /*  { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text' },
-        { path: '/menus', key: 'menus', icon: 'bi-list-ul' },*/
-        { path: '/news', key: 'news', icon: 'bi-newspaper' },
+      /*  { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text', roles: AREA.content },
+        { path: '/menus', key: 'menus', icon: 'bi-list-ul', roles: AREA.content },*/
+        { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
       ],
     },
     {
       key: 'system',
       items: [
-        { path: '/locations', key: 'countries', icon: 'bi-globe2' },
-       /* { path: '/localization', key: 'localization', icon: 'bi-translate' },*/
-        { path: '/settings', key: 'settings', icon: 'bi-gear' },
-      /*  { path: '/logs', key: 'logs', icon: 'bi-journal-text' },*/
+        { path: '/locations', key: 'countries', icon: 'bi-globe2', roles: AREA.settings },
+       /* { path: '/localization', key: 'localization', icon: 'bi-translate', roles: AREA.settings },*/
+        { path: '/settings', key: 'settings', icon: 'bi-gear', roles: AREA.settings },
+      /*  { path: '/logs', key: 'logs', icon: 'bi-journal-text', roles: AREA.settings },*/
       ],
     },
   ];
+
+  /**
+   * Sections/items the signed-in user may reach, recomputed from their roles.
+   * Items they can't access are dropped, and a section with no visible items
+   * disappears entirely — so the sidebar only ever shows reachable links.
+   */
+  protected readonly visibleSections = computed(() =>
+    this.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => this.auth.hasAnyRole(item.roles)),
+      }))
+      .filter((section) => section.items.length > 0),
+  );
 
   protected logout(): void {
     this.auth.logout();

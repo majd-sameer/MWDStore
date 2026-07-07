@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for customer groups (used by cart/catalog rule targeting). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Sales)]
 [Route("api/admin/customer-groups")]
 public sealed class AdminCustomerGroupsController : ControllerBase
 {

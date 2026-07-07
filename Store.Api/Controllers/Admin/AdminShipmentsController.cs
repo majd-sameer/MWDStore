@@ -15,7 +15,7 @@ namespace Store.Api.Controllers.Admin;
 /// list shipments globally or per order, and update tracking numbers.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Fulfillment)]
 [Route("api/admin/shipments")]
 public sealed class AdminShipmentsController : ControllerBase
 {

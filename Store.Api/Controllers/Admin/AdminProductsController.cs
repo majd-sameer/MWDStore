@@ -17,7 +17,7 @@ namespace Store.Api.Controllers.Admin;
 /// matched by name) and related/cross-sell links. Deletes are soft (sets <c>IsDeleted</c>).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/products")]
 public sealed class AdminProductsController : ControllerBase
 {

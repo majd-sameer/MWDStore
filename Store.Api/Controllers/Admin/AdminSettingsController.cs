@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin app-settings page (old Core module's configuration admin): list + bulk upsert.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/settings")]
 public sealed class AdminSettingsController : ControllerBase
 {

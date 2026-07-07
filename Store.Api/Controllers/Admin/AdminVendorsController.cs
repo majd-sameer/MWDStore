@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for vendors (old Vendors module). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/vendors")]
 public sealed class AdminVendorsController : ControllerBase
 {

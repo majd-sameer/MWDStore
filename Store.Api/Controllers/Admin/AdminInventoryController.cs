@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin warehouse inventory: view per-warehouse stock and apply adjustments via the stock service.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Inventory)]
 [Route("api/admin/inventory")]
 public sealed class AdminInventoryController : ControllerBase
 {

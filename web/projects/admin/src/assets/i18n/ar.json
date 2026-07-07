@@ -33,6 +33,15 @@
     "settings": "الإعدادات",
     "logs": "السجلات"
   },
+  "roles": {
+    "super-admin": "مدير عام",
+    "admin": "مدير",
+    "sales-manager": "مدير المبيعات",
+    "sales": "مبيعات",
+    "warehouse-keeper": "أمين المستودع",
+    "content-writer": "كاتب محتوى",
+    "customer": "عميل"
+  },
   "topbar": {
     "signed_in_as": "مسجّل الدخول باسم",
     "signout": "تسجيل الخروج"

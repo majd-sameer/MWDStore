@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin view of contact submissions + contact-area management (old Contacts module).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Sales)]
 [Route("api/admin/contacts")]
 public sealed class AdminContactsController : ControllerBase
 {

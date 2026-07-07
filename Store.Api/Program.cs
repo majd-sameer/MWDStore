@@ -94,7 +94,7 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddStorePolicies());
 
 // Bootstrap admin account options (password lives in gitignored config / user-secrets).
 var adminSeedOptions = builder.Configuration.GetSection(AdminSeedOptions.SectionName).Get<AdminSeedOptions>()

@@ -55,7 +55,7 @@
                       <input type="checkbox" class="form-check-input" id="usr-role-{{ r.id }}"
                         [checked]="selectedRoles().includes(r.name ?? '')"
                         (change)="toggleRole(r.name ?? '')" />
-                      <label class="form-check-label" for="usr-role-{{ r.id }}">{{ r.name }}</label>
+                      <label class="form-check-label" for="usr-role-{{ r.id }}">{{ 'roles.' + (r.name ?? '') | translate }}</label>
                     </div>
                   }
                 </div>

@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for warehouses (each owns an <see cref="Address"/> row, like the old Inventory module).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Inventory)]
 [Route("api/admin/warehouses")]
 public sealed class AdminWarehousesController : ControllerBase
 {

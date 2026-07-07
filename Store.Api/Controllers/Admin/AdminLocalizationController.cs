@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin localization (old Localization module): cultures and per-culture resource strings.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/localization")]
 public sealed class AdminLocalizationController : ControllerBase
 {

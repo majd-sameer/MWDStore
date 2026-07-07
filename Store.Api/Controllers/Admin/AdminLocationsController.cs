@@ -13,7 +13,7 @@ namespace Store.Api.Controllers.Admin;
 /// countries and states-provinces admin pages).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/locations")]
 public sealed class AdminLocationsController : ControllerBase
 {

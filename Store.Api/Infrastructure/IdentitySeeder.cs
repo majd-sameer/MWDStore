@@ -20,32 +20,23 @@ public static class IdentitySeeder
         var options = sp.GetRequiredService<AdminSeedOptions>();
         var timeProvider = sp.GetRequiredService<TimeProvider>();
 
-        // 1) Ensure the admin role.
-        if (!await roleManager.RoleExistsAsync(AppRoles.Admin))
+        // 1) Ensure every well-known role (the six staff roles + customer) exists.
+        foreach (var roleName in AppRoles.All)
         {
-            var roleResult = await roleManager.CreateAsync(new Role { Name = AppRoles.Admin });
+            if (await roleManager.RoleExistsAsync(roleName))
+            {
+                continue;
+            }
+
+            var roleResult = await roleManager.CreateAsync(new Role { Name = roleName });
             if (!roleResult.Succeeded)
             {
                 logger.LogError("Failed to create the '{Role}' role: {Errors}",
-                    AppRoles.Admin, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+                    roleName, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
                 return;
             }
 
-            logger.LogInformation("Created the '{Role}' role.", AppRoles.Admin);
-        }
-
-        // 1b) Ensure the customer role (assigned to storefront shoppers on create).
-        if (!await roleManager.RoleExistsAsync(AppRoles.Customer))
-        {
-            var roleResult = await roleManager.CreateAsync(new Role { Name = AppRoles.Customer });
-            if (!roleResult.Succeeded)
-            {
-                logger.LogError("Failed to create the '{Role}' role: {Errors}",
-                    AppRoles.Customer, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
-                return;
-            }
-
-            logger.LogInformation("Created the '{Role}' role.", AppRoles.Customer);
+            logger.LogInformation("Created the '{Role}' role.", roleName);
         }
 
         // 1c) Ensure the shared guest account that owns no-login orders. It has no role and a
@@ -109,18 +100,20 @@ public static class IdentitySeeder
             logger.LogInformation("Created the admin user '{Email}'.", options.Email);
         }
 
-        // 3) Ensure the user is in the admin role.
-        if (!await userManager.IsInRoleAsync(user, AppRoles.Admin))
+        // 3) Ensure the bootstrap user is a super admin — the only role that can manage users/roles,
+        //    so without it nobody could ever assign the other roles. Additive: an existing admin-only
+        //    account is upgraded on the next startup and keeps any roles it already had.
+        if (!await userManager.IsInRoleAsync(user, AppRoles.SuperAdmin))
         {
-            var addResult = await userManager.AddToRoleAsync(user, AppRoles.Admin);
+            var addResult = await userManager.AddToRoleAsync(user, AppRoles.SuperAdmin);
             if (!addResult.Succeeded)
             {
                 logger.LogError("Failed to add '{Email}' to the '{Role}' role: {Errors}",
-                    options.Email, AppRoles.Admin, string.Join("; ", addResult.Errors.Select(e => e.Description)));
+                    options.Email, AppRoles.SuperAdmin, string.Join("; ", addResult.Errors.Select(e => e.Description)));
                 return;
             }
 
-            logger.LogInformation("Granted '{Email}' the '{Role}' role.", options.Email, AppRoles.Admin);
+            logger.LogInformation("Granted '{Email}' the '{Role}' role.", options.Email, AppRoles.SuperAdmin);
         }
     }
 }

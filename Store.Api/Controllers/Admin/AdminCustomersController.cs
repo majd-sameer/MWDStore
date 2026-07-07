@@ -16,7 +16,7 @@ namespace Store.Api.Controllers.Admin;
 /// management (customers hold no roles) and adds per-customer order stats.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Sales)]
 [Route("api/admin/customers")]
 public sealed class AdminCustomersController : ControllerBase
 {
@@ -40,7 +40,7 @@ public sealed class AdminCustomersController : ControllerBase
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 200);
 
-        var customers = _db.Users.Where(u => !u.Roles.Any(r => r.Role.Name == AppRoles.Admin));
+        var customers = _db.Users.Where(u => !u.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)));
         if (!includeDeleted)
         {
             customers = customers.Where(u => !u.IsDeleted);
@@ -68,7 +68,7 @@ public sealed class AdminCustomersController : ControllerBase
     public async Task<ActionResult<AdminCustomerDetail>> Get(long id, CancellationToken cancellationToken)
     {
         var customer = await _db.Users
-            .Where(u => u.Id == id && !u.Roles.Any(r => r.Role.Name == AppRoles.Admin))
+            .Where(u => u.Id == id && !u.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)))
             .Select(u => new AdminCustomerDetail(
                 u.Id, u.Email, u.FullName, u.PhoneNumber,
                 u.CustomerGroups.Select(g => g.Id).ToList()))
@@ -112,7 +112,8 @@ public sealed class AdminCustomersController : ControllerBase
         long id, AdminCustomerUpdateRequest request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null || user.IsDeleted || await _userManager.IsInRoleAsync(user, AppRoles.Admin))
+        if (user == null || user.IsDeleted
+            || (await _userManager.GetRolesAsync(user)).Any(AppRoles.Staff.Contains))
         {
             return NotFound();
         }
@@ -135,7 +136,7 @@ public sealed class AdminCustomersController : ControllerBase
         var user = await _db.Users
             .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        if (user == null || user.Roles.Any(r => r.Role.Name == AppRoles.Admin))
+        if (user == null || user.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)))
         {
             return NotFound();
         }

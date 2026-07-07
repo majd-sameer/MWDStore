@@ -19,6 +19,7 @@ import { AuthService, LanguageService } from 'core';
 import { firstValueFrom } from 'rxjs';
 import { Button, FormField } from 'ui';
 import { firstError } from '../../shared/field-error';
+import { STAFF_ROLES } from '../../core/roles';
 
 interface LoginModel {
   email: string;
@@ -27,8 +28,8 @@ interface LoginModel {
 
 /**
  * Admin sign-in. Authenticates via core's `AuthService` (JWT held in memory),
- * then verifies the account actually holds the `Admin` role before entering the
- * console — a non-admin who authenticates is signed back out with a clear
+ * then verifies the account holds at least one staff role before entering the
+ * console — a customer who authenticates is signed back out with a clear
  * message rather than being bounced by the route guard. Includes a language
  * toggle since the authenticated topbar isn't available yet.
  */
@@ -80,7 +81,7 @@ export class Login {
         return undefined;
       }
 
-      if (!this.auth.hasRole('admin')) {
+      if (!this.auth.hasAnyRole(STAFF_ROLES)) {
         this.auth.clearSession();
         this.serverError.set('login.no_access');
         return undefined;

@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for news categories and news items (old News module). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/news")]
 public sealed class AdminNewsController : ControllerBase
 {

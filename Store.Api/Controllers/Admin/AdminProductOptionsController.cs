@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for product options (Color, Size, ...) used to build variations.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/product-options")]
 public sealed class AdminProductOptionsController : ControllerBase
 {

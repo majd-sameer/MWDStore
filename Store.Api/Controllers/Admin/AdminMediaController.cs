@@ -13,7 +13,7 @@ namespace Store.Api.Controllers.Admin;
 /// reference the returned media id.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Media)]
 [Route("api/admin/media")]
 public sealed class AdminMediaController : ControllerBase
 {

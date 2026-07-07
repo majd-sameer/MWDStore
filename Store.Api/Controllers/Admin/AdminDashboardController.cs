@@ -14,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// health, the best sellers, and the work queues (low stock + orders needing action).
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Reports)]
 [Route("api/admin/dashboard")]
 public sealed class AdminDashboardController : ControllerBase
 {

@@ -33,6 +33,15 @@
     "settings": "Settings",
     "logs": "Logs"
   },
+  "roles": {
+    "super-admin": "Super Admin",
+    "admin": "Admin",
+    "sales-manager": "Sales Manager",
+    "sales": "Sales",
+    "warehouse-keeper": "Warehouse Keeper",
+    "content-writer": "Content Writer",
+    "customer": "Customer"
+  },
   "topbar": {
     "signed_in_as": "Signed in as",
     "signout": "Sign out"

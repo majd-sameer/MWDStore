@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin order management: browse all orders, view detail, change status, and cancel (restocks).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Sales)]
 [Route("api/admin/orders")]
 public sealed class AdminOrdersController : ControllerBase
 {

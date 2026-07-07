@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin category management (CRUD). Deletes are soft.</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/categories")]
 public sealed class AdminCategoriesController : ControllerBase
 {

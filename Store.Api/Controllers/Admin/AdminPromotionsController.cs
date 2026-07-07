@@ -14,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// join tables; usage rows come from checkout's <c>CouponService</c>.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Marketing)]
 [Route("api/admin/promotions")]
 public sealed class AdminPromotionsController : ControllerBase
 {

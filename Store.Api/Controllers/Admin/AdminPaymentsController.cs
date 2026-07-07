@@ -15,7 +15,7 @@ namespace Store.Api.Controllers.Admin;
 /// transaction log. The standard providers are seeded on first access using the old modules' ids.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/payments")]
 public sealed class AdminPaymentsController : ControllerBase
 {

@@ -12,7 +12,7 @@
       </a>
 
       <nav class="admin-nav nav nav-pills flex-column flex-nowrap">
-        @for (section of sections; track section.key) {
+        @for (section of visibleSections(); track section.key) {
           @if (section.key) {
             <div class="nav-section-label">{{ 'nav.' + section.key | translate }}</div>
           }

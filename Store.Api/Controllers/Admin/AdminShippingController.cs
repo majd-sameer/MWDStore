@@ -17,7 +17,7 @@ namespace Store.Api.Controllers.Admin;
 /// matching the rows the old ShippingFree/ShippingTableRate modules registered.
 /// </summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Fulfillment)]
 [Route("api/admin/shipping")]
 public sealed class AdminShippingController : ControllerBase
 {

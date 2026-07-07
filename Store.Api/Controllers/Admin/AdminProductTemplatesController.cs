@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin CRUD for product templates (named attribute sets used to prefill the product form).</summary>
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/product-templates")]
 public sealed class AdminProductTemplatesController : ControllerBase
 {
