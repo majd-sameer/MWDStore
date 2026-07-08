@@ -49,7 +49,7 @@
     "subtitle": "Edit the words and images of the storefront — the design stays fixed.",
     "preview": "Preview storefront",
     "page": "Page",
-    "pages": { "home": "Home", "about": "About us" },
+    "pages": { "home": "Home", "about": "About us", "footer": "Footer" },
     "language": "Language",
     "ar": "Arabic",
     "en": "English",
@@ -68,7 +68,12 @@
       "cta-band": "Call-to-action band",
       "about-hero": "About — hero",
       "about-how": "About — how we work",
-      "about-values": "About — our values"
+      "about-values": "About — our values",
+      "footer-brand": "Footer — brand & newsletter",
+      "footer-shop": "Footer — shop column",
+      "footer-company": "Footer — company column",
+      "footer-care": "Footer — care column",
+      "footer-social": "Footer — social links"
     },
     "keys": {
       "hero_title": "Hero title",
@@ -81,7 +86,18 @@
       "eyebrow": "Eyebrow",
       "title": "Title",
       "body": "Body",
-      "cta_label": "Button label"
+      "cta_label": "Button label",
+      "heading": "Column heading",
+      "tagline": "Tagline",
+      "psd": "PSD endorsement",
+      "newsletter": "Newsletter label",
+      "link_about": "Link — our story",
+      "link_makers": "Link — our makers",
+      "link_stores": "Link — stores",
+      "link_delivery": "Link — delivery & returns",
+      "link_track": "Link — track an order",
+      "link_contact": "Link — contact",
+      "link_faq": "Link — FAQ"
     }
   },
   "audit": {

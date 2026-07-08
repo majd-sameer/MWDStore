@@ -39,6 +39,18 @@ const KEY_LABELS: Record<string, string> = {
   title: 'cms.keys.title',
   body: 'cms.keys.body',
   'cta-label': 'cms.keys.cta_label',
+  // Footer — the social platform keys (facebook, instagram, …) read fine raw.
+  heading: 'cms.keys.heading',
+  tagline: 'cms.keys.tagline',
+  psd: 'cms.keys.psd',
+  newsletter: 'cms.keys.newsletter',
+  about: 'cms.keys.link_about',
+  makers: 'cms.keys.link_makers',
+  stores: 'cms.keys.link_stores',
+  delivery_returns: 'cms.keys.link_delivery',
+  track: 'cms.keys.link_track',
+  contact: 'cms.keys.link_contact',
+  faq: 'cms.keys.link_faq',
 };
 
 /**
@@ -59,7 +71,7 @@ export class AdminContentBlocks {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  protected readonly pages = ['home', 'about'];
+  protected readonly pages = ['home', 'about', 'footer'];
   protected readonly page = signal('home');
   protected readonly lang = signal<'ar' | 'en'>('ar');
 

@@ -6,25 +6,25 @@
             <img class="wordmark-logo" src="logo-gold.png" alt="" />
             <span>{{ 'brand.name' | translate }}</span>
           </span>
-          <p class="tagline">{{ 'footer.tagline' | translate }}</p>
+          <p class="tagline">{{ content.block('footer-brand', 'tagline')?.value || ('footer.tagline' | translate) }}</p>
 
           <div class="psd">
             <span class="psd-crest">
-              <img src="logo-psd.png" [attr.alt]="'footer.psd' | translate" />
+              <img src="logo-psd.png" [attr.alt]="content.block('footer-brand', 'psd')?.value || ('footer.psd' | translate)" />
             </span>
-            <span class="psd-note">{{ 'footer.psd' | translate }}</span>
+            <span class="psd-note">{{ content.block('footer-brand', 'psd')?.value || ('footer.psd' | translate) }}</span>
           </div>
 
           <form class="newsletter" (submit)="$event.preventDefault()">
             <label class="visually-hidden" for="footer-email">
-              {{ 'footer.newsletter' | translate }}
+              {{ content.block('footer-brand', 'newsletter')?.value || ('footer.newsletter' | translate) }}
             </label>
             <input
               id="footer-email"
               type="email"
               dir="auto"
               class="form-control"
-              [attr.placeholder]="'footer.newsletter' | translate"
+              [attr.placeholder]="content.block('footer-brand', 'newsletter')?.value || ('footer.newsletter' | translate)"
             />
             <button
               type="submit"
@@ -34,10 +34,24 @@
               <lib-icon name="arrowEnd" [size]="18" />
             </button>
           </form>
+
+          @if (hasSocial()) {
+            <ul class="footer-social">
+              @for (s of socials; track s.key) {
+                @if (content.block('footer-social', s.key)?.linkUrl; as url) {
+                  <li>
+                    <a [href]="url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
+                      <lib-icon [name]="s.icon" [size]="20" />
+                    </a>
+                  </li>
+                }
+              }
+            </ul>
+          }
         </div>
 
         <div class="footer-col">
-          <h2 class="footer-h">{{ 'footer.shop' | translate }}</h2>
+          <h2 class="footer-h">{{ content.block('footer-shop', 'heading')?.value || ('footer.shop' | translate) }}</h2>
           <ul>
             <li><a routerLink="/shop">{{ 'nav.shop' | translate }}</a></li>
             @for (item of shopLinks(); track item.category) {
@@ -51,19 +65,19 @@
         </div>
 
         <div class="footer-col">
-          <h2 class="footer-h">{{ 'footer.brand' | translate }}</h2>
+          <h2 class="footer-h">{{ content.block('footer-company', 'heading')?.value || ('footer.brand' | translate) }}</h2>
           <ul>
             @for (item of brandLinks; track item.key) {
-              <li><a [routerLink]="item.link">{{ 'footer.' + item.key | translate }}</a></li>
+              <li><a [routerLink]="item.link">{{ content.block('footer-company', item.key)?.value || ('footer.' + item.key | translate) }}</a></li>
             }
           </ul>
         </div>
 
         <div class="footer-col">
-          <h2 class="footer-h">{{ 'footer.care' | translate }}</h2>
+          <h2 class="footer-h">{{ content.block('footer-care', 'heading')?.value || ('footer.care' | translate) }}</h2>
           <ul>
             @for (item of careLinks; track item.key) {
-              <li><a [routerLink]="item.link">{{ 'footer.' + item.key | translate }}</a></li>
+              <li><a [routerLink]="item.link">{{ content.block('footer-care', item.key)?.value || ('footer.' + item.key | translate) }}</a></li>
             }
           </ul>
         </div>

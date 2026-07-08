@@ -97,6 +97,40 @@ public static class ContentBlockSeeder
         new("about", "about-values", "quality.text", "text",
             "معايير دقيقة لكل منتج قبل أن يصل إلى يديك.",
             "Strict standards for every product before it reaches your hands.", Sort: 11),
+
+        // ----- Footer (global) — editable copy + social links, fixed design --------------------------
+        new("footer", "footer-brand", "tagline", "text",
+            "منتجات يدوية من صنع نزلاء مراكز الإصلاح والتأهيل في الأردن — ١٠٠٪ من العائدات تدعم التأهيل وإعادة الدمج.",
+            "Handmade products by inmates of Jordan's Reform & Rehabilitation Centers — 100% of proceeds "
+            + "support rehabilitation and reintegration.", Sort: 0),
+        new("footer", "footer-brand", "psd", "text",
+            "بإشراف مديرية الأمن العام — إدارة مراكز الإصلاح والتأهيل",
+            "Under the supervision of the Public Security Directorate — Reform & Rehabilitation Centers "
+            + "Administration", Sort: 1),
+        new("footer", "footer-brand", "newsletter", "text",
+            "بريدك لنشرة الأسبوع", "Email for the weekly drop", Sort: 2),
+
+        new("footer", "footer-shop", "heading", "text", "المتجر", "Shop", Sort: 0),
+
+        new("footer", "footer-company", "heading", "text", "صُنع بعزيمة", "Made With Determination", Sort: 0),
+        new("footer", "footer-company", "about", "text", "قصّتنا", "Our story", Sort: 1),
+        new("footer", "footer-company", "makers", "text", "صنّاعنا", "Our makers", Sort: 2),
+        new("footer", "footer-company", "stores", "text", "المتاجر", "Stores", Sort: 3),
+
+        new("footer", "footer-care", "heading", "text", "العناية", "Care", Sort: 0),
+        new("footer", "footer-care", "delivery_returns", "text", "التوصيل والإرجاع", "Delivery & returns", Sort: 1),
+        new("footer", "footer-care", "track", "text", "تتبّع طلبًا", "Track an order", Sort: 2),
+        new("footer", "footer-care", "contact", "text", "تواصل معنا", "Contact", Sort: 3),
+        new("footer", "footer-care", "faq", "text", "الأسئلة الشائعة", "FAQ", Sort: 4),
+
+        // Social links — icon is code-owned (by BlockKey); admins set the URL and toggle visibility.
+        // Seeded with an empty URL so nothing shows until configured in the Site Content editor.
+        new("footer", "footer-social", "facebook", "link", null, null, Sort: 0),
+        new("footer", "footer-social", "instagram", "link", null, null, Sort: 1),
+        new("footer", "footer-social", "twitter", "link", null, null, Sort: 2),
+        new("footer", "footer-social", "youtube", "link", null, null, Sort: 3),
+        new("footer", "footer-social", "tiktok", "link", null, null, Sort: 4),
+        new("footer", "footer-social", "whatsapp", "link", null, null, Sort: 5),
     ];
 
     public static async Task SeedAsync(IServiceProvider services, CancellationToken cancellationToken = default)
