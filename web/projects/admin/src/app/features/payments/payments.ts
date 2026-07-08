@@ -18,7 +18,7 @@ import { PageHeader } from '../../shared/page-header';
 import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 
 /**
  * Payments browser: the gateway list (enable inline, configure on its own page)

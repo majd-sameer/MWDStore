@@ -23,7 +23,7 @@ import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 import { dayBoundary } from '../../shared/date-range';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 const REASON_KEYS: Record<number, string> = {
   1: 'sale',

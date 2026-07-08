@@ -21,7 +21,7 @@ import { TableFooter } from '../../shared/table-footer';
 import { FilterDropdown, type FilterOption, type FilterValue } from '../../shared/filter-dropdown';
 import { dayBoundary } from '../../shared/date-range';
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 10;
 
 /** One before/after pair rendered in the detail drawer. */
 interface DiffRow {

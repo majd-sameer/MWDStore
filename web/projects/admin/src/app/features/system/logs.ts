@@ -25,7 +25,7 @@ export class AdminLogs {
   protected readonly tab = signal<'activity' | 'search'>('activity');
 
   protected readonly page = signal(1);
-  protected readonly pageSize = signal(50);
+  protected readonly pageSize = signal(10);
 
   private readonly activityQuery = computed(() => ({
     page: this.page(),

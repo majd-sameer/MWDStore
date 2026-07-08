@@ -22,7 +22,7 @@ import { StatusPill } from '../../shared/status-pill';
 import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 /** Publish-state segments for the filter chips. */
 type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';

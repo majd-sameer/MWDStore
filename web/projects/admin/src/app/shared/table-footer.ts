@@ -50,8 +50,8 @@ import { Pagination } from 'ui';
 export class TableFooter {
   readonly total = input(0);
   readonly page = input(1);
-  readonly pageSize = input(15);
-  readonly pageSizeOptions = input<number[]>([15, 30, 50, 100]);
+  readonly pageSize = input(10);
+  readonly pageSizeOptions = input<number[]>([10, 20, 50]);
 
   readonly pageChange = output<number>();
   readonly pageSizeChange = output<number>();

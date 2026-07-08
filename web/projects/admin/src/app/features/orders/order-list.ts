@@ -22,7 +22,7 @@ import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 import { FilterDropdown, type FilterOption, type FilterValue } from '../../shared/filter-dropdown';
 
-const DEFAULT_PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 10;
 
 /**
  * Order browser over the paged `GET /api/admin/orders` envelope: a multi-select

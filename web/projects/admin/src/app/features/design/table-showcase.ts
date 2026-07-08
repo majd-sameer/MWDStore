@@ -73,7 +73,7 @@ export class TableShowcase {
   }
 
   protected readonly page = signal(1);
-  protected readonly pageSize = signal(15);
+  protected readonly pageSize = signal(10);
 
   // Multi-select filter demo -------------------------------------------------
   protected readonly bidStatusOptions: FilterOption[] = [

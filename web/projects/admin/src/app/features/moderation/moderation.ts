@@ -15,7 +15,7 @@ import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 import { FilterDropdown, type FilterOption, type FilterValue } from '../../shared/filter-dropdown';
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_KEYS: Record<number, string> = {
   1: 'moderation.status_pending',

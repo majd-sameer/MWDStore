@@ -45,7 +45,7 @@ export class AdminUsers {
 
   protected readonly search = signal('');
   protected readonly page = signal(1);
-  protected readonly pageSize = signal(25);
+  protected readonly pageSize = signal(10);
   protected readonly list = this.service.listResource(() => ({
     query: this.search() || undefined,
     page: this.page(),
