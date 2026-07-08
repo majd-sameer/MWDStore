@@ -15,6 +15,8 @@ export {
   API_ROOT,
   toQueryParams,
   type QueryParamValue,
+  type QueryParamScalar,
+  type PagedResult,
   type CatalogProductQuery,
   type AdminProductQuery,
   type AdminOrderQuery,

@@ -59,7 +59,7 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.seo' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.seo' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
                   <multi-lang-input controlId="metaTitle" [formField]="f.metaTitle" />
@@ -74,11 +74,12 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'nav.attributes' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'nav.attributes' | translate }}</div>
               <div class="card-body">
                 <div class="d-flex gap-2 mb-3">
                   <ng-select class="flex-grow-1" [items]="availableAttributes()" bindValue="id"
                     [ngModel]="pendingAttributeId()" (ngModelChange)="pendingAttributeId.set($event)"
+                    [ngModelOptions]="{ standalone: true }"
                     [placeholder]="'product_form.choose_attribute' | translate">
                     <ng-template ng-label-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
                     <ng-template ng-option-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
@@ -105,11 +106,12 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.options_title' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.options_title' | translate }}</div>
               <div class="card-body">
                 <div class="d-flex gap-2 mb-3">
                   <ng-select class="flex-grow-1" [items]="availableOptions()" bindLabel="name" bindValue="id"
                     [ngModel]="pendingOptionId()" (ngModelChange)="pendingOptionId.set($event)"
+                    [ngModelOptions]="{ standalone: true }"
                     [placeholder]="'product_form.choose_option' | translate" />
                   <button type="button" libButton variant="secondary" [outline]="true"
                     (click)="addOption(pendingOptionId()); pendingOptionId.set(null)">
@@ -123,6 +125,7 @@
                       <span class="fw-semibold">{{ row.name }}</span>
                       <ng-select class="option-display-select" [items]="displayTypeOptions" bindValue="value"
                         [ngModel]="row.displayType" (ngModelChange)="setOptionDisplayType(row.optionId, $event)"
+                        [ngModelOptions]="{ standalone: true }"
                         [clearable]="false" [searchable]="false">
                         <ng-template ng-label-tmp let-item>{{ item.key | translate }}</ng-template>
                         <ng-template ng-option-tmp let-item>{{ item.key | translate }}</ng-template>
@@ -208,7 +211,7 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.related_title' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.related_title' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'product_form.search_products' | translate" controlId="linkSearch"
                   [hint]="'product_form.search_products_hint' | translate">
@@ -266,7 +269,7 @@
 
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.images_title' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.images_title' | translate }}</div>
               <div class="card-body">
                 <label class="form-label" for="thumbnailFile">{{ 'product_form.thumbnail' | translate }}</label>
                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -310,7 +313,7 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.pricing_title' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.pricing_title' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'product_form.price' | translate" controlId="price" [required]="true" [error]="err(f.price())">
                   <input id="price" type="number" step="0.01" class="form-control"
@@ -351,7 +354,7 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-              <div class="card-header bg-body fw-semibold">{{ 'product_form.organisation_title' | translate }}</div>
+              <div class="card-header fw-semibold">{{ 'product_form.organisation_title' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'products.brand' | translate" controlId="brandId">
                   <ng-select id="brandId" [items]="brandItems()" bindLabel="name" bindValue="id"
@@ -436,4 +439,3 @@
         </div>
       </form>
     }
-  

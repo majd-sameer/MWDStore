@@ -1,4 +1,4 @@
-﻿import { DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MoneyPipe } from 'core';
 import {
   ChangeDetectionStrategy,
@@ -9,56 +9,80 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminOrdersService, type AdminOrderQuery } from 'data-access';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from 'core';
 import { Icon } from 'ui';
 import {
   ORDER_STATUS_OPTIONS,
-  orderStatusBadge,
+  orderStatusTone,
 } from '../../shared/order-status';
 import { PageHeader } from '../../shared/page-header';
+import { StatusPill } from '../../shared/status-pill';
+import { TableSkeleton } from '../../shared/table-skeleton';
+import { TableFooter } from '../../shared/table-footer';
+import { FilterDropdown, type FilterOption, type FilterValue } from '../../shared/filter-dropdown';
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 25;
 
-/** Order browser: one-click status chips + pagination over `GET /api/admin/orders`. */
+/**
+ * Order browser over the paged `GET /api/admin/orders` envelope: a multi-select
+ * status filter, numbered pagination with total count, and skeleton loading.
+ */
 @Component({
   selector: 'app-admin-order-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [
+    MoneyPipe,
+    DatePipe,
+    RouterLink,
+    Icon,
+    TranslatePipe,
+    PageHeader,
+    StatusPill,
+    TableSkeleton,
+    TableFooter,
+    FilterDropdown,
+  ],
   templateUrl: './order-list.html',
 })
 export class AdminOrderList {
   private readonly service = inject(AdminOrdersService);
+  private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
 
-  protected readonly statusOptions = ORDER_STATUS_OPTIONS;
-  protected readonly badge = orderStatusBadge;
+  protected readonly tone = orderStatusTone;
 
-  protected readonly status = signal<number | null>(null);
+  /** Status filter options, re-labelled when the console language switches. */
+  protected readonly statusFilterOptions = computed<FilterOption[]>(() => {
+    this.language.lang();
+    return ORDER_STATUS_OPTIONS.map((o) => ({
+      value: o.value,
+      label: this.translate.instant('orders.status_' + o.value),
+    }));
+  });
+
+  protected readonly statuses = signal<FilterValue[]>([]);
   protected readonly page = signal(1);
+  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
 
   private readonly query = computed<AdminOrderQuery>(() => ({
-    status: this.status() ?? undefined,
+    statuses: this.statuses() as number[],
     page: this.page(),
-    pageSize: PAGE_SIZE,
+    pageSize: this.pageSize(),
   }));
 
   protected readonly orders = this.service.listResource(this.query);
 
-  protected readonly hasMore = computed(
-    () => (this.orders.value()?.length ?? 0) === PAGE_SIZE,
-  );
+  protected readonly rows = computed(() => this.orders.value()?.items ?? []);
+  protected readonly total = computed(() => this.orders.value()?.total ?? 0);
 
-  protected setStatus(value: number | null): void {
-    this.status.set(value);
+  protected setStatuses(values: FilterValue[]): void {
+    this.statuses.set(values);
     this.page.set(1);
   }
 
-  protected prev(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  protected next(): void {
-    if (this.hasMore()) {
-      this.page.update((p) => p + 1);
-    }
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 }

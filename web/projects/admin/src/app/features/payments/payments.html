@@ -5,14 +5,10 @@
     />
 
     <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-body fw-semibold">{{ 'payments.providers_title' | translate }}</div>
+      <div class="card-header fw-semibold">{{ 'payments.providers_title' | translate }}</div>
       <div class="card-body">
         @if (providers.isLoading()) {
-          <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
+          <app-table-skeleton [rows]="4" [columns]="[3, 2, 1, 1]" />
         } @else if (providers.value(); as rows) {
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -56,40 +52,57 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-body fw-semibold">{{ 'payments.transactions_title' | translate }}</div>
+      <div class="card-header fw-semibold">{{ 'payments.transactions_title' | translate }}</div>
       <div class="card-body">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>{{ 'dashboard.col_order' | translate }}</th>
-              <th>{{ 'payments.col_method' | translate }}</th>
-              <th class="text-end">{{ 'payments.col_amount' | translate }}</th>
-              <th class="text-end">{{ 'payments.col_fee' | translate }}</th>
-              <th>{{ 'payments.col_ref' | translate }}</th>
-              <th>{{ 'common.when' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (t of payments.value() ?? []; track t.id) {
-              <tr>
-                <td>{{ t.id }}</td>
-                <td>#{{ t.orderId }}</td>
-                <td>{{ t.paymentMethod ?? '—' }}</td>
-                <td class="text-end">{{ t.amount | money }}</td>
-                <td class="text-end">{{ t.paymentFee | money }}</td>
-                <td class="small">{{ t.gatewayTransactionId ?? '—' }}</td>
-                <td class="small">{{ t.createdOn | date: 'medium' }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="7" class="text-center text-body-secondary py-4">
-                  {{ 'payments.no_payments' | translate }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        @if (payments.isLoading()) {
+          <app-table-skeleton [rows]="6" [columns]="[1, 2, 2, 1, 1, 2, 2]" />
+        } @else if (payments.error()) {
+          <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{{ 'dashboard.col_order' | translate }}</th>
+                  <th>{{ 'payments.col_method' | translate }}</th>
+                  <th class="text-end">{{ 'payments.col_amount' | translate }}</th>
+                  <th class="text-end">{{ 'payments.col_fee' | translate }}</th>
+                  <th>{{ 'payments.col_ref' | translate }}</th>
+                  <th>{{ 'common.when' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of paymentRows(); track t.id) {
+                  <tr>
+                    <td>{{ t.id }}</td>
+                    <td>#{{ t.orderId }}</td>
+                    <td>{{ t.paymentMethod ?? '—' }}</td>
+                    <td class="text-end">{{ t.amount | money }}</td>
+                    <td class="text-end">{{ t.paymentFee | money }}</td>
+                    <td class="small">{{ t.gatewayTransactionId ?? '—' }}</td>
+                    <td class="small">{{ t.createdOn | date: 'medium' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="text-center text-body-secondary py-4">
+                      {{ 'payments.no_payments' | translate }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (paymentsTotal() > 0) {
+            <app-table-footer
+              [total]="paymentsTotal()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              (pageChange)="page.set($event)"
+              (pageSizeChange)="setPageSize($event)"
+            />
+          }
+        }
       </div>
     </div>
-  

@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, toQueryParams, type PagedResult } from '../http-utils';
 import type { ProductStockDto, StockAdjustmentRequest } from '../models';
 
 /** StockOutReason enum values (mirror Store.Domain.StockOutReason). */
@@ -100,7 +100,7 @@ export class AdminInventoryService {
   /** GET /api/admin/inventory/stock-out-log */
   stockOutLogResource(query: () => AdminStockOutQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<StockOutLogRow[]>(() => {
+      httpResource<PagedResult<StockOutLogRow>>(() => {
         const q = query();
         return {
           url: `${API_ROOT}/admin/inventory/stock-out-log`,

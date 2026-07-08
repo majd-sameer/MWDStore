@@ -11,11 +11,7 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         @if (list.isLoading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
+          <app-table-skeleton [rows]="6" [columns]="[3, 1, 1, 2]" />
         } @else if (list.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {

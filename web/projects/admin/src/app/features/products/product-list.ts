@@ -18,18 +18,21 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { StatusPill } from '../../shared/status-pill';
+import { TableSkeleton } from '../../shared/table-skeleton';
+import { TableFooter } from '../../shared/table-footer';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 /** Publish-state segments for the filter chips. */
 type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
 
 /**
- * Admin product browser over `GET /api/admin/products`: debounced name search,
- * one-click publish-state chips (all / published / draft / deleted) and brand +
- * category selects — all server-side filters — plus pagination and icon row
- * actions to edit or soft-delete. The endpoint returns a bare array (no
- * total), so paging advances while a full page comes back.
+ * Admin product browser over the paged `GET /api/admin/products` envelope:
+ * debounced name search, one-click publish-state chips (all / published / draft
+ * / deleted) and brand + category selects — all server-side filters — plus
+ * numbered pagination with total count and icon row actions to edit or
+ * soft-delete.
  */
 @Component({
   selector: 'app-admin-product-list',
@@ -42,6 +45,9 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
     Icon,
     TranslatePipe,
     PageHeader,
+    StatusPill,
+    TableSkeleton,
+    TableFooter,
   ],
   templateUrl: './product-list.html',
 })
@@ -58,6 +64,7 @@ export class AdminProductList {
   protected readonly brandId = signal<number | null>(null);
   protected readonly categoryId = signal<number | null>(null);
   protected readonly page = signal(1);
+  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   protected readonly deletingId = signal<number | null>(null);
 
   protected readonly brands = this.brandsService.listResource(() => false);
@@ -76,16 +83,14 @@ export class AdminProductList {
       brandId: this.brandId() ?? undefined,
       categoryId: this.categoryId() ?? undefined,
       page: this.page(),
-      pageSize: PAGE_SIZE,
+      pageSize: this.pageSize(),
     };
   });
 
   protected readonly products = this.service.listResource(this.query);
 
-  /** A full page back implies there may be another page. */
-  protected readonly hasMore = computed(
-    () => (this.products.value()?.length ?? 0) === PAGE_SIZE,
-  );
+  protected readonly rows = computed(() => this.products.value()?.items ?? []);
+  protected readonly total = computed(() => this.products.value()?.total ?? 0);
 
   protected readonly hasFilters = computed(
     () =>
@@ -163,14 +168,9 @@ export class AdminProductList {
     this.page.set(1);
   }
 
-  protected prev(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  protected next(): void {
-    if (this.hasMore()) {
-      this.page.update((p) => p + 1);
-    }
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   protected remove(id: number, name: string | null): void {

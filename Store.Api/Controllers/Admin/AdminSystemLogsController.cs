@@ -22,18 +22,14 @@ public sealed class AdminSystemLogsController : ControllerBase
     }
 
     [HttpGet("activities")]
-    public async Task<ActionResult<IReadOnlyList<AdminActivityDto>>> Activities(
+    public async Task<ActionResult<PagedResult<AdminActivityDto>>> Activities(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var activities = await _db.Activities
             .OrderByDescending(a => a.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(a => new AdminActivityDto(
                 a.Id, a.ActivityTypeId, a.ActivityType.Name, a.UserId, a.EntityId, a.EntityTypeId, a.CreatedOn))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
         return Ok(activities);
     }

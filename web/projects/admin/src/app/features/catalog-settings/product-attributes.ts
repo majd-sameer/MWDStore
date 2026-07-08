@@ -14,6 +14,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Product attribute browser: the attribute list with a small group manager
@@ -24,7 +25,7 @@ import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-inp
 @Component({
   selector: 'app-admin-product-attributes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, MultiLangInput, TableSkeleton],
   templateUrl: './product-attributes.html',
 })
 export class AdminProductAttributes {

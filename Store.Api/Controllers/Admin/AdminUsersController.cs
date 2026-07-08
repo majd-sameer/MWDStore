@@ -31,13 +31,10 @@ public sealed class AdminUsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminUserListItem>>> List(
+    public async Task<ActionResult<PagedResult<AdminUserListItem>>> List(
         [FromQuery] string? query, [FromQuery] bool includeDeleted = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var users = _db.Users.AsQueryable();
         if (!includeDeleted)
         {
@@ -49,16 +46,15 @@ public sealed class AdminUsersController : ControllerBase
             users = users.Where(u => u.Email!.Contains(query) || u.FullName.Contains(query));
         }
 
-        var items = await users
+        var result = await users
             .OrderByDescending(u => u.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(u => new AdminUserListItem(
                 u.Id, u.Email, u.FullName, u.PhoneNumber, u.CreatedOn, u.IsDeleted,
                 u.Roles.Select(r => r.Role.Name!).ToList(),
                 u.CustomerGroups.Select(g => g.Name).ToList()))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 
     [HttpGet("roles")]

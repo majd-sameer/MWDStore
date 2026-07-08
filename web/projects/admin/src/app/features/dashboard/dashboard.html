@@ -81,7 +81,7 @@
     <div class="row g-3 mb-3">
       <div class="col-12 col-xl-8">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_revenue_trend' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_revenue_trend' | translate }}</div>
           <div class="card-body">
             <div class="chart-box chart-box-tall">
               <canvas baseChart [type]="'bar'" [data]="trendData()" [options]="trendOptions" ></canvas>
@@ -91,7 +91,7 @@
       </div>
       <div class="col-12 col-xl-4">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_stock_health' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_stock_health' | translate }}</div>
           <div class="card-body d-flex flex-column">
             <div class="chart-box flex-grow-1">
               <canvas baseChart [type]="'doughnut'" [data]="stockData()" [options]="doughnutOptions" ></canvas>
@@ -108,7 +108,7 @@
     <div class="row g-3 mb-3">
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_status_funnel' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_status_funnel' | translate }}</div>
           <div class="card-body">
             <div class="chart-box">
               <canvas baseChart [type]="'bar'" [data]="statusData()" [options]="horizontalBarOptions" ></canvas>
@@ -118,7 +118,7 @@
       </div>
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_top_products' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_top_products' | translate }}</div>
           <div class="card-body">
             @if ((stats.value()?.topProducts ?? []).length === 0) {
               <p class="text-body-secondary text-center py-4 mb-0">{{ 'dashboard.no_sales' | translate }}</p>
@@ -136,7 +136,7 @@
     <div class="row g-3 mb-3">
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_payment_mix' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_payment_mix' | translate }}</div>
           <div class="card-body">
             <div class="chart-box">
               <canvas baseChart [type]="'doughnut'" [data]="paymentData()" [options]="doughnutOptions" ></canvas>
@@ -146,7 +146,7 @@
       </div>
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body fw-semibold">{{ 'dashboard.chart_channel_mix' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'dashboard.chart_channel_mix' | translate }}</div>
           <div class="card-body">
             <div class="chart-box">
               <canvas baseChart [type]="'doughnut'" [data]="channelData()" [options]="doughnutOptions" ></canvas>
@@ -160,7 +160,7 @@
     <div class="row g-3">
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">{{ 'dashboard.low_stock_title' | translate }}</span>
             <a routerLink="/inventory" class="small text-decoration-none">{{ 'dashboard.view_inventory' | translate }}</a>
           </div>
@@ -201,7 +201,7 @@
 
       <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-body d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">{{ 'dashboard.action_title' | translate }}</span>
             <a routerLink="/orders" class="small text-decoration-none">{{ 'dashboard.all_orders' | translate }}</a>
           </div>
@@ -238,4 +238,3 @@
         </div>
       </div>
     </div>
-  

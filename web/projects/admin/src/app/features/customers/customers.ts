@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -14,6 +15,8 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
+import { TableFooter } from '../../shared/table-footer';
 
 /**
  * Customer directory: a searchable list of storefront shoppers (every non-admin
@@ -23,7 +26,16 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-customers',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, DatePipe, Icon, TranslatePipe, PageHeader],
+  imports: [
+    RouterLink,
+    MoneyPipe,
+    DatePipe,
+    Icon,
+    TranslatePipe,
+    PageHeader,
+    TableSkeleton,
+    TableFooter,
+  ],
   templateUrl: './customers.html',
 })
 export class AdminCustomers {
@@ -32,10 +44,26 @@ export class AdminCustomers {
   private readonly translate = inject(TranslateService);
 
   protected readonly search = signal('');
+  protected readonly page = signal(1);
+  protected readonly pageSize = signal(25);
   protected readonly list = this.service.listResource(() => ({
     query: this.search() || undefined,
+    page: this.page(),
+    pageSize: this.pageSize(),
   }));
+  protected readonly rows = computed(() => this.list.value()?.items ?? []);
+  protected readonly total = computed(() => this.list.value()?.total ?? 0);
   protected readonly deletingId = signal<number | null>(null);
+
+  protected setSearch(value: string): void {
+    this.search.set(value);
+    this.page.set(1);
+  }
+
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
+  }
 
   protected remove(c: AdminCustomerListItem): void {
     if (!confirm(this.translate.instant('customers.confirm_delete', { name: c.email ?? '#' + c.id }))) {

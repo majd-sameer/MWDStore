@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type {
   AdminCustomerCreateRequest,
   AdminCustomerDetail,
@@ -16,16 +16,28 @@ export class AdminCustomersService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/customers */
-  listResource(query: () => { query?: string; includeDeleted?: boolean } = () => ({})) {
+  /** GET /api/admin/customers — paged envelope with total count. */
+  listResource(
+    query: () => {
+      query?: string;
+      includeDeleted?: boolean;
+      page?: number;
+      pageSize?: number;
+    } = () => ({}),
+  ) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminCustomerListItem[]>(() => ({
-        url: `${API_ROOT}/admin/customers`,
-        params: toQueryParams({
-          query: query().query,
-          includeDeleted: query().includeDeleted,
-        }),
-      })),
+      httpResource<PagedResult<AdminCustomerListItem>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/customers`,
+          params: toQueryParams({
+            query: q.query,
+            includeDeleted: q.includeDeleted,
+            page: q.page,
+            pageSize: q.pageSize,
+          }),
+        };
+      }),
     );
   }
 

@@ -7,37 +7,24 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         <div class="list-toolbar">
-          <div class="filter-chips" role="group" [attr.aria-label]="'common.status' | translate">
-            <button
-              type="button"
-              class="filter-chip"
-              [class.active]="status() === null"
-              (click)="setStatus(null)"
-            >
-              {{ 'common.all' | translate }}
+          <app-filter-dropdown
+            [label]="'common.status' | translate"
+            [options]="statusFilterOptions()"
+            [selected]="statuses()"
+            (selectedChange)="setStatuses($event)"
+          />
+          @if (statuses().length) {
+            <button type="button" class="btn btn-link btn-sm p-0 ms-auto" (click)="setStatuses([])">
+              {{ 'common.clear' | translate }}
             </button>
-            @for (opt of statusOptions; track opt.value) {
-              <button
-                type="button"
-                class="filter-chip"
-                [class.active]="status() === opt.value"
-                (click)="setStatus(opt.value)"
-              >
-                {{ 'orders.status_' + opt.value | translate }}
-              </button>
-            }
-          </div>
+          }
         </div>
 
         @if (orders.isLoading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
+          <app-table-skeleton [rows]="8" [columns]="[2, 2, 2, 1, 1, 1]" />
         } @else if (orders.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-        } @else if (orders.value(); as rows) {
+        } @else {
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
@@ -51,7 +38,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (o of rows; track o.id) {
+                @for (o of rows(); track o.id) {
                   <tr>
                     <td>
                       <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">
@@ -60,13 +47,13 @@
                     </td>
                     <td>{{ o.createdOn | date: 'medium' }}</td>
                     <td>
-                      <span class="badge" [class]="badge(o.orderStatus)">{{ o.orderStatusName }}</span>
+                      <app-status-pill [tone]="tone(o.orderStatus)">{{ o.orderStatusName }}</app-status-pill>
                     </td>
                     <td class="text-end tabular-nums">{{ o.itemCount }}</td>
                     <td class="text-end tabular-nums">{{ o.orderTotal | money }}</td>
                     <td class="text-end">
-                      <a [routerLink]="['/orders', o.id]" class="action-btn" [title]="'common.view' | translate">
-                        <lib-icon name="eye" [size]="15" [label]="'common.view' | translate" />
+                      <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">
+                        {{ 'common.view' | translate }}
                       </a>
                     </td>
                   </tr>
@@ -76,10 +63,10 @@
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="bag" [size]="26" /></span>
                         <div class="empty-title">
-                          {{ (status() === null ? 'orders.empty_all' : 'orders.empty_status') | translate }}
+                          {{ (statuses().length ? 'orders.empty_status' : 'orders.empty_all') | translate }}
                         </div>
-                        @if (status() !== null) {
-                          <button type="button" class="btn btn-link btn-sm" (click)="setStatus(null)">
+                        @if (statuses().length) {
+                          <button type="button" class="btn btn-link btn-sm" (click)="setStatuses([])">
                             {{ 'orders.show_all' | translate }}
                           </button>
                         }
@@ -91,30 +78,15 @@
             </table>
           </div>
 
-          @if (rows.length || page() > 1) {
-            <div class="list-pager">
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
-                [disabled]="page() === 1"
-                (click)="prev()"
-              >
-                <lib-icon name="chevStart" [size]="15" />
-                {{ 'common.previous' | translate }}
-              </button>
-              <span class="page-chip">{{ 'common.page_info' | translate: { page: page(), count: rows.length } }}</span>
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
-                [disabled]="!hasMore()"
-                (click)="next()"
-              >
-                {{ 'common.next' | translate }}
-                <lib-icon name="chevEnd" [size]="15" />
-              </button>
-            </div>
+          @if (total() > 0) {
+            <app-table-footer
+              [total]="total()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              (pageChange)="page.set($event)"
+              (pageSizeChange)="setPageSize($event)"
+            />
           }
         }
       </div>
     </div>
-  

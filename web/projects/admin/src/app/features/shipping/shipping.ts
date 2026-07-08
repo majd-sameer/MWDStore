@@ -12,6 +12,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Shipping browser: provider config (enable + free-shipping threshold) plus the
@@ -21,7 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-shipping',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './shipping.html',
 })
 export class AdminShipping {

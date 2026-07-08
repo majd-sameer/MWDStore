@@ -11,7 +11,7 @@
     <div class="row g-4">
       <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
-          <div class="card-header bg-body fw-semibold">{{ 'taxes.classes_title' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'taxes.classes_title' | translate }}</div>
           <div class="card-body">
             @for (c of classes.value() ?? []; track c.id) {
               <div class="d-flex align-items-center gap-2 mb-2">
@@ -37,14 +37,10 @@
 
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
-          <div class="card-header bg-body fw-semibold">{{ 'taxes.rates_title' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'taxes.rates_title' | translate }}</div>
           <div class="card-body">
             @if (rates.isLoading()) {
-              <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-                </div>
-              </div>
+              <app-table-skeleton [rows]="6" [columns]="[3, 2, 2, 1, 1, 1]" />
             } @else if (rates.error()) {
               <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
             } @else if (rates.value(); as rows) {
@@ -108,4 +104,3 @@
         </div>
       </div>
     </div>
-  

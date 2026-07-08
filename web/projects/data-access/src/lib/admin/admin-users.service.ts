@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type {
   AdminCustomerGroupDto,
   AdminUserCreateRequest,
@@ -18,16 +18,28 @@ export class AdminUsersService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/users */
-  listResource(query: () => { query?: string; includeDeleted?: boolean } = () => ({})) {
+  /** GET /api/admin/users — paged envelope with total count. */
+  listResource(
+    query: () => {
+      query?: string;
+      includeDeleted?: boolean;
+      page?: number;
+      pageSize?: number;
+    } = () => ({}),
+  ) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminUserListItem[]>(() => ({
-        url: `${API_ROOT}/admin/users`,
-        params: toQueryParams({
-          query: query().query,
-          includeDeleted: query().includeDeleted,
-        }),
-      })),
+      httpResource<PagedResult<AdminUserListItem>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/users`,
+          params: toQueryParams({
+            query: q.query,
+            includeDeleted: q.includeDeleted,
+            page: q.page,
+            pageSize: q.pageSize,
+          }),
+        };
+      }),
     );
   }
 

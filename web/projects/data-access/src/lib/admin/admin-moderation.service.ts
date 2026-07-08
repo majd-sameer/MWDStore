@@ -1,8 +1,15 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type { AdminCommentDto, AdminReviewDto } from '../models';
+
+/** Moderation list filter (status codes OR-ed; empty = all) with paging. */
+export interface AdminModerationQuery {
+  statuses?: number[];
+  page?: number;
+  pageSize?: number;
+}
 
 /** Review + comment moderation (`/api/admin/reviews`, `/api/admin/comments`). */
 @Injectable({ providedIn: 'root' })
@@ -10,13 +17,16 @@ export class AdminModerationService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/reviews */
-  reviewsResource(status: () => number | null = () => null) {
+  /** GET /api/admin/reviews — paged envelope with total count. */
+  reviewsResource(query: () => AdminModerationQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminReviewDto[]>(() => ({
-        url: `${API_ROOT}/admin/reviews`,
-        params: toQueryParams({ status: status() }),
-      })),
+      httpResource<PagedResult<AdminReviewDto>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/reviews`,
+          params: toQueryParams({ statuses: q.statuses, page: q.page, pageSize: q.pageSize }),
+        };
+      }),
     );
   }
 
@@ -30,13 +40,16 @@ export class AdminModerationService {
     return this.http.delete<void>(`${API_ROOT}/admin/reviews/${id}`);
   }
 
-  /** GET /api/admin/comments */
-  commentsResource(status: () => number | null = () => null) {
+  /** GET /api/admin/comments — paged envelope with total count. */
+  commentsResource(query: () => AdminModerationQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminCommentDto[]>(() => ({
-        url: `${API_ROOT}/admin/comments`,
-        params: toQueryParams({ status: status() }),
-      })),
+      httpResource<PagedResult<AdminCommentDto>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/comments`,
+          params: toQueryParams({ statuses: q.statuses, page: q.page, pageSize: q.pageSize }),
+        };
+      }),
     );
   }
 

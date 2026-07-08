@@ -39,6 +39,26 @@ export const ORDER_STATUS_OPTIONS: readonly OrderStatusOption[] = [
   { value: ORDER_STATUS.Closed, label: 'Closed' },
 ];
 
+/** Semantic {@link StatusTone} for an order-status code (StatusPill variant). */
+export function orderStatusTone(status: number): import('./status-pill').StatusTone {
+  switch (status) {
+    case ORDER_STATUS.Complete:
+    case ORDER_STATUS.PaymentReceived:
+    case ORDER_STATUS.Shipped:
+      return 'success';
+    case ORDER_STATUS.Shipping:
+    case ORDER_STATUS.Invoiced:
+      return 'info';
+    case ORDER_STATUS.PaymentFailed:
+    case ORDER_STATUS.Canceled:
+      return 'danger';
+    case ORDER_STATUS.Refunded:
+      return 'warning';
+    default:
+      return 'neutral';
+  }
+}
+
 /** Bootstrap badge contextual class for a status code. */
 export function orderStatusBadge(status: number): string {
   switch (status) {

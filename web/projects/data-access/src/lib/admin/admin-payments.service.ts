@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type {
   AdminPaymentDto,
   AdminPaymentProviderDto,
@@ -34,10 +34,18 @@ export class AdminPaymentsService {
     );
   }
 
-  /** GET /api/admin/payments */
-  paymentsResource() {
+  /** GET /api/admin/payments — paged envelope with total count. */
+  paymentsResource(
+    query: () => { page?: number; pageSize?: number } = () => ({}),
+  ) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminPaymentDto[]>(() => `${API_ROOT}/admin/payments`),
+      httpResource<PagedResult<AdminPaymentDto>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/payments`,
+          params: toQueryParams({ page: q.page, pageSize: q.pageSize }),
+        };
+      }),
     );
   }
 }

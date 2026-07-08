@@ -50,16 +50,13 @@ public sealed class AdminProductsController : ControllerBase
     /// <paramref name="includeVariations"/> is set. <paramref name="deletedOnly"/> narrows the list to
     /// soft-deleted products (it implies <paramref name="includeDeleted"/>).</summary>
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminProductListItem>>> List(
+    public async Task<ActionResult<PagedResult<AdminProductListItem>>> List(
         [FromQuery] string? query, [FromQuery] bool includeDeleted = false, [FromQuery] bool includeVariations = false,
         [FromQuery] bool deletedOnly = false, [FromQuery] bool? isPublished = null,
         [FromQuery] bool? isSignature = null,
         [FromQuery] long? brandId = null, [FromQuery] long? categoryId = null,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var products = _db.Products.AsQueryable();
         if (deletedOnly)
         {
@@ -100,16 +97,15 @@ public sealed class AdminProductsController : ControllerBase
             products = products.Where(p => p.Name.Contains(query));
         }
 
-        var items = await products
+        var result = await products
             .OrderByDescending(p => p.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new AdminProductListItem(
                 p.Id, p.Name, p.Slug, p.Price, p.OldPrice, p.StockQuantity, p.IsPublished, p.IsDeleted, p.BrandId,
                 p.HasOptions, p.IsVisibleIndividually, p.IsSignature,
                 p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList());
+        return Ok(result with { Items = result.Items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList() });
     }
 
     /// <summary>Name search for the related/cross-sell product pickers (simple products only).</summary>

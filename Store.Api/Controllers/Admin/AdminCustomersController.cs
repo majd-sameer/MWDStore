@@ -33,13 +33,10 @@ public sealed class AdminCustomersController : ControllerBase
 
     /// <summary>Customers (non-admin users) with their order count and lifetime spend.</summary>
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminCustomerListItem>>> List(
+    public async Task<ActionResult<PagedResult<AdminCustomerListItem>>> List(
         [FromQuery] string? query, [FromQuery] bool includeDeleted = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var customers = _db.Users.Where(u => !u.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)));
         if (!includeDeleted)
         {
@@ -51,17 +48,16 @@ public sealed class AdminCustomersController : ControllerBase
             customers = customers.Where(u => u.Email!.Contains(query) || u.FullName.Contains(query));
         }
 
-        var items = await customers
+        var result = await customers
             .OrderByDescending(u => u.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(u => new AdminCustomerListItem(
                 u.Id, u.Email, u.FullName, u.PhoneNumber, u.CreatedOn, u.IsDeleted,
                 _db.Orders.Count(o => o.CustomerId == u.Id),
                 _db.Orders.Where(o => o.CustomerId == u.Id).Sum(o => (decimal?)o.OrderTotal) ?? 0m,
                 u.CustomerGroups.Select(g => g.Name).ToList()))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 
     [HttpGet("{id:long}")]

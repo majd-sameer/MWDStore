@@ -15,6 +15,7 @@ import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Inventory: look up a product's per-warehouse stock, then apply an adjustment.
@@ -24,7 +25,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-inventory',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NgSelectModule, TranslatePipe, PageHeader],
+  imports: [FormsModule, NgSelectModule, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './inventory.html',
 })
 export class AdminInventory {

@@ -9,6 +9,7 @@ import { AdminBrandsService, type AdminBrandDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Brand browser: a full-width list. Creating and editing happen on their own
@@ -17,7 +18,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-brands',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './brands.html',
 })
 export class AdminBrands {

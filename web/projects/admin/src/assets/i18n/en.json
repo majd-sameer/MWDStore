@@ -234,6 +234,11 @@
   },
   "common": {
     "language": "العربية",
+    "total": "Total",
+    "lines_per_page": "Lines per page",
+    "selected": "Selected",
+    "clear": "Clear",
+    "no_options": "No options",
     "loading": "Loading…",
     "error_api": "Couldn't load data. Is Store.Api running?",
     "actions": "Actions",

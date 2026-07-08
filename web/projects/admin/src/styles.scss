@@ -491,7 +491,7 @@ h1.h3 {
 .ng-select.filter-select .ng-select-container {
   border-radius: 999px;
   border-color: transparent;
-  background-color: var(--surface-2);
+  background-color: var(--bs-gray-200);
   padding-inline-start: 0.35rem;
 }
 .ng-select.filter-select.ng-select-focused:not(.ng-select-opened)
@@ -571,6 +571,305 @@ h1.h3 {
 }
 .date-field > .form-control {
   cursor: pointer;
+}
+
+// =============================================================================
+// Data-table design-system components (spec: bid-requests-table)
+// -----------------------------------------------------------------------------
+// StatusPill · AvatarCell · TableSkeleton · TableFooter · FilterDropdown.
+// All token-driven, logical properties for RTL, dark-mode via the shared tokens.
+// =============================================================================
+
+// --- StatusPill: rounded chip with a leading semantic dot --------------------
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.34em 0.7em;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.status-pill .status-pill-dot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.status-pill--success {
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  color: var(--green-strong);
+}
+.status-pill--primary {
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  color: var(--green-strong);
+}
+.status-pill--warning {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.status-pill--danger {
+  background: color-mix(in srgb, #d6455d 14%, transparent);
+  color: #b62f45;
+}
+.status-pill--info {
+  background: color-mix(in srgb, var(--navy) 13%, transparent);
+  color: var(--navy);
+}
+.status-pill--neutral {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+// --- AvatarCell: circular avatar (image or initials) + label -----------------
+.avatar-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-inline-size: 0;
+}
+.avatar-cell-media {
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: hsl(var(--avatar-hue, 210) 45% 92%);
+  color: hsl(var(--avatar-hue, 210) 45% 32%);
+}
+[data-bs-theme="dark"] .avatar-cell-media {
+  background: hsl(var(--avatar-hue, 210) 35% 26%);
+  color: hsl(var(--avatar-hue, 210) 45% 82%);
+}
+.avatar-cell-img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.avatar-cell-initials {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.avatar-cell-text {
+  display: inline-flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.avatar-cell-name {
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.avatar-cell-sub {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- TableSkeleton: shimmer rows --------------------------------------------
+.table-skeleton {
+  padding-block: 0.25rem;
+}
+.table-skeleton-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  padding-block: 0.9rem;
+  border-block-end: 1px solid var(--line-2);
+}
+.table-skeleton-row:last-child {
+  border-block-end: 0;
+}
+.table-skeleton-bar {
+  flex-basis: 0;
+  block-size: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    color-mix(in srgb, var(--surface-3) 70%, var(--surface-2)) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: table-skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes table-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table-skeleton-bar {
+    animation: none;
+  }
+}
+
+// --- TableFooter: Total · lines-per-page · numbered pagination ---------------
+.table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-block-start: 1rem;
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid var(--line-2);
+}
+.table-footer-total {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.table-footer-total strong {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.table-footer-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.table-footer-perpage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.table-footer .perpage-select {
+  min-inline-size: 92px;
+}
+.table-footer .perpage-select .ng-select-container {
+  min-block-size: 34px;
+  border-radius: var(--r-sm);
+}
+// Numbered pagination — brand the active page + soften the rest.
+.table-footer .pagination {
+  --bs-pagination-color: var(--ink-2);
+  --bs-pagination-bg: var(--surface);
+  --bs-pagination-border-color: var(--line);
+  --bs-pagination-hover-color: var(--ink);
+  --bs-pagination-hover-bg: var(--surface-2);
+  --bs-pagination-hover-border-color: var(--line-strong);
+  --bs-pagination-focus-box-shadow: 0 0 0 0.2rem
+    color-mix(in srgb, var(--green) 20%, transparent);
+  --bs-pagination-active-bg: var(--green);
+  --bs-pagination-active-border-color: var(--green);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-disabled-bg: var(--surface);
+  --bs-pagination-disabled-border-color: var(--line-2);
+  gap: 0.25rem;
+}
+.table-footer .pagination .page-link {
+  border-radius: var(--r-sm);
+  min-inline-size: 34px;
+  text-align: center;
+}
+
+// --- FilterDropdown: ghost trigger + count badge + checkbox popover ----------
+.filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.filter-trigger:hover {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.filter-trigger.has-selection {
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line-strong));
+  color: var(--ink);
+}
+.filter-trigger.open {
+  background: var(--surface-2);
+  border-color: var(--green);
+}
+.filter-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 22%, transparent);
+}
+.filter-trigger .filter-selected-word {
+  color: var(--ink-3);
+}
+.filter-trigger .filter-chevron {
+  color: var(--ink-3);
+  transition: transform 0.18s ease;
+}
+.filter-trigger.open .filter-chevron {
+  transform: rotate(180deg);
+}
+// Popover panel (rendered in a CDK overlay).
+.filter-panel {
+  min-inline-size: 220px;
+  max-block-size: 320px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-md);
+  padding: 0.35rem;
+}
+.filter-panel .filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  margin: 0;
+  border-radius: var(--r-sm);
+  font-size: 0.88rem;
+  color: var(--ink);
+  cursor: pointer;
+  min-block-size: 38px;
+}
+.filter-panel .filter-option:hover {
+  background: color-mix(in srgb, var(--green-soft) 55%, transparent);
+}
+.filter-panel .filter-option .form-check-input {
+  margin: 0;
+  cursor: pointer;
+}
+.filter-panel .filter-option .form-check-input:checked {
+  background-color: var(--green);
+  border-color: var(--green);
+}
+.filter-panel-empty {
+  padding: 0.6rem;
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+.filter-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0.6rem 0.2rem;
+  border-block-start: 1px solid var(--line-2);
+  margin-block-start: 0.2rem;
 }
 
 // Stat cards (dashboard) ----------------------------------------------------------

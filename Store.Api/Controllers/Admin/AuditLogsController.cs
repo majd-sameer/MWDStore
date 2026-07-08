@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
+using Store.Api.Models;
 using Store.Data;
 
 namespace Store.Api.Controllers.Admin;
@@ -21,21 +22,18 @@ public sealed class AuditLogsController : ControllerBase
     public AuditLogsController(StoreDbContext db) => _db = db;
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AuditLogListItem>>> List(
+    public async Task<ActionResult<PagedResult<AuditLogListItem>>> List(
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
         [FromQuery] long? userId = null,
         [FromQuery] string? entityType = null,
-        [FromQuery] string? action = null,
-        [FromQuery] string? area = null,
+        [FromQuery] string[]? actions = null,
+        [FromQuery] string[]? areas = null,
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var logs = _db.AuditLogs.AsNoTracking();
 
         if (from is { } fromValue)
@@ -58,14 +56,14 @@ public sealed class AuditLogsController : ControllerBase
             logs = logs.Where(l => l.EntityType == entityType);
         }
 
-        if (!string.IsNullOrWhiteSpace(action))
+        if (actions is { Length: > 0 })
         {
-            logs = logs.Where(l => l.Action == action);
+            logs = logs.Where(l => actions.Contains(l.Action));
         }
 
-        if (!string.IsNullOrWhiteSpace(area))
+        if (areas is { Length: > 0 })
         {
-            logs = logs.Where(l => l.Area == area);
+            logs = logs.Where(l => areas.Contains(l.Area));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -75,17 +73,15 @@ public sealed class AuditLogsController : ControllerBase
                 (l.EntityName != null && l.EntityName.Contains(term)) || l.UserName.Contains(term));
         }
 
-        var items = await logs
+        var result = await logs
             .OrderByDescending(l => l.CreatedOn)
             .ThenByDescending(l => l.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(l => new AuditLogListItem(
                 l.Id, l.CreatedOn, l.UserId, l.UserName, l.Role, l.Action,
                 l.EntityType, l.EntityId, l.EntityName, l.Area))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 
     [HttpGet("{id:long}")]

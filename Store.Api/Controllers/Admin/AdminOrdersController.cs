@@ -26,17 +26,14 @@ public sealed class AdminOrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<OrderSummaryDto>>> List(
-        [FromQuery] int? status, [FromQuery] long? customerId,
+    public async Task<ActionResult<PagedResult<OrderSummaryDto>>> List(
+        [FromQuery] int[]? statuses, [FromQuery] long? customerId,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var orders = _db.Orders.Include(o => o.OrderItems).AsQueryable();
-        if (status.HasValue)
+        if (statuses is { Length: > 0 })
         {
-            orders = orders.Where(o => o.OrderStatus == status.Value);
+            orders = orders.Where(o => statuses.Contains(o.OrderStatus));
         }
 
         if (customerId.HasValue)
@@ -44,12 +41,11 @@ public sealed class AdminOrdersController : ControllerBase
             orders = orders.Where(o => o.CustomerId == customerId.Value);
         }
 
-        var items = await orders
+        var result = await orders
             .OrderByDescending(o => o.CreatedOn)
-            .Skip((page - 1) * pageSize).Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, o => o.ToSummary(), cancellationToken);
 
-        return Ok(items.Select(o => o.ToSummary()).ToList());
+        return Ok(result);
     }
 
     [HttpGet("{id:long}")]

@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { type AdminProductQuery, API_ROOT, toQueryParams } from '../http-utils';
+import { type AdminProductQuery, API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type {
   AdminProductDetail,
   AdminProductListItem,
@@ -18,7 +18,7 @@ export class AdminProductsService {
   /** GET /api/admin/products */
   listResource(query: () => AdminProductQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminProductListItem[]>(() => {
+      httpResource<PagedResult<AdminProductListItem>>(() => {
         const q = query();
         return {
           url: `${API_ROOT}/admin/products`,

@@ -117,7 +117,7 @@ public sealed class AdminInventoryController : ControllerBase
 
     /// <summary>Paged view of tracked stock-outs (StockHistory rows carrying a reason), newest first.</summary>
     [HttpGet("stock-out-log")]
-    public async Task<ActionResult<IReadOnlyList<StockOutLogRow>>> StockOutLog(
+    public async Task<ActionResult<PagedResult<StockOutLogRow>>> StockOutLog(
         [FromQuery] DateTimeOffset? from = null,
         [FromQuery] DateTimeOffset? to = null,
         [FromQuery] StockOutReason? reason = null,
@@ -129,9 +129,6 @@ public sealed class AdminInventoryController : ControllerBase
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var logs = _db.Set<StockHistory>().AsNoTracking().Where(h => h.Reason != null);
 
         if (from is { } fromValue)
@@ -171,11 +168,9 @@ public sealed class AdminInventoryController : ControllerBase
                 h.Product.Name.Contains(term) || (h.RecipientOrRef != null && h.RecipientOrRef.Contains(term)));
         }
 
-        var items = await logs
+        var result = await logs
             .OrderByDescending(h => h.CreatedOn)
             .ThenByDescending(h => h.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(h => new StockOutLogRow(
                 h.Id,
                 h.CreatedOn,
@@ -190,9 +185,9 @@ public sealed class AdminInventoryController : ControllerBase
                 h.PerformedBy != null ? h.PerformedBy.FullName : null,
                 h.RecipientOrRef,
                 h.Note))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 }
 

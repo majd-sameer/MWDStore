@@ -14,6 +14,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Promotions browser: the cart-rule list plus a recent-usage log. Creating and
@@ -23,7 +24,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-promotions',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, DatePipe, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './promotions.html',
 })
 export class AdminPromotions {

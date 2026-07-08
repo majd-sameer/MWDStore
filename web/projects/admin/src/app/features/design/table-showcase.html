@@ -1,0 +1,108 @@
+
+    <app-page-header
+      title="Table components"
+      subtitle="Living reference for the shared data-table design system"
+    />
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <!-- Filter toolbar -->
+        <div class="list-toolbar">
+          <app-filter-dropdown
+            label="Bid Status"
+            [options]="bidStatusOptions"
+            [selected]="bidStatus()"
+            (selectedChange)="bidStatus.set($event)"
+          />
+          <app-filter-dropdown
+            label="Request Type"
+            [options]="requestTypeOptions"
+            [selected]="requestType()"
+            (selectedChange)="requestType.set($event)"
+          />
+          @if (hasFilters()) {
+            <button type="button" class="btn btn-link btn-sm p-0 ms-auto" (click)="clearFilters()">
+              Clear
+            </button>
+          }
+        </div>
+
+        <!-- State switcher (demo only) -->
+        <div class="filter-chips mb-3" role="group" aria-label="Preview state">
+          <button type="button" class="filter-chip" [class.active]="state() === 'populated'"
+            (click)="setState('populated')">Populated</button>
+          <button type="button" class="filter-chip" [class.active]="state() === 'skeleton'"
+            (click)="setState('skeleton')">Skeleton</button>
+          <button type="button" class="filter-chip" [class.active]="state() === 'empty'"
+            (click)="setState('empty')">Empty</button>
+        </div>
+
+        @if (state() === 'skeleton') {
+          <app-table-skeleton [rows]="6" [columns]="skeletonColumns" />
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Request ID</th>
+                  <th scope="col">Request Type</th>
+                  <th scope="col">Policyholder</th>
+                  <th scope="col">Vehicle Owner</th>
+                  <th scope="col" class="text-end">Bid Amount</th>
+                  <th scope="col">Bid Status</th>
+                  <th scope="col">Request Status</th>
+                  <th scope="col">Time Left</th>
+                  <th scope="col" class="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (state() === 'populated') {
+                  @for (r of rows; track r.requestId) {
+                    <tr>
+                      <td class="fw-medium">{{ r.requestId }}</td>
+                      <td class="text-body-secondary">{{ r.requestType }}</td>
+                      <td>
+                        <app-avatar-cell [name]="r.policyholder" [sublabel]="r.policyholderEmail" />
+                      </td>
+                      <td class="text-body-secondary">{{ r.vehicleOwner }}</td>
+                      <td class="text-end tabular-nums">
+                        @if (r.bidAmount !== null) { {{ r.bidAmount }} JOD }
+                        @else { <span class="text-body-secondary">—</span> }
+                      </td>
+                      <td><app-status-pill [tone]="r.bidStatus.tone">{{ r.bidStatus.label }}</app-status-pill></td>
+                      <td><app-status-pill [tone]="r.requestStatus.tone">{{ r.requestStatus.label }}</app-status-pill></td>
+                      <td>
+                        @if (r.timeLeft) { {{ r.timeLeft }} }
+                        @else { <span class="text-body-secondary">—</span> }
+                      </td>
+                      <td class="text-end">
+                        <a href="javascript:void(0)" class="text-decoration-none fw-medium">View Details</a>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="9">
+                      <div class="empty-state">
+                        <span class="empty-icon"><lib-icon name="grid" [size]="26" /></span>
+                        <div class="empty-title">No results match your filters</div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (state() === 'populated') {
+          <app-table-footer
+            [total]="128"
+            [page]="page()"
+            [pageSize]="pageSize()"
+            (pageChange)="page.set($event)"
+            (pageSizeChange)="pageSize.set($event)"
+          />
+        }
+      </div>
+    </div>

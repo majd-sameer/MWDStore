@@ -43,6 +43,18 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        // Living reference for the shared data-table components (spec §6):
+        // StatusPill / AvatarCell / TableSkeleton / TableFooter / FilterDropdown
+        // across empty, skeleton and populated states. No sidebar link — reach
+        // it directly at /design/tables.
+        path: 'design/tables',
+        title: 'Table components · MadeWithDetermination Admin',
+        loadComponent: () =>
+          import('./features/design/table-showcase').then(
+            (m) => m.TableShowcase,
+          ),
+      },
+      {
         path: 'products',
         title: 'Products · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.catalog)],

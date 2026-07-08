@@ -11,20 +11,45 @@
 /** Root path of the Store.Api surface. The origin is prepended by `core`. */
 export const API_ROOT = '/api';
 
-export type QueryParamValue = string | number | boolean | null | undefined;
+export type QueryParamScalar = string | number | boolean;
+export type QueryParamValue =
+  | QueryParamScalar
+  | readonly (string | number)[]
+  | null
+  | undefined;
+
+/**
+ * A paged list response from the admin API: one page of {@link items} plus the
+ * {@link total} count of the whole filtered set (for numbered pagination).
+ * Mirrors the backend `PagedResult<T>`.
+ */
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 
 /**
  * Builds a request params record, dropping `null` / `undefined` / empty-string
- * values so optional filters don't leak onto the query string.
+ * and empty-array values so optional filters don't leak onto the query string.
+ * Array values become repeated query keys (`?statuses=1&statuses=2`).
  */
 export function toQueryParams(
   source: Record<string, QueryParamValue>,
-): Record<string, string | number | boolean> {
-  const params: Record<string, string | number | boolean> = {};
+): Record<string, QueryParamScalar | readonly (string | number)[]> {
+  const params: Record<string, QueryParamScalar | readonly (string | number)[]> = {};
   for (const [key, value] of Object.entries(source)) {
-    if (value !== null && value !== undefined && value !== '') {
-      params[key] = value;
+    if (value === null || value === undefined || value === '') {
+      continue;
     }
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        params[key] = value;
+      }
+      continue;
+    }
+    params[key] = value as QueryParamScalar;
   }
   return params;
 }
@@ -50,7 +75,7 @@ export interface CatalogProductQuery {
 /** Maps a {@link CatalogProductQuery} to the OpenAPI query-parameter names. */
 export function catalogQueryParams(
   query: CatalogProductQuery,
-): Record<string, string | number | boolean> {
+): Record<string, QueryParamScalar | readonly (string | number)[]> {
   return toQueryParams({
     Query: query.query,
     Brand: query.brand,
@@ -80,7 +105,8 @@ export interface AdminProductQuery {
 
 /** Admin order list filter (GET /api/admin/orders). */
 export interface AdminOrderQuery {
-  status?: number;
+  /** Order-status codes to include (OR-ed); empty/undefined = all statuses. */
+  statuses?: number[];
   customerId?: number;
   page?: number;
   pageSize?: number;

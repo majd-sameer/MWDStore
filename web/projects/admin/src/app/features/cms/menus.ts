@@ -9,6 +9,7 @@ import { AdminCmsService, type AdminMenuDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Menu browser: a full-width list of navigation menus. Creating and editing a
@@ -18,7 +19,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-menus',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './menus.html',
 })
 export class AdminMenus {

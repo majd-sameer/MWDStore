@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type {
   AdminActivityDto,
   AdminContactAreaDto,
@@ -109,10 +109,18 @@ export class AdminOperationsService {
 
   // ----- System logs ------------------------------------------------------------
 
-  /** GET /api/admin/logs/activities */
-  activitiesResource() {
+  /** GET /api/admin/logs/activities — paged envelope with total count. */
+  activitiesResource(
+    query: () => { page?: number; pageSize?: number } = () => ({}),
+  ) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminActivityDto[]>(() => `${API_ROOT}/admin/logs/activities`),
+      httpResource<PagedResult<AdminActivityDto>>(() => {
+        const q = query();
+        return {
+          url: `${API_ROOT}/admin/logs/activities`,
+          params: toQueryParams({ page: q.page, pageSize: q.pageSize }),
+        };
+      }),
     );
   }
 

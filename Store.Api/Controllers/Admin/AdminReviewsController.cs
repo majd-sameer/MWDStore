@@ -26,29 +26,25 @@ public sealed class AdminReviewsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminReviewDto>>> List(
-        [FromQuery] int? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
+    public async Task<ActionResult<PagedResult<AdminReviewDto>>> List(
+        [FromQuery] int[]? statuses, [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var reviews = _db.Reviews.AsQueryable();
-        if (status.HasValue)
+        if (statuses is { Length: > 0 })
         {
-            reviews = reviews.Where(r => r.Status == status.Value);
+            reviews = reviews.Where(r => statuses.Contains(r.Status));
         }
 
-        var items = await reviews
+        var result = await reviews
             .OrderByDescending(r => r.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(r => new AdminReviewDto(
                 r.Id, r.Title, r.Comment, r.Rating, r.ReviewerName, r.User.Email,
                 r.Status, r.CreatedOn, r.EntityId, r.EntityTypeId,
                 _db.Products.Where(p => p.Id == r.EntityId).Select(p => p.Name).FirstOrDefault()))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 
     [HttpPut("{id:long}/status")]

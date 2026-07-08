@@ -7,11 +7,7 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         @if (list.isLoading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
+          <app-table-skeleton [rows]="6" [columns]="[3, 2, 3]" />
         } @else {
           <table class="table table-sm align-middle">
             <thead>

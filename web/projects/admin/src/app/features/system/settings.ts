@@ -8,6 +8,7 @@ import { AdminSystemService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * App settings (old Core configuration admin): edit values inline, add new keys.
@@ -16,7 +17,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslatePipe, PageHeader],
+  imports: [Button, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './settings.html',
 })
 export class AdminSettings {

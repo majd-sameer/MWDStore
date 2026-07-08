@@ -96,20 +96,16 @@ public sealed class AdminPaymentsController : ControllerBase
 
     /// <summary>Payment transaction log (newest first).</summary>
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminPaymentDto>>> List(
+    public async Task<ActionResult<PagedResult<AdminPaymentDto>>> List(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
-        var payments = await _db.Payments
+        var result = await _db.Payments
             .OrderByDescending(p => p.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new AdminPaymentDto(
                 p.Id, p.OrderId, p.Amount, p.PaymentFee, p.PaymentMethod,
                 p.GatewayTransactionId, p.Status, p.CreatedOn))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(payments);
+        return Ok(result);
     }
 }

@@ -17,13 +17,17 @@
               [attr.aria-label]="'audit.search_ph' | translate"
             />
           </div>
-          <ng-select
-            class="filter-select"
-            [items]="areas()"
-            [ngModel]="area()"
-            (ngModelChange)="setArea($event)"
-            [placeholder]="'audit.all_areas' | translate"
-            [attr.aria-label]="'audit.area' | translate"
+          <app-filter-dropdown
+            [label]="'audit.action' | translate"
+            [options]="actionOptions()"
+            [selected]="actions()"
+            (selectedChange)="setActions($event)"
+          />
+          <app-filter-dropdown
+            [label]="'audit.area' | translate"
+            [options]="areaOptions()"
+            [selected]="areas()"
+            (selectedChange)="setAreas($event)"
           />
           <div class="date-field">
             <input
@@ -51,18 +55,6 @@
             />
             <owl-date-time #dtTo pickerType="calendar" />
           </div>
-          <div class="filter-chips" role="group" [attr.aria-label]="'audit.action' | translate">
-            @for (a of actions; track a) {
-              <button
-                type="button"
-                class="filter-chip"
-                [class.active]="action() === a"
-                (click)="setAction(a)"
-              >
-                {{ 'audit.actions.' + a | translate }}
-              </button>
-            }
-          </div>
           @if (hasFilters()) {
             <button
               type="button"
@@ -76,14 +68,10 @@
         </div>
 
         @if (logs.isLoading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-            </div>
-          </div>
+          <app-table-skeleton [rows]="8" [columns]="[2, 2, 2, 3, 1, 1]" />
         } @else if (logs.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-        } @else if (logs.value(); as rows) {
+        } @else {
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
@@ -97,7 +85,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (row of rows; track row.id) {
+                @for (row of rows(); track row.id) {
                   <tr>
                     <td class="small" [attr.title]="row.createdOn + ' UTC'">
                       {{ row.createdOn | date: 'medium' }}
@@ -152,28 +140,14 @@
             </table>
           </div>
 
-          @if (rows.length || page() > 1) {
-            <div class="list-pager">
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
-                [disabled]="page() === 1"
-                (click)="prev()"
-              >
-                <lib-icon name="chevStart" [size]="15" />
-                {{ 'common.previous' | translate }}
-              </button>
-              <span class="page-chip">{{ 'common.page_info' | translate: { page: page(), count: rows.length } }}</span>
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
-                [disabled]="!hasMore()"
-                (click)="next()"
-              >
-                {{ 'common.next' | translate }}
-                <lib-icon name="chevEnd" [size]="15" />
-              </button>
-            </div>
+          @if (total() > 0) {
+            <app-table-footer
+              [total]="total()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              (pageChange)="page.set($event)"
+              (pageSizeChange)="setPageSize($event)"
+            />
           }
         }
       </div>

@@ -19,6 +19,8 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
+import { TableFooter } from '../../shared/table-footer';
 import { dayBoundary } from '../../shared/date-range';
 
 const PAGE_SIZE = 50;
@@ -59,6 +61,8 @@ const CHANNEL_KEYS: Record<number, string> = {
     Icon,
     TranslatePipe,
     PageHeader,
+    TableSkeleton,
+    TableFooter,
   ],
   templateUrl: './stock-out-log.html',
 })
@@ -74,6 +78,7 @@ export class AdminStockOutLog {
   protected readonly from = signal<Date | null>(null);
   protected readonly to = signal<Date | null>(null);
   protected readonly page = signal(1);
+  protected readonly pageSize = signal(PAGE_SIZE);
 
   protected readonly reasonKeys = REASON_KEYS;
   protected readonly channelKeys = CHANNEL_KEYS;
@@ -91,14 +96,13 @@ export class AdminStockOutLog {
     from: dayBoundary(this.from(), false),
     to: dayBoundary(this.to(), true),
     page: this.page(),
-    pageSize: PAGE_SIZE,
+    pageSize: this.pageSize(),
   }));
 
   protected readonly logs = this.service.stockOutLogResource(this.query);
 
-  protected readonly hasMore = computed(
-    () => (this.logs.value()?.length ?? 0) === PAGE_SIZE,
-  );
+  protected readonly rows = computed(() => this.logs.value()?.items ?? []);
+  protected readonly total = computed(() => this.logs.value()?.total ?? 0);
 
   protected readonly hasFilters = computed(
     () =>
@@ -114,7 +118,7 @@ export class AdminStockOutLog {
   /** Warehouse options seen on the loaded page. */
   protected readonly warehouses = computed(() => {
     const seen = new Map<number, string>();
-    for (const row of this.logs.value() ?? []) {
+    for (const row of this.rows()) {
       seen.set(row.warehouseId, row.warehouseName ?? `#${row.warehouseId}`);
     }
     return [...seen].map(([id, name]) => ({ id, name }));
@@ -123,7 +127,7 @@ export class AdminStockOutLog {
   /** Performer options seen on the loaded page. */
   protected readonly performers = computed(() => {
     const seen = new Map<number, string>();
-    for (const row of this.logs.value() ?? []) {
+    for (const row of this.rows()) {
       if (row.performedById !== null) {
         seen.set(row.performedById, row.performedByName ?? `#${row.performedById}`);
       }
@@ -198,18 +202,13 @@ export class AdminStockOutLog {
     this.page.set(1);
   }
 
-  protected prev(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  protected next(): void {
-    if (this.hasMore()) {
-      this.page.update((p) => p + 1);
-    }
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   protected exportCsv(): void {
-    const rows = this.logs.value() ?? [];
+    const rows = this.rows();
     const header = ['Date', 'Product', 'Quantity', 'Reason', 'Channel', 'Performed by', 'Recipient/Ref', 'Note'];
     const body = rows.map((r) =>
       [

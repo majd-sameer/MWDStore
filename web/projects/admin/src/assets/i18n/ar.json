@@ -234,6 +234,11 @@
   },
   "common": {
     "language": "English",
+    "total": "الإجمالي",
+    "lines_per_page": "عدد الصفوف بالصفحة",
+    "selected": "محدد",
+    "clear": "مسح",
+    "no_options": "لا خيارات",
     "loading": "جارٍ التحميل…",
     "error_api": "تعذّر تحميل البيانات. هل خادم Store.Api يعمل؟",
     "actions": "إجراءات",

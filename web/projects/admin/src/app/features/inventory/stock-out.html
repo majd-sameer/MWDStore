@@ -74,7 +74,7 @@
 
       <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
-          <div class="card-header bg-body fw-semibold">{{ 'stockout.form_title' | translate }}</div>
+          <div class="card-header fw-semibold">{{ 'stockout.form_title' | translate }}</div>
           <div class="card-body">
             @if (!stock.value()?.warehouses?.length) {
               <p class="text-body-secondary mb-0">{{ 'inventory.lookup_hint' | translate }}</p>

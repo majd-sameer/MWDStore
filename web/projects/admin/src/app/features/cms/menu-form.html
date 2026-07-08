@@ -46,7 +46,7 @@
             <div class="alert alert-light border">{{ 'menus.save_to_add_items' | translate }}</div>
           } @else if (existing(); as menu) {
             <div class="card border-0 shadow-sm">
-              <div class="card-header bg-body fw-semibold">
+              <div class="card-header fw-semibold">
                 {{ 'menus.items_in' | translate: { name: menu.name } }}
               </div>
               <div class="card-body">
@@ -103,4 +103,3 @@
         </div>
       </div>
     }
-  

@@ -9,6 +9,7 @@ import { AdminTaxService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Tax browser: the tax-classes manager alongside the per-destination rates list.
@@ -18,7 +19,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-taxes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './taxes.html',
 })
 export class AdminTaxes {

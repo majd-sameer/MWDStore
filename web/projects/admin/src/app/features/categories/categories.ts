@@ -12,6 +12,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Category browser: a full-width list with publish status and display order.
@@ -21,7 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-categories',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './categories.html',
 })
 export class AdminCategories {

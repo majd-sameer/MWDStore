@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
-import { API_ROOT, toQueryParams } from '../http-utils';
+import { API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 
 /** One row of the audit trail (list projection). */
 export interface AuditLogListItem {
@@ -30,8 +30,8 @@ export interface AdminAuditQuery {
   to?: string;
   userId?: number;
   entityType?: string;
-  action?: string;
-  area?: string;
+  actions?: string[];
+  areas?: string[];
   search?: string;
   page?: number;
   pageSize?: number;
@@ -45,7 +45,7 @@ export class AdminAuditService {
   /** GET /api/admin/audit-logs */
   listResource(query: () => AdminAuditQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AuditLogListItem[]>(() => {
+      httpResource<PagedResult<AuditLogListItem>>(() => {
         const q = query();
         return {
           url: `${API_ROOT}/admin/audit-logs`,
@@ -54,8 +54,8 @@ export class AdminAuditService {
             to: q.to,
             userId: q.userId,
             entityType: q.entityType,
-            action: q.action,
-            area: q.area,
+            actions: q.actions,
+            areas: q.areas,
             search: q.search,
             page: q.page,
             pageSize: q.pageSize,

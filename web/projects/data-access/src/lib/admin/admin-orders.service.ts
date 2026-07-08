@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { type AdminOrderQuery, API_ROOT, toQueryParams } from '../http-utils';
+import { type AdminOrderQuery, API_ROOT, type PagedResult, toQueryParams } from '../http-utils';
 import type { OrderDetailDto, OrderSummaryDto, UpdateOrderStatusRequest } from '../models';
 
 /** Admin order management (`/api/admin/orders`). */
@@ -10,15 +10,15 @@ export class AdminOrdersService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/orders */
+  /** GET /api/admin/orders — paged envelope with total count. */
   listResource(query: () => AdminOrderQuery = () => ({})) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<OrderSummaryDto[]>(() => {
+      httpResource<PagedResult<OrderSummaryDto>>(() => {
         const q = query();
         return {
           url: `${API_ROOT}/admin/orders`,
           params: toQueryParams({
-            status: q.status,
+            statuses: q.statuses,
             customerId: q.customerId,
             page: q.page,
             pageSize: q.pageSize,

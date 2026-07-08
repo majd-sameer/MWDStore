@@ -26,28 +26,24 @@ public sealed class AdminCommentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AdminCommentDto>>> List(
-        [FromQuery] int? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
+    public async Task<ActionResult<PagedResult<AdminCommentDto>>> List(
+        [FromQuery] int[]? statuses, [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        page = Math.Max(page, 1);
-        pageSize = Math.Clamp(pageSize, 1, 200);
-
         var comments = _db.Comments.AsQueryable();
-        if (status.HasValue)
+        if (statuses is { Length: > 0 })
         {
-            comments = comments.Where(c => c.Status == status.Value);
+            comments = comments.Where(c => statuses.Contains(c.Status));
         }
 
-        var items = await comments
+        var result = await comments
             .OrderByDescending(c => c.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(c => new AdminCommentDto(
                 c.Id, c.CommentText, c.CommenterName, c.User.Email,
                 c.Status, c.CreatedOn, c.EntityId, c.EntityTypeId, c.ParentId))
-            .ToListAsync(cancellationToken);
+            .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(items);
+        return Ok(result);
     }
 
     [HttpPut("{id:long}/status")]

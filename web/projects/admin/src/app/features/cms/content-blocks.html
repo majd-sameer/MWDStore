@@ -10,7 +10,7 @@
 
     @if (isFaq()) {
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-body fw-semibold">{{ 'cms.faq.add_title' | translate }}</div>
+        <div class="card-header fw-semibold">{{ 'cms.faq.add_title' | translate }}</div>
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-6">
@@ -51,7 +51,7 @@
     } @else if (list.value(); as sections) {
       @for (section of sections; track section.sectionKey) {
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-body fw-semibold d-flex justify-content-between align-items-center">
+          <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
             <span>{{ 'cms.sections.' + section.sectionKey | translate }}</span>
             <button
               type="button"

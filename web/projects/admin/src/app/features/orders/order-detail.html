@@ -24,7 +24,7 @@
       <div class="row g-4">
         <div class="col-lg-8">
           <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-body fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
+            <div class="card-header fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
             <div class="card-body p-0">
               <table class="table align-middle mb-0">
                 <thead>
@@ -52,7 +52,7 @@
           </div>
 
           <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-body fw-semibold">{{ 'order_detail.shipments_title' | translate }}</div>
+            <div class="card-header fw-semibold">{{ 'order_detail.shipments_title' | translate }}</div>
             <div class="card-body">
               @for (s of shipments(); track s.id) {
                 <div class="border rounded p-2 mb-2 small">
@@ -115,7 +115,7 @@
           <div class="row g-4">
             <div class="col-md-6">
               <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-body fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
+                <div class="card-header fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
                 <div class="card-body small">
                   <div>{{ o.shippingAddress.contactName }}</div>
                   <div>{{ o.shippingAddress.phone }}</div>
@@ -129,7 +129,7 @@
             </div>
             <div class="col-md-6">
               <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-body fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
+                <div class="card-header fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
                 <div class="card-body small">
                   <div>{{ o.billingAddress.contactName }}</div>
                   <div>{{ o.billingAddress.phone }}</div>
@@ -146,7 +146,7 @@
 
         <div class="col-lg-4">
           <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-body fw-semibold">{{ 'order_detail.summary' | translate }}</div>
+            <div class="card-header fw-semibold">{{ 'order_detail.summary' | translate }}</div>
             <div class="card-body">
               <dl class="row mb-0 small">
                 <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.customer_id' | translate }}</dt>
@@ -176,7 +176,7 @@
           </div>
 
           <div class="card border-0 shadow-sm">
-            <div class="card-header bg-body fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
+            <div class="card-header fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
             <div class="card-body">
               <div class="input-group mb-2">
                 <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
@@ -208,4 +208,3 @@
         </div>
       </div>
     }
-  

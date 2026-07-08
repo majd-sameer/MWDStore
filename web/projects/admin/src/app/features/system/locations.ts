@@ -9,6 +9,7 @@ import { AdminSystemService, type AdminCountryDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * Countries browser: a full-width list with inline shipping/billing toggles.
@@ -18,7 +19,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-locations',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton],
   templateUrl: './locations.html',
 })
 export class AdminLocations {

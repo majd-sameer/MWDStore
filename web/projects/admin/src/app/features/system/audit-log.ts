@@ -7,18 +7,21 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgSelectModule } from '@ng-select/ng-select';
 import {
   OwlDateTimeModule,
   OwlNativeDateTimeModule,
 } from '@danielmoncada/angular-datetime-picker';
 import { AdminAuditService, type AdminAuditQuery } from 'data-access';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from 'core';
 import { Icon } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { TableSkeleton } from '../../shared/table-skeleton';
+import { TableFooter } from '../../shared/table-footer';
+import { FilterDropdown, type FilterOption, type FilterValue } from '../../shared/filter-dropdown';
 import { dayBoundary } from '../../shared/date-range';
 
-const PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 50;
 
 /** One before/after pair rendered in the detail drawer. */
 interface DiffRow {
@@ -29,10 +32,10 @@ interface DiffRow {
 
 /**
  * Read-only view of the append-only audit trail (`GET /api/admin/audit-logs`,
- * Settings-gated). Server-side filters for action, area, actor and date range;
- * a side drawer renders the changed properties old-vs-new from the stored JSON.
- * The endpoint returns a bare array (no total), so paging advances while a full
- * page comes back — matching the products/orders list convention.
+ * Settings-gated). Server-side multi-select filters for action, area, plus actor
+ * and date range; a side drawer renders the changed properties old-vs-new from
+ * the stored JSON. The endpoint returns a paged envelope with a total count, so
+ * pagination is numbered — matching the orders list convention.
  */
 @Component({
   selector: 'app-admin-audit-log',
@@ -40,12 +43,14 @@ interface DiffRow {
   imports: [
     DatePipe,
     FormsModule,
-    NgSelectModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     Icon,
     TranslatePipe,
     PageHeader,
+    TableSkeleton,
+    TableFooter,
+    FilterDropdown,
   ],
   templateUrl: './audit-log.html',
   styles: [
@@ -88,55 +93,71 @@ interface DiffRow {
 })
 export class AdminAuditLog {
   private readonly service = inject(AdminAuditService);
+  private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
 
   protected readonly term = signal('');
-  protected readonly action = signal<string>('');
-  protected readonly area = signal<string | null>(null);
+  protected readonly actions = signal<FilterValue[]>([]);
+  protected readonly areas = signal<FilterValue[]>([]);
   protected readonly from = signal<Date | null>(null);
   protected readonly to = signal<Date | null>(null);
   protected readonly page = signal(1);
+  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
 
   protected readonly selectedId = signal<number | null>(null);
 
-  /** Action segments offered as filter chips (aligned with the server's Action values). */
-  protected readonly actions = ['Create', 'Update', 'Delete', 'StockOut', 'Login'] as const;
+  /** Action values offered by the server (aligned with the server's Action values). */
+  private readonly actionKeys = ['Create', 'Update', 'Delete', 'StockOut', 'Login'] as const;
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly query = computed<AdminAuditQuery>(() => ({
     search: this.term() || undefined,
-    action: this.action() || undefined,
-    area: this.area() || undefined,
+    actions: this.actions() as string[],
+    areas: this.areas() as string[],
     from: dayBoundary(this.from(), false),
     to: dayBoundary(this.to(), true),
     page: this.page(),
-    pageSize: PAGE_SIZE,
+    pageSize: this.pageSize(),
   }));
 
   protected readonly logs = this.service.listResource(this.query);
   protected readonly detail = this.service.getResource(this.selectedId);
 
-  protected readonly hasMore = computed(
-    () => (this.logs.value()?.length ?? 0) === PAGE_SIZE,
-  );
+  protected readonly rows = computed(() => this.logs.value()?.items ?? []);
+  protected readonly total = computed(() => this.logs.value()?.total ?? 0);
+
+  /** Action filter options, re-labelled when the console language switches. */
+  protected readonly actionOptions = computed<FilterOption[]>(() => {
+    this.language.lang();
+    return this.actionKeys.map((value) => ({
+      value,
+      label: this.translate.instant('audit.actions.' + value),
+    }));
+  });
 
   protected readonly hasFilters = computed(
     () =>
       Boolean(this.term()) ||
-      this.action() !== '' ||
-      this.area() !== null ||
+      this.actions().length > 0 ||
+      this.areas().length > 0 ||
       this.from() !== null ||
       this.to() !== null,
   );
 
-  /** Distinct areas present on the loaded page, for the area select. */
-  protected readonly areas = computed(() => {
+  /** Distinct areas present on the loaded page, for the area filter options. */
+  protected readonly areaValues = computed(() => {
     const set = new Set<string>();
-    for (const row of this.logs.value() ?? []) {
+    for (const row of this.rows()) {
       set.add(row.area);
     }
     return [...set].sort();
   });
+
+  /** Area filter options derived from the loaded rows. */
+  protected readonly areaOptions = computed<FilterOption[]>(() =>
+    this.areaValues().map((a) => ({ value: a, label: a })),
+  );
 
   /** Union of the changed properties, paired old-vs-new, parsed from the detail JSON. */
   protected readonly diffRows = computed<DiffRow[]>(() => {
@@ -182,13 +203,18 @@ export class AdminAuditLog {
     }, 300);
   }
 
-  protected setAction(value: string): void {
-    this.action.set(this.action() === value ? '' : value);
+  protected setActions(values: FilterValue[]): void {
+    this.actions.set(values);
     this.page.set(1);
   }
 
-  protected setArea(value: string | null): void {
-    this.area.set(value);
+  protected setAreas(values: FilterValue[]): void {
+    this.areas.set(values);
+    this.page.set(1);
+  }
+
+  protected setPageSize(size: number): void {
+    this.pageSize.set(size);
     this.page.set(1);
   }
 
@@ -204,21 +230,11 @@ export class AdminAuditLog {
 
   protected clearFilters(): void {
     this.term.set('');
-    this.action.set('');
-    this.area.set(null);
+    this.actions.set([]);
+    this.areas.set([]);
     this.from.set(null);
     this.to.set(null);
     this.page.set(1);
-  }
-
-  protected prev(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  protected next(): void {
-    if (this.hasMore()) {
-      this.page.update((p) => p + 1);
-    }
   }
 
   protected open(id: number): void {

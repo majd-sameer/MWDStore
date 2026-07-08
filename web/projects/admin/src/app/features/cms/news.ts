@@ -14,6 +14,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
+import { TableSkeleton } from '../../shared/table-skeleton';
 
 /**
  * News browser: the article list with a news-category manager alongside.
@@ -23,7 +24,7 @@ import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-inp
 @Component({
   selector: 'app-admin-news',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader, MultiLangInput, TableSkeleton],
   templateUrl: './news.html',
 })
 export class AdminNews {
