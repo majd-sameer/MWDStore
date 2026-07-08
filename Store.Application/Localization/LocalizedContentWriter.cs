@@ -26,8 +26,23 @@ public interface ILocalizedContentWriter
         string? value,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// String-keyed sibling of <see cref="SetAsync"/> for entities keyed by a code
+    /// (<c>LocalizedContentProperty.EntityKey</c>, e.g. <c>Country</c> by ISO code).
+    /// </summary>
+    Task SetByKeyAsync(
+        string entityType,
+        string entityKey,
+        string propertyName,
+        string cultureId,
+        string? value,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Removes every overlay row for an entity — call when the entity is hard-deleted.</summary>
     Task RemoveAllAsync(string entityType, long entityId, CancellationToken cancellationToken = default);
+
+    /// <summary>Removes every overlay row for a string-keyed entity — call on hard delete.</summary>
+    Task RemoveAllByKeyAsync(string entityType, string entityKey, CancellationToken cancellationToken = default);
 }
 
 /// <inheritdoc />
@@ -80,10 +95,65 @@ public sealed class LocalizedContentWriter : ILocalizedContentWriter
         }
     }
 
+    public async Task SetByKeyAsync(
+        string entityType,
+        string entityKey,
+        string propertyName,
+        string cultureId,
+        string? value,
+        CancellationToken cancellationToken = default)
+    {
+        var row = await _db.LocalizedContentProperties.FirstOrDefaultAsync(
+            p => p.EntityType == entityType
+                && p.EntityKey == entityKey
+                && p.ProperyName == propertyName
+                && p.CultureId == cultureId,
+            cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            if (row != null)
+            {
+                _db.LocalizedContentProperties.Remove(row);
+            }
+
+            return;
+        }
+
+        if (row == null)
+        {
+            await EnsureCultureAsync(cultureId, cancellationToken);
+            _db.LocalizedContentProperties.Add(new LocalizedContentProperty
+            {
+                EntityType = entityType,
+                EntityKey = entityKey,
+                CultureId = cultureId,
+                ProperyName = propertyName,
+                Value = value,
+            });
+        }
+        else
+        {
+            row.Value = value;
+        }
+    }
+
     public async Task RemoveAllAsync(string entityType, long entityId, CancellationToken cancellationToken = default)
     {
         var rows = await _db.LocalizedContentProperties
             .Where(p => p.EntityType == entityType && p.EntityId == entityId)
+            .ToListAsync(cancellationToken);
+
+        if (rows.Count > 0)
+        {
+            _db.LocalizedContentProperties.RemoveRange(rows);
+        }
+    }
+
+    public async Task RemoveAllByKeyAsync(string entityType, string entityKey, CancellationToken cancellationToken = default)
+    {
+        var rows = await _db.LocalizedContentProperties
+            .Where(p => p.EntityType == entityType && p.EntityKey == entityKey)
             .ToListAsync(cancellationToken);
 
         if (rows.Count > 0)

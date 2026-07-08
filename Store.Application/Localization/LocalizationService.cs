@@ -43,4 +43,39 @@ public sealed class LocalizationService : ILocalizationService
 
         return new LocalizedOverlay(values);
     }
+
+    public async Task<LocalizedKeyOverlay> GetOverlayByKeyAsync(
+        string entityType,
+        IReadOnlyCollection<string> keys,
+        string? cultureId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(cultureId) || keys.Count == 0)
+        {
+            return LocalizedKeyOverlay.Empty;
+        }
+
+        var rows = await _db.LocalizedContentProperties
+            .AsNoTracking()
+            .Where(p => p.EntityType == entityType
+                && p.CultureId == cultureId
+                && p.EntityKey != null
+                && keys.Contains(p.EntityKey)
+                && p.Value != null)
+            .Select(p => new { p.EntityKey, p.ProperyName, p.Value })
+            .ToListAsync(cancellationToken);
+
+        if (rows.Count == 0)
+        {
+            return LocalizedKeyOverlay.Empty;
+        }
+
+        var values = new Dictionary<(string, string), string>(rows.Count);
+        foreach (var row in rows)
+        {
+            values[(row.EntityKey!, row.ProperyName)] = row.Value!;
+        }
+
+        return new LocalizedKeyOverlay(values);
+    }
 }

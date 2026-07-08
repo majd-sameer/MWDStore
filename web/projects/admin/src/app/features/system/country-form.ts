@@ -8,17 +8,15 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import {
-  AdminSystemService,
-  type StateOrProvinceLookupDto,
-} from 'data-access';
+import { AdminSystemService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface CountryModel {
   id: string;
-  name: string;
+  name: MultiLangValue;
   code3: string;
   isShippingEnabled: boolean;
   isBillingEnabled: boolean;
@@ -27,10 +25,17 @@ interface CountryModel {
   isDistrictEnabled: boolean;
 }
 
+/** A state row in edit form: the id/country plus a bilingual, locally-editable name. */
+interface EditableState {
+  id: number;
+  countryId: string;
+  value: MultiLangValue;
+}
+
 function emptyModel(): CountryModel {
   return {
     id: '',
-    name: '',
+    name: { ar: '', en: '' },
     code3: '',
     isShippingEnabled: true,
     isBillingEnabled: true,
@@ -44,11 +49,14 @@ function emptyModel(): CountryModel {
  * Create / edit a country on its own page. The countries API has no single-fetch
  * endpoint, so edit mode seeds from the list resource. States are managed inline
  * once the country exists; creating a new country lands you on its edit page.
+ *
+ * Country and state names are bilingual (Arabic base + English overlay) via
+ * {@link MultiLangInput}; each edits both languages in one control.
  */
 @Component({
   selector: 'app-admin-country-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './country-form.html',
 })
 export class AdminCountryForm {
@@ -70,7 +78,8 @@ export class AdminCountryForm {
   );
 
   protected readonly model = signal<CountryModel>(emptyModel());
-  protected readonly states = signal<StateOrProvinceLookupDto[]>([]);
+  protected readonly states = signal<EditableState[]>([]);
+  protected readonly newState = signal<MultiLangValue>({ ar: '', en: '' });
   protected readonly saving = signal(false);
 
   private seeded = false;
@@ -87,7 +96,7 @@ export class AdminCountryForm {
       this.seeded = true;
       this.model.set({
         id: c.id,
-        name: c.name ?? '',
+        name: { ar: c.name ?? '', en: c.nameEn ?? '' },
         code3: c.code3 ?? '',
         isShippingEnabled: c.isShippingEnabled,
         isBillingEnabled: c.isBillingEnabled,
@@ -103,9 +112,20 @@ export class AdminCountryForm {
     this.model.update((m) => ({ ...m, ...patch }));
   }
 
+  protected setName(value: MultiLangValue): void {
+    this.model.update((m) => ({ ...m, name: value }));
+  }
+
   private loadStates(): void {
     this.service.states(this.countryId()).subscribe({
-      next: (states) => this.states.set(states),
+      next: (states) =>
+        this.states.set(
+          states.map((s) => ({
+            id: s.id,
+            countryId: s.countryId,
+            value: { ar: s.name ?? '', en: s.nameEn ?? '' },
+          })),
+        ),
       error: () => this.states.set([]),
     });
   }
@@ -114,13 +134,13 @@ export class AdminCountryForm {
     const m = this.model();
     if (this.isNew()) {
       const id = m.id.trim().toUpperCase();
-      const name = m.name.trim();
+      const name = m.name.ar.trim();
       if (!id || !name) {
         this.toast.error(this.translate.instant('countries.id_name_required'));
         return;
       }
       this.saving.set(true);
-      this.service.createCountry({ id, name }).subscribe({
+      this.service.createCountry({ id, name, nameEn: m.name.en || null }).subscribe({
         next: () => {
           this.toast.success(this.translate.instant('countries.created_ok'));
           this.saving.set(false);
@@ -136,7 +156,8 @@ export class AdminCountryForm {
     this.saving.set(true);
     this.service
       .updateCountry(this.countryId(), {
-        name: m.name || this.countryId(),
+        name: m.name.ar || this.countryId(),
+        nameEn: m.name.en || null,
         code3: m.code3 || null,
         isBillingEnabled: m.isBillingEnabled,
         isShippingEnabled: m.isShippingEnabled,
@@ -157,33 +178,36 @@ export class AdminCountryForm {
       });
   }
 
-  protected addState(input: HTMLInputElement): void {
-    const name = input.value.trim();
-    if (!name) {
+  protected addState(): void {
+    const v = this.newState();
+    if (!v.ar.trim() && !v.en.trim()) {
       return;
     }
-    this.service.createState(this.countryId(), { name }).subscribe({
+    this.service.createState(this.countryId(), { name: v.ar, nameEn: v.en || null }).subscribe({
       next: () => {
-        input.value = '';
+        this.newState.set({ ar: '', en: '' });
         this.loadStates();
       },
       error: () => this.toast.error(this.translate.instant('countries.state_create_failed')),
     });
   }
 
-  protected renameState(s: StateOrProvinceLookupDto, name: string): void {
-    const trimmed = name.trim();
-    if (!trimmed) {
+  protected patchState(id: number, value: MultiLangValue): void {
+    this.states.update((list) => list.map((s) => (s.id === id ? { ...s, value } : s)));
+  }
+
+  protected saveState(s: EditableState): void {
+    if (!s.value.ar.trim()) {
       return;
     }
-    this.service.updateState(s.id, { name: trimmed }).subscribe({
+    this.service.updateState(s.id, { name: s.value.ar, nameEn: s.value.en || null }).subscribe({
       next: () => this.toast.success(this.translate.instant('countries.state_updated')),
       error: () => this.toast.error(this.translate.instant('countries.state_update_failed')),
     });
   }
 
-  protected removeState(s: StateOrProvinceLookupDto): void {
-    if (!confirm(this.translate.instant('countries.confirm_delete_state', { name: s.name ?? '' }))) {
+  protected removeState(s: EditableState): void {
+    if (!confirm(this.translate.instant('countries.confirm_delete_state', { name: s.value.ar || '' }))) {
       return;
     }
     this.service.deleteState(s.id).subscribe({

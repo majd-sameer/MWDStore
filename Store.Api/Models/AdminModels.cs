@@ -402,7 +402,7 @@ public sealed class WarehouseUpsertRequest
 
 public sealed record CountryLookupDto(string Id, string Name);
 
-public sealed record StateOrProvinceLookupDto(long Id, string Name, string CountryId);
+public sealed record StateOrProvinceLookupDto(long Id, string Name, string? NameEn, string CountryId);
 
 // ----- Promotions (cart rules / coupons) ---------------------------------------------------------------
 
@@ -705,7 +705,7 @@ public sealed class AppSettingUpdateRequest
 }
 
 public sealed record AdminCountryDto(
-    string Id, string Name, string? Code3, bool IsBillingEnabled, bool IsShippingEnabled,
+    string Id, string Name, string? NameEn, string? Code3, bool IsBillingEnabled, bool IsShippingEnabled,
     bool IsCityEnabled, bool IsZipCodeEnabled, bool IsDistrictEnabled, int StatesCount);
 
 public sealed class CountryUpsertRequest
@@ -715,6 +715,9 @@ public sealed class CountryUpsertRequest
 
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
 
     public string? Code3 { get; set; }
     public bool IsBillingEnabled { get; set; } = true;
@@ -728,6 +731,9 @@ public sealed class StateOrProvinceUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
 
     public string? Code { get; set; }
     public string? Type { get; set; }

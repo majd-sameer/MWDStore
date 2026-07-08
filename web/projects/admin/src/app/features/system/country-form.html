@@ -26,8 +26,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                   <label class="form-label" for="cty-name">{{ 'common.name' | translate }}</label>
-                  <input id="cty-name" type="text" class="form-control"
-                    [value]="model().name" (input)="patch({ name: $any($event.target).value })" />
+                  <multi-lang-input controlId="cty-name" [value]="model().name" (valueChange)="setName($event)" />
                 </div>
                 <div class="col-md-3 mb-3">
                   <label class="form-label" for="cty-code3">{{ 'countries.iso3' | translate }}</label>
@@ -106,19 +105,24 @@
               <div class="card-body">
                 @for (s of states(); track s.id) {
                   <div class="d-flex align-items-center gap-2 mb-2">
-                    <input type="text" class="form-control form-control-sm" [value]="s.name"
-                      (change)="renameState(s, $any($event.target).value)" />
+                    <div class="flex-grow-1">
+                      <multi-lang-input [value]="s.value" (valueChange)="patchState(s.id, $event)" />
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                      [attr.aria-label]="'common.save_changes' | translate" (click)="saveState(s)">✓</button>
                     <button type="button" class="btn btn-sm btn-outline-danger"
                       (click)="removeState(s)">✕</button>
                   </div>
                 } @empty {
                   <p class="text-body-secondary small">{{ 'countries.no_states' | translate }}</p>
                 }
-                <div class="d-flex gap-2 mt-3">
-                  <input type="text" class="form-control form-control-sm"
-                    [placeholder]="'countries.new_state_ph' | translate" #stateName />
+                <div class="d-flex align-items-start gap-2 mt-3">
+                  <div class="flex-grow-1">
+                    <multi-lang-input [value]="newState()" (valueChange)="newState.set($event)"
+                      [placeholder]="'countries.new_state_ph' | translate" />
+                  </div>
                   <button type="button" libButton variant="secondary" [outline]="true"
-                    (click)="addState(stateName)">
+                    (click)="addState()">
                     {{ 'common.add' | translate }}
                   </button>
                 </div>

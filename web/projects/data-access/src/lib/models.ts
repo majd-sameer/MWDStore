@@ -865,6 +865,7 @@ export interface CountryLookupDto {
 export interface StateOrProvinceLookupDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   countryId: string;
 }
 
@@ -1242,6 +1243,7 @@ export interface AppSettingUpdateRequest {
 export interface AdminCountryDto {
   id: string;
   name: string | null;
+  nameEn: string | null;
   code3: string | null;
   isBillingEnabled: boolean;
   isShippingEnabled: boolean;
@@ -1254,6 +1256,7 @@ export interface AdminCountryDto {
 export interface CountryUpsertRequest {
   id?: string | null;
   name: string;
+  nameEn?: string | null;
   code3?: string | null;
   isBillingEnabled?: boolean;
   isShippingEnabled?: boolean;
@@ -1264,6 +1267,7 @@ export interface CountryUpsertRequest {
 
 export interface StateOrProvinceUpsertRequest {
   name: string;
+  nameEn?: string | null;
   code?: string | null;
   type?: string | null;
 }

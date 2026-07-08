@@ -18,6 +18,17 @@ public interface ILocalizationService
         IReadOnlyCollection<long> ids,
         string? cultureId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Like <see cref="GetOverlayAsync"/> but for entities keyed by a string
+    /// (<c>LocalizedContentProperty.EntityKey</c>, e.g. <c>Country</c> by ISO code) rather than a
+    /// numeric id. Returns an empty overlay when the culture is null/empty or there are no keys.
+    /// </summary>
+    Task<LocalizedKeyOverlay> GetOverlayByKeyAsync(
+        string entityType,
+        IReadOnlyCollection<string> keys,
+        string? cultureId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Entity-type discriminators used in <c>LocalizedContentProperty.EntityType</c>.</summary>
@@ -76,6 +87,29 @@ public sealed class LocalizedOverlay
     public string? Apply(long entityId, string property, string? baseValue)
     {
         var value = Get(entityId, property);
+        return string.IsNullOrEmpty(value) ? baseValue : value;
+    }
+}
+
+/// <summary>String-keyed sibling of <see cref="LocalizedOverlay"/> for entities keyed by a code.</summary>
+public sealed class LocalizedKeyOverlay
+{
+    public static readonly LocalizedKeyOverlay Empty = new(new Dictionary<(string, string), string>());
+
+    private readonly IReadOnlyDictionary<(string EntityKey, string Property), string> _values;
+
+    public LocalizedKeyOverlay(IReadOnlyDictionary<(string, string), string> values) => _values = values;
+
+    public bool IsEmpty => _values.Count == 0;
+
+    /// <summary>The translated value for the key/property, or null when there is no translation.</summary>
+    public string? Get(string entityKey, string property) =>
+        _values.TryGetValue((entityKey, property), out var value) ? value : null;
+
+    /// <summary>The translation when present and non-empty, otherwise the supplied base value.</summary>
+    public string? Apply(string entityKey, string property, string? baseValue)
+    {
+        var value = Get(entityKey, property);
         return string.IsNullOrEmpty(value) ? baseValue : value;
     }
 }
