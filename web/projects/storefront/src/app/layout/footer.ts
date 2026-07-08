@@ -84,7 +84,7 @@ export class Footer {
   protected readonly careLinks: readonly FooterLink[] = [
     { key: 'delivery_returns', link: '/' },
     { key: 'track', link: '/account/orders' },
-    { key: 'contact', link: '/' },
-    { key: 'faq', link: '/' },
+    { key: 'contact', link: '/contact' },
+    { key: 'faq', link: '/pages/faq' },
   ];
 }

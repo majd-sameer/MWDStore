@@ -446,7 +446,27 @@
     "stores": "Stores",
     "tagline": "Handmade products by inmates of Jordan's Reform & Rehabilitation Centers — 100% of proceeds support rehabilitation and reintegration.",
     "psd": "Under the supervision of the Public Security Directorate — Reform & Rehabilitation Centers Administration",
+    "location": "Amman, Jordan · Public Security Directorate — Reform & Rehabilitation Centers Administration",
     "rights": "© {{year}} Made With Determination. All rights reserved."
+  },
+  "faq": {
+    "eyebrow": "Help center",
+    "title": "Frequently asked questions",
+    "subtitle": "Quick answers about our products, your orders, and the initiative behind them.",
+    "meta_title": "FAQ",
+    "meta_description": "Answers to common questions about Made With Determination products, orders, delivery and returns.",
+    "q1": "What is Made With Determination?",
+    "a1": "A national initiative by the Public Security Directorate that lets residents of Jordan's Reform & Rehabilitation Centers sell the crafts they make by hand — every purchase supports their rehabilitation and reintegration.",
+    "q2": "Who makes the products?",
+    "a2": "Residents of the centers, trained by specialized instructors, craft every piece by hand from carefully selected materials.",
+    "q3": "Are my payments secure?",
+    "a3": "Yes. This is an official government platform and all payments are processed over a secure, encrypted connection.",
+    "q4": "How long does delivery take?",
+    "a4": "Orders are usually delivered within 3–5 business days across Jordan. You can follow your order any time from “Track an order”.",
+    "q5": "Can I return or exchange an item?",
+    "a5": "Unused items in their original condition can be returned or exchanged within 14 days of delivery. See Delivery & returns for details.",
+    "q6": "Where do the proceeds go?",
+    "a6": "100% of proceeds go toward rehabilitating the makers and helping them reintegrate into society with dignity."
   },
   "common": {
     "home": "Home",

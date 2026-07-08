@@ -51,6 +51,10 @@ const KEY_LABELS: Record<string, string> = {
   track: 'cms.keys.link_track',
   contact: 'cms.keys.link_contact',
   faq: 'cms.keys.link_faq',
+  address: 'cms.keys.address',
+  map: 'cms.keys.map',
+  // FAQ page — the q1/a1 … item keys read fine raw.
+  subtitle: 'cms.keys.subtitle',
 };
 
 /**
@@ -71,7 +75,7 @@ export class AdminContentBlocks {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  protected readonly pages = ['home', 'about', 'footer'];
+  protected readonly pages = ['home', 'about', 'footer', 'faq'];
   protected readonly page = signal('home');
   protected readonly lang = signal<'ar' | 'en'>('ar');
 

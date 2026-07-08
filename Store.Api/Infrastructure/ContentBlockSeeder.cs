@@ -131,6 +131,52 @@ public static class ContentBlockSeeder
         new("footer", "footer-social", "youtube", "link", null, null, Sort: 3),
         new("footer", "footer-social", "tiktok", "link", null, null, Sort: 4),
         new("footer", "footer-social", "whatsapp", "link", null, null, Sort: 5),
+
+        // Location — editable address line plus an optional map link (empty until an admin sets it).
+        new("footer", "footer-location", "address", "text",
+            "عمّان، الأردن · مديرية الأمن العام — إدارة مراكز الإصلاح والتأهيل",
+            "Amman, Jordan · Public Security Directorate — Reform & Rehabilitation Centers Administration",
+            Sort: 0),
+        new("footer", "footer-location", "map", "link", null, null, Sort: 1),
+
+        // ----- FAQ (/pages/faq) — editable heading + Q&A pairs, fixed design ------------------------
+        new("faq", "faq-hero", "title", "text",
+            "الأسئلة الشائعة", "Frequently asked questions", Sort: 0),
+        new("faq", "faq-hero", "subtitle", "text",
+            "إجابات سريعة حول منتجاتنا وطلباتك والمبادرة التي تقف خلفها.",
+            "Quick answers about our products, your orders, and the initiative behind them.", Sort: 1),
+
+        new("faq", "faq-list", "q1", "text", "ما هي مبادرة “صُنع بعزيمة”؟", "What is Made With Determination?", Sort: 0),
+        new("faq", "faq-list", "a1", "text",
+            "مبادرة وطنية من مديرية الأمن العام تتيح لنزلاء مراكز الإصلاح والتأهيل في الأردن بيع منتجاتهم المصنوعة يدويًا — وكل عملية شراء تدعم تأهيلهم وإعادة دمجهم.",
+            "A national initiative by the Public Security Directorate that lets residents of Jordan's Reform "
+            + "& Rehabilitation Centers sell the crafts they make by hand — every purchase supports their "
+            + "rehabilitation and reintegration.", Sort: 1),
+        new("faq", "faq-list", "q2", "text", "من يصنع المنتجات؟", "Who makes the products?", Sort: 2),
+        new("faq", "faq-list", "a2", "text",
+            "يصنع كل قطعة نزلاء المراكز يدويًا، بعد تدريبهم على يد مدرّبين متخصصين، من خامات مختارة بعناية.",
+            "Residents of the centers, trained by specialized instructors, craft every piece by hand from "
+            + "carefully selected materials.", Sort: 3),
+        new("faq", "faq-list", "q3", "text", "هل عمليات الدفع آمنة؟", "Are my payments secure?", Sort: 4),
+        new("faq", "faq-list", "a3", "text",
+            "نعم. هذه منصّة حكومية رسمية، وتتم جميع عمليات الدفع عبر اتصال آمن ومشفّر.",
+            "Yes. This is an official government platform and all payments are processed over a secure, "
+            + "encrypted connection.", Sort: 5),
+        new("faq", "faq-list", "q4", "text", "كم تستغرق مدة التوصيل؟", "How long does delivery take?", Sort: 6),
+        new("faq", "faq-list", "a4", "text",
+            "تُسلَّم الطلبات عادةً خلال ٣–٥ أيام عمل داخل الأردن. ويمكنك متابعة طلبك في أي وقت من خلال “تتبّع طلب”.",
+            "Orders are usually delivered within 3–5 business days across Jordan. You can follow your order "
+            + "any time from “Track an order”.", Sort: 7),
+        new("faq", "faq-list", "q5", "text", "هل يمكنني إرجاع منتج أو استبداله؟", "Can I return or exchange an item?", Sort: 8),
+        new("faq", "faq-list", "a5", "text",
+            "يمكن إرجاع أو استبدال المنتجات غير المستخدمة وبحالتها الأصلية خلال ١٤ يومًا من الاستلام. راجع صفحة التوصيل والإرجاع للتفاصيل.",
+            "Unused items in their original condition can be returned or exchanged within 14 days of "
+            + "delivery. See Delivery & returns for details.", Sort: 9),
+        new("faq", "faq-list", "q6", "text", "أين تذهب العائدات؟", "Where do the proceeds go?", Sort: 10),
+        new("faq", "faq-list", "a6", "text",
+            "١٠٠٪ من العائدات تذهب لتأهيل الصنّاع ومساعدتهم على الاندماج في المجتمع بكرامة.",
+            "100% of proceeds go toward rehabilitating the makers and helping them reintegrate into society "
+            + "with dignity.", Sort: 11),
     ];
 
     public static async Task SeedAsync(IServiceProvider services, CancellationToken cancellationToken = default)

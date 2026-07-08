@@ -15,6 +15,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'shop', renderMode: RenderMode.Server },
   { path: 'products/:id', renderMode: RenderMode.Server },
   { path: 'pages/about-us', renderMode: RenderMode.Server },
+  { path: 'pages/faq', renderMode: RenderMode.Server },
   { path: 'pages/:slug', renderMode: RenderMode.Server },
   { path: 'news', renderMode: RenderMode.Server },
   { path: 'news/:slug', renderMode: RenderMode.Server },

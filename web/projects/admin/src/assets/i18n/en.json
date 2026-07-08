@@ -49,7 +49,7 @@
     "subtitle": "Edit the words and images of the storefront — the design stays fixed.",
     "preview": "Preview storefront",
     "page": "Page",
-    "pages": { "home": "Home", "about": "About us", "footer": "Footer" },
+    "pages": { "home": "Home", "about": "About us", "footer": "Footer", "faq": "FAQ" },
     "language": "Language",
     "ar": "Arabic",
     "en": "English",
@@ -73,7 +73,10 @@
       "footer-shop": "Footer — shop column",
       "footer-company": "Footer — company column",
       "footer-care": "Footer — care column",
-      "footer-social": "Footer — social links"
+      "footer-social": "Footer — social links",
+      "footer-location": "Footer — location",
+      "faq-hero": "FAQ — heading",
+      "faq-list": "FAQ — questions"
     },
     "keys": {
       "hero_title": "Hero title",
@@ -97,7 +100,10 @@
       "link_delivery": "Link — delivery & returns",
       "link_track": "Link — track an order",
       "link_contact": "Link — contact",
-      "link_faq": "Link — FAQ"
+      "link_faq": "Link — FAQ",
+      "address": "Address",
+      "map": "Map link",
+      "subtitle": "Subtitle"
     }
   },
   "audit": {

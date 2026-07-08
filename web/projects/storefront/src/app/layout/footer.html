@@ -7,7 +7,6 @@
             <span>{{ 'brand.name' | translate }}</span>
           </span>
           <p class="tagline">{{ content.block('footer-brand', 'tagline')?.value || ('footer.tagline' | translate) }}</p>
-
           <div class="psd">
             <span class="psd-crest">
               <img src="logo-psd.png" [attr.alt]="content.block('footer-brand', 'psd')?.value || ('footer.psd' | translate)" />
@@ -15,42 +14,10 @@
             <span class="psd-note">{{ content.block('footer-brand', 'psd')?.value || ('footer.psd' | translate) }}</span>
           </div>
 
-          <form class="newsletter" (submit)="$event.preventDefault()">
-            <label class="visually-hidden" for="footer-email">
-              {{ content.block('footer-brand', 'newsletter')?.value || ('footer.newsletter' | translate) }}
-            </label>
-            <input
-              id="footer-email"
-              type="email"
-              dir="auto"
-              class="form-control"
-              [attr.placeholder]="content.block('footer-brand', 'newsletter')?.value || ('footer.newsletter' | translate)"
-            />
-            <button
-              type="submit"
-              class="btn btn-primary"
-              [attr.aria-label]="'footer.subscribe' | translate"
-            >
-              <lib-icon name="arrowEnd" [size]="18" />
-            </button>
-          </form>
 
-          @if (hasSocial()) {
-            <ul class="footer-social">
-              @for (s of socials; track s.key) {
-                @if (content.block('footer-social', s.key)?.linkUrl; as url) {
-                  <li>
-                    <a [href]="url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
-                      <lib-icon [name]="s.icon" [size]="20" />
-                    </a>
-                  </li>
-                }
-              }
-            </ul>
-          }
         </div>
 
-        <div class="footer-col">
+     <!--   <div class="footer-col">
           <h2 class="footer-h">{{ content.block('footer-shop', 'heading')?.value || ('footer.shop' | translate) }}</h2>
           <ul>
             <li><a routerLink="/shop">{{ 'nav.shop' | translate }}</a></li>
@@ -62,7 +29,7 @@
               </li>
             }
           </ul>
-        </div>
+        </div>-->
 
         <div class="footer-col">
           <h2 class="footer-h">{{ content.block('footer-company', 'heading')?.value || ('footer.brand' | translate) }}</h2>
@@ -81,10 +48,39 @@
             }
           </ul>
         </div>
-      </div>
+        <div class="footer-col">
+          <h2 class="footer-h">{{ content.block('footer-care', 'heading')?.value || ('footer.care' | translate) }}</h2>
+          @if (hasSocial()) {
+            <ul class="footer-social">
+              @for (s of socials; track s.key) {
+                @if (content.block('footer-social', s.key)?.linkUrl; as url) {
+                  <li>
+                    <a [href]="url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
+                      <lib-icon [name]="s.icon" [size]="20" />
+                    </a>
+                  </li>
+                }
+              }
+            </ul>
+          }
+
+          @let address = content.block('footer-location', 'address')?.value || ('footer.location' | translate);
+          <div class="footer-loc">
+            <lib-icon name="pin" [size]="18" />
+            @if (content.block('footer-location', 'map')?.linkUrl; as map) {
+              <a [href]="map" target="_blank" rel="noopener">{{ address }}</a>
+            } @else {
+              <span>{{ address }}</span>
+            }
+          </div>
+
+
+
+
+        </div>
+        </div>
 
       <div class="wrap footer-base">
         {{ 'footer.rights' | translate: { year: year } }}
       </div>
     </footer>
-  

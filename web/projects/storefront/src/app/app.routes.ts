@@ -40,6 +40,13 @@ export const routes: Routes = [
       import('./features/content/about').then((m) => m.About),
   },
   {
+    // Designed FAQ page (translated copy + CMS blocks) — like About, must
+    // precede the generic `pages/:slug` matcher.
+    path: 'pages/faq',
+    loadComponent: () =>
+      import('./features/content/faq').then((m) => m.Faq),
+  },
+  {
     path: 'pages/:slug',
     loadComponent: () =>
       import('./features/content/page').then((m) => m.CmsPage),

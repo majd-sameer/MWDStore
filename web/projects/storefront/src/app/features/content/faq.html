@@ -1,0 +1,27 @@
+
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <span class="eyebrow">{{ 'faq.eyebrow' | translate }}</span>
+        <h1 class="hero-title">
+          {{ content.block('faq-hero', 'title')?.value || ('faq.title' | translate) }}
+        </h1>
+        <p class="hero-body">
+          {{ content.block('faq-hero', 'subtitle')?.value || ('faq.subtitle' | translate) }}
+        </p>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="wrap faq-list">
+        @for (n of items; track n) {
+          <details class="faq-item">
+            <summary class="faq-q">
+              {{ content.block('faq-list', 'q' + n)?.value || ('faq.q' + n | translate) }}
+            </summary>
+            <p class="faq-a">
+              {{ content.block('faq-list', 'a' + n)?.value || ('faq.a' + n | translate) }}
+            </p>
+          </details>
+        }
+      </div>
+    </section>
