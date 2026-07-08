@@ -20,7 +20,7 @@
               <thead>
                 <tr>
                   <th scope="col">{{ 'menus.col_menu' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'menus.col_items' | translate }}</th>
+                  <th scope="col" >{{ 'menus.col_items' | translate }}</th>
                   <th scope="col">{{ 'common.published' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
@@ -34,7 +34,7 @@
                         <span class="badge text-bg-info ms-1">{{ 'menus.system_badge' | translate }}</span>
                       }
                     </td>
-                    <td class="text-end">{{ m.items.length }}</td>
+                    <td>{{ m.items.length }}</td>
                     <td>
                       <div class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" id="menu-pub-{{ m.id }}"
@@ -83,4 +83,3 @@
         }
       </div>
     </div>
-  

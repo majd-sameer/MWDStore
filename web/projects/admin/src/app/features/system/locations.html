@@ -23,7 +23,7 @@
                   <th>{{ 'common.name' | translate }}</th>
                   <th class="text-center">{{ 'nav.shipping' | translate }}</th>
                   <th class="text-center">{{ 'countries.col_billing' | translate }}</th>
-                  <th class="text-end">{{ 'countries.col_states' | translate }}</th>
+                  <th>{{ 'countries.col_states' | translate }}</th>
                   <th class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -44,7 +44,7 @@
                         [attr.aria-label]="'countries.billing_enabled' | translate"
                         (change)="patchCountry(c, { isBillingEnabled: $any($event.target).checked })" />
                     </td>
-                    <td class="text-end">{{ c.statesCount }}</td>
+                    <td>{{ c.statesCount }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/locations', c.id]" class="action-btn" [title]="'common.edit' | translate">

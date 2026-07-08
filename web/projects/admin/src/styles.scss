@@ -1136,4 +1136,47 @@ h1.h3 {
   .owl-dt-control-arrow-button .owl-dt-control-button-content {
     transform: rotate(180deg);
   }
+
+  // Pagination prev/next — the arrows are `«` / `»` text glyphs, not icons, so
+  // they don't mirror on their own. Flip them so "previous" points to the start
+  // (right) and "next" to the end (left) in Arabic. (`lib-icon` directional
+  // arrows already mirror via ui's `.icon-directional`.)
+  .pagination .page-link span[aria-hidden="true"] {
+    display: inline-block;
+    transform: scaleX(-1);
+  }
+
+  // Horizontal Bootstrap-Icon arrows/chevrons/carets — mirror the directional
+  // ones. Only left/right (never -up / -down, e.g. the dropdown `bi-chevron-down`).
+  .bi-arrow-left,
+  .bi-arrow-right,
+  .bi-arrow-left-short,
+  .bi-arrow-right-short,
+  .bi-arrow-left-circle,
+  .bi-arrow-left-circle-fill,
+  .bi-arrow-right-circle,
+  .bi-arrow-right-circle-fill,
+  .bi-arrow-left-square,
+  .bi-arrow-left-square-fill,
+  .bi-arrow-right-square,
+  .bi-arrow-right-square-fill,
+  .bi-arrow-bar-left,
+  .bi-arrow-bar-right,
+  .bi-chevron-left,
+  .bi-chevron-right,
+  .bi-chevron-double-left,
+  .bi-chevron-double-right,
+  .bi-chevron-bar-left,
+  .bi-chevron-bar-right,
+  .bi-caret-left,
+  .bi-caret-left-fill,
+  .bi-caret-right,
+  .bi-caret-right-fill,
+  .bi-box-arrow-left,
+  .bi-box-arrow-right,
+  .bi-box-arrow-in-left,
+  .bi-box-arrow-in-right {
+    display: inline-block;
+    transform: scaleX(-1);
+  }
 }

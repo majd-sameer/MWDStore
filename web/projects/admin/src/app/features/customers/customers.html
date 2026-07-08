@@ -30,8 +30,8 @@
                 <tr>
                   <th scope="col">{{ 'customers.col_customer' | translate }}</th>
                   <th scope="col">{{ 'users.col_groups' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'nav.orders' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'customers.col_spend' | translate }}</th>
+                  <th scope="col">{{ 'nav.orders' | translate }}</th>
+                  <th scope="col">{{ 'customers.col_spend' | translate }}</th>
                   <th scope="col">{{ 'customers.col_joined' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
@@ -50,8 +50,8 @@
                         <span class="text-body-secondary small">—</span>
                       }
                     </td>
-                    <td class="text-end">{{ c.orderCount }}</td>
-                    <td class="text-end">{{ c.totalSpent | money }}</td>
+                    <td>{{ c.orderCount }}</td>
+                    <td>{{ c.totalSpent | money }}</td>
                     <td class="small">{{ c.createdOn | date: 'mediumDate' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">

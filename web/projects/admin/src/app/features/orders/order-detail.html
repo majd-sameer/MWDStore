@@ -30,8 +30,8 @@
                 <thead>
                   <tr>
                     <th scope="col">{{ 'products.col_product' | translate }}</th>
-                    <th scope="col" class="text-end">{{ 'products.col_price' | translate }}</th>
-                    <th scope="col" class="text-end">{{ 'order_detail.col_qty' | translate }}</th>
+                    <th scope="col">{{ 'products.col_price' | translate }}</th>
+                    <th scope="col">{{ 'order_detail.col_qty' | translate }}</th>
                     <th scope="col" class="text-end">{{ 'order_detail.col_line_total' | translate }}</th>
                   </tr>
                 </thead>
@@ -39,8 +39,8 @@
                   @for (it of o.items ?? []; track it.productId) {
                     <tr>
                       <td>{{ it.productName }}</td>
-                      <td class="text-end">{{ it.productPrice | money }}</td>
-                      <td class="text-end">{{ it.quantity }}</td>
+                      <td>{{ it.productPrice | money }}</td>
+                      <td>{{ it.quantity }}</td>
                       <td class="text-end">
                         {{ it.productPrice * it.quantity - it.discountAmount | money }}
                       </td>

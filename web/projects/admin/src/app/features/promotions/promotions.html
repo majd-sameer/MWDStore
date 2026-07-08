@@ -22,7 +22,7 @@
                   <th scope="col">{{ 'common.name' | translate }}</th>
                   <th scope="col">{{ 'promotions.col_discount' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'promotions.col_used' | translate }}</th>
+                  <th scope="col">{{ 'promotions.col_used' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -43,7 +43,7 @@
                         <span class="badge text-bg-secondary">{{ 'common.inactive' | translate }}</span>
                       }
                     </td>
-                    <td class="text-end">{{ r.usageCount }}</td>
+                    <td>{{ r.usageCount }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/promotions', r.id]" class="action-btn" [title]="'common.edit' | translate">

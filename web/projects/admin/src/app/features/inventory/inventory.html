@@ -43,18 +43,18 @@
                   <thead>
                     <tr>
                       <th scope="col">{{ 'inventory.warehouse' | translate }}</th>
-                      <th scope="col" class="text-end">{{ 'inventory.col_on_hand' | translate }}</th>
-                      <th scope="col" class="text-end">{{ 'inventory.col_reserved' | translate }}</th>
-                      <th scope="col" class="text-end">{{ 'inventory.col_available' | translate }}</th>
+                      <th scope="col" >{{ 'inventory.col_on_hand' | translate }}</th>
+                      <th scope="col">{{ 'inventory.col_reserved' | translate }}</th>
+                      <th scope="col" >{{ 'inventory.col_available' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (w of s.warehouses ?? []; track w.warehouseId) {
                       <tr>
                         <td>{{ w.warehouseName }} <span class="text-body-secondary">#{{ w.warehouseId }}</span></td>
-                        <td class="text-end">{{ w.quantity }}</td>
-                        <td class="text-end">{{ w.reservedQuantity }}</td>
-                        <td class="text-end">{{ w.quantity - w.reservedQuantity }}</td>
+                        <td >{{ w.quantity }}</td>
+                        <td >{{ w.reservedQuantity }}</td>
+                        <td>{{ w.quantity - w.reservedQuantity }}</td>
                       </tr>
                     } @empty {
                       <tr>

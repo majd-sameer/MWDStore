@@ -66,8 +66,8 @@
                   <th>#</th>
                   <th>{{ 'dashboard.col_order' | translate }}</th>
                   <th>{{ 'payments.col_method' | translate }}</th>
-                  <th class="text-end">{{ 'payments.col_amount' | translate }}</th>
-                  <th class="text-end">{{ 'payments.col_fee' | translate }}</th>
+                  <th>{{ 'payments.col_amount' | translate }}</th>
+                  <th>{{ 'payments.col_fee' | translate }}</th>
                   <th>{{ 'payments.col_ref' | translate }}</th>
                   <th>{{ 'common.when' | translate }}</th>
                 </tr>
@@ -78,8 +78,8 @@
                     <td>{{ t.id }}</td>
                     <td>#{{ t.orderId }}</td>
                     <td>{{ t.paymentMethod ?? '—' }}</td>
-                    <td class="text-end">{{ t.amount | money }}</td>
-                    <td class="text-end">{{ t.paymentFee | money }}</td>
+                    <td>{{ t.amount | money }}</td>
+                    <td>{{ t.paymentFee | money }}</td>
                     <td class="small">{{ t.gatewayTransactionId ?? '—' }}</td>
                     <td class="small">{{ t.createdOn | date: 'medium' }}</td>
                   </tr>

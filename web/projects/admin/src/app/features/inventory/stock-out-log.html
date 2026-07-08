@@ -36,8 +36,8 @@
             [placeholder]="'stockoutlog.all_reasons' | translate"
             [attr.aria-label]="'stockout.reason' | translate"
           >
-            <ng-template ng-label-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
-            <ng-template ng-option-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+            <ng-template ng-label-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-option-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
           </ng-select>
           <ng-select
             class="filter-select"
@@ -48,8 +48,8 @@
             [placeholder]="'stockoutlog.all_channels' | translate"
             [attr.aria-label]="'stockout.channel' | translate"
           >
-            <ng-template ng-label-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
-            <ng-template ng-option-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+            <ng-template ng-label-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-option-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
           </ng-select>
           @if (warehouses().length) {
             <ng-select
@@ -124,7 +124,7 @@
                 <tr>
                   <th scope="col">{{ 'audit.col_time' | translate }}</th>
                   <th scope="col">{{ 'stockoutlog.col_product' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'stockoutlog.col_qty' | translate }}</th>
+                  <th scope="col">{{ 'stockoutlog.col_qty' | translate }}</th>
                   <th scope="col">{{ 'stockout.reason' | translate }}</th>
                   <th scope="col">{{ 'stockout.channel' | translate }}</th>
                   <th scope="col">{{ 'stockoutlog.col_performed_by' | translate }}</th>
@@ -141,7 +141,7 @@
                         #{{ row.productId }} · {{ row.warehouseName }}
                       </div>
                     </td>
-                    <td class="text-end tabular-nums">{{ row.quantity }}</td>
+                    <td class="tabular-nums">{{ row.quantity }}</td>
                     <td>
                       @if (row.reason !== null) {
                         <span class="badge" [class]="reasonBadge(row.reason)">

@@ -46,7 +46,7 @@
                   <thead>
                     <tr>
                       <th scope="col">{{ 'inventory.warehouse' | translate }}</th>
-                      <th scope="col" class="text-end">{{ 'inventory.col_on_hand' | translate }}</th>
+                      <th scope="col">{{ 'inventory.col_on_hand' | translate }}</th>
                       <th scope="col" class="text-end">{{ 'inventory.col_available' | translate }}</th>
                     </tr>
                   </thead>
@@ -54,7 +54,7 @@
                     @for (w of s.warehouses ?? []; track w.warehouseId) {
                       <tr>
                         <td>{{ w.warehouseName }} <span class="text-body-secondary">#{{ w.warehouseId }}</span></td>
-                        <td class="text-end">{{ w.quantity }}</td>
+                        <td>{{ w.quantity }}</td>
                         <td class="text-end">{{ w.quantity - w.reservedQuantity }}</td>
                       </tr>
                     } @empty {
@@ -118,8 +118,8 @@
                   (ngModelChange)="setReason($event)"
                   [clearable]="false"
                 >
-                  <ng-template ng-label-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
-                  <ng-template ng-option-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+                  <ng-template ng-label-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+                  <ng-template ng-option-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
                 </ng-select>
               </div>
 
@@ -140,8 +140,8 @@
                     [clearable]="!channelRequired()"
                     [placeholder]="'stockout.no_channel' | translate"
                   >
-                    <ng-template ng-label-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
-                    <ng-template ng-option-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+                    <ng-template ng-label-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+                    <ng-template ng-option-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
                   </ng-select>
                 </div>
               }

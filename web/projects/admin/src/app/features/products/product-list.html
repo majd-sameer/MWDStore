@@ -80,8 +80,8 @@
                 <tr>
                   <th scope="col">{{ 'products.col_product' | translate }}</th>
                   <th scope="col">{{ 'products.brand' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'products.col_price' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'products.col_stock' | translate }}</th>
+                  <th scope="col">{{ 'products.col_price' | translate }}</th>
+                  <th scope="col">{{ 'products.col_stock' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
@@ -111,13 +111,13 @@
                       </div>
                     </td>
                     <td class="text-body-secondary">{{ brandName(p.brandId) }}</td>
-                    <td class="text-end tabular-nums">
+                    <td class="tabular-nums">
                       <div>{{ p.price | money }}</div>
                       @if (p.oldPrice !== null) {
                         <div class="price-old">{{ p.oldPrice | money }}</div>
                       }
                     </td>
-                    <td class="text-end tabular-nums">
+                    <td class="tabular-nums">
                       <span
                         class="stock-dot"
                         [class.out]="p.stockQuantity <= 0"

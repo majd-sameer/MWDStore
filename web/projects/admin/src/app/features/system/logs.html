@@ -75,7 +75,7 @@
             <thead>
               <tr>
                 <th>{{ 'logs.col_query' | translate }}</th>
-                <th class="text-end">{{ 'logs.col_count' | translate }}</th>
+                <th>{{ 'logs.col_count' | translate }}</th>
                 <th>{{ 'logs.col_latest' | translate }}</th>
               </tr>
             </thead>
@@ -83,7 +83,7 @@
               @for (q of queries.value() ?? []; track q.queryText) {
                 <tr>
                   <td class="fw-medium">{{ q.queryText }}</td>
-                  <td class="text-end">{{ q.count }}</td>
+                  <td>{{ q.count }}</td>
                   <td class="small">{{ q.latestCreatedOn | date: 'medium' }}</td>
                 </tr>
               } @empty {

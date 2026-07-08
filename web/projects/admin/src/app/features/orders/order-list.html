@@ -32,8 +32,8 @@
                   <th scope="col">{{ 'dashboard.col_order' | translate }}</th>
                   <th scope="col">{{ 'dashboard.col_placed' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'dashboard.col_items' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'dashboard.col_total' | translate }}</th>
+                  <th scope="col">{{ 'dashboard.col_items' | translate }}</th>
+                  <th scope="col">{{ 'dashboard.col_total' | translate }}</th>
                   <th scope="col"></th>
                 </tr>
               </thead>
@@ -49,8 +49,8 @@
                     <td>
                       <app-status-pill [tone]="tone(o.orderStatus)">{{ o.orderStatusName }}</app-status-pill>
                     </td>
-                    <td class="text-end tabular-nums">{{ o.itemCount }}</td>
-                    <td class="text-end tabular-nums">{{ o.orderTotal | money }}</td>
+                    <td class="tabular-nums">{{ o.itemCount }}</td>
+                    <td class="tabular-nums">{{ o.orderTotal | money }}</td>
                     <td class="text-end">
                       <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">
                         {{ 'common.view' | translate }}

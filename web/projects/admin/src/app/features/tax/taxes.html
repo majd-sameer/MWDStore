@@ -52,7 +52,7 @@
                       <th>{{ 'common.country' | translate }}</th>
                       <th>{{ 'common.state' | translate }}</th>
                       <th>{{ 'common.zip' | translate }}</th>
-                      <th class="text-end">{{ 'taxes.col_rate' | translate }}</th>
+                      <th >{{ 'taxes.col_rate' | translate }}</th>
                       <th class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
                   </thead>
@@ -65,7 +65,7 @@
                         <td>{{ r.countryName ?? ('common.any' | translate) }}</td>
                         <td>{{ r.stateOrProvinceName ?? ('common.any' | translate) }}</td>
                         <td>{{ r.zipCode ?? ('common.any' | translate) }}</td>
-                        <td class="text-end">{{ r.rate }}</td>
+                        <td >{{ r.rate }}</td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
                             <a [routerLink]="['/taxes', r.id]" class="action-btn" [title]="'common.edit' | translate">
