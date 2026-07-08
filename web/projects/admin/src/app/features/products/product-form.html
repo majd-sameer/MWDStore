@@ -283,7 +283,7 @@
                     <span class="text-body-secondary small">{{ 'product_form.no_thumbnail' | translate }}</span>
                   }
                 </div>
-                <input id="thumbnailFile" type="file" class="form-control form-control-sm mb-4" accept="image/*"
+                <input id="thumbnailFile" type="file" class="file-field mb-4" accept="image/*"
                   [disabled]="uploading()"
                   (change)="onThumbnailSelected($event)" />
 
@@ -303,7 +303,7 @@
                     <span class="text-body-secondary small">{{ 'product_form.no_images' | translate }}</span>
                   }
                 </div>
-                <input id="galleryFiles" type="file" class="form-control form-control-sm" accept="image/*" multiple
+                <input id="galleryFiles" type="file" class="file-field" accept="image/*" multiple
                   [disabled]="uploading()"
                   (change)="onGallerySelected($event)" />
                 @if (uploading()) {

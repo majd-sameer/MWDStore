@@ -50,90 +50,110 @@
       <div class="alert alert-danger">{{ 'common.error_api' | translate }}</div>
     } @else if (list.value(); as sections) {
       @for (section of sections; track section.sectionKey) {
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <div class="card border-0 shadow-sm mb-4 cms-section">
+          <div class="card-header fw-semibold d-flex align-items-center gap-2">
             <span>{{ 'cms.sections.' + section.sectionKey | translate }}</span>
+            <span class="badge rounded-pill text-bg-light fw-normal">{{ section.blocks.length }}</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 cms-field-grid">
+              @for (block of section.blocks; track block.id) {
+                <div [class]="colClass(block.type)">
+                  <div
+                    class="cms-field h-100"
+                    [class.cms-field--muted]="!edit(block.id).isActive"
+                  >
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <label [attr.for]="'block-' + block.id" class="form-label mb-0 fw-medium">
+                        {{ label(block.blockKey) }}
+                        <span class="badge text-bg-light ms-1 align-middle">{{ block.type }}</span>
+                      </label>
+                      <div class="d-flex align-items-center gap-3 flex-shrink-0">
+                        <div class="form-check form-switch mb-0">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            [id]="'active-' + block.id"
+                            [checked]="edit(block.id).isActive"
+                            (change)="setActive(block.id, $event)"
+                          />
+                          <label class="form-check-label small" [attr.for]="'active-' + block.id">
+                            {{ 'cms.active' | translate }}
+                          </label>
+                        </div>
+                        @if (isFaq() && isFaqQuestion(block.blockKey)) {
+                          <button type="button" class="btn btn-outline-danger btn-sm"
+                            (click)="deleteQuestion(block.blockKey)">
+                            {{ 'cms.faq.delete' | translate }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    @switch (block.type) {
+                      @case ('image') {
+                        <label class="file-dropzone" [class.is-uploading]="uploadingId() === block.id">
+                          @if (edit(block.id).mediaUrl; as url) {
+                            <img [src]="url" alt="" class="file-dropzone__preview" />
+                          } @else {
+                            <span class="file-dropzone__thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+                          }
+                          <span class="file-dropzone__body">
+                            <span class="file-dropzone__title">
+                              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                              {{ (edit(block.id).mediaUrl ? 'cms.change_image' : 'cms.upload_image') | translate }}
+                            </span>
+                            <span class="file-dropzone__hint">{{ 'cms.image_hint' | translate }}</span>
+                          </span>
+                          @if (uploadingId() === block.id) {
+                            <span class="spinner-border spinner-border-sm file-dropzone__spinner" aria-hidden="true"></span>
+                          }
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="visually-hidden"
+                            [disabled]="uploadingId() === block.id"
+                            (change)="onImageSelected(block.id, $event)"
+                          />
+                        </label>
+                      }
+                      @case ('link') {
+                        <input
+                          [id]="'block-' + block.id"
+                          type="text"
+                          class="form-control"
+                          [placeholder]="'cms.link_ph' | translate"
+                          [value]="edit(block.id).linkUrl"
+                          (input)="setLink(block.id, $event)"
+                        />
+                      }
+                      @default {
+                        <multi-lang-input
+                          type="textarea"
+                          [rows]="block.type === 'richtext' ? 4 : 2"
+                          [controlId]="'block-' + block.id"
+                          [value]="multiValue(block.id)"
+                          (valueChange)="setMultiLang(block.id, $event)"
+                        />
+                        @if (block.type === 'richtext') {
+                          <div class="form-text">{{ 'cms.richtext_hint' | translate }}</div>
+                        }
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="card-footer cms-section-footer d-flex justify-content-end">
             <button
               type="button"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary"
               [disabled]="savingSection() === section.sectionKey"
               (click)="saveSection(section)"
             >
               {{ (savingSection() === section.sectionKey ? 'cms.saving' : 'cms.save_section') | translate }}
             </button>
-          </div>
-          <div class="card-body">
-            @for (block of section.blocks; track block.id) {
-              <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label [attr.for]="'block-' + block.id" class="form-label mb-0 fw-medium">
-                    {{ label(block.blockKey) }}
-                    <span class="badge text-bg-light ms-1">{{ block.type }}</span>
-                  </label>
-                  <div class="d-flex align-items-center gap-3">
-                    <div class="form-check form-switch mb-0">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        [id]="'active-' + block.id"
-                        [checked]="edit(block.id).isActive"
-                        (change)="setActive(block.id, $event)"
-                      />
-                      <label class="form-check-label small" [attr.for]="'active-' + block.id">
-                        {{ 'cms.active' | translate }}
-                      </label>
-                    </div>
-                    @if (isFaq() && isFaqQuestion(block.blockKey)) {
-                      <button type="button" class="btn btn-outline-danger btn-sm"
-                        (click)="deleteQuestion(block.blockKey)">
-                        {{ 'cms.faq.delete' | translate }}
-                      </button>
-                    }
-                  </div>
-                </div>
-
-                @switch (block.type) {
-                  @case ('image') {
-                    <div class="d-flex align-items-center gap-3">
-                      @if (edit(block.id).mediaUrl; as url) {
-                        <img [src]="url" alt="" class="rounded border" style="width: 96px; height: 72px; object-fit: cover" />
-                      } @else {
-                        <span class="text-body-secondary small">{{ 'cms.no_image' | translate }}</span>
-                      }
-                      <input
-                        type="file"
-                        accept="image/*"
-                        class="form-control form-control-sm w-auto"
-                        [disabled]="uploadingId() === block.id"
-                        (change)="onImageSelected(block.id, $event)"
-                      />
-                    </div>
-                  }
-                  @case ('link') {
-                    <input
-                      [id]="'block-' + block.id"
-                      type="text"
-                      class="form-control"
-                      [placeholder]="'cms.link_ph' | translate"
-                      [value]="edit(block.id).linkUrl"
-                      (input)="setLink(block.id, $event)"
-                    />
-                  }
-                  @default {
-                    <multi-lang-input
-                      type="textarea"
-                      [rows]="block.type === 'richtext' ? 4 : 2"
-                      [controlId]="'block-' + block.id"
-                      [value]="multiValue(block.id)"
-                      (valueChange)="setMultiLang(block.id, $event)"
-                    />
-                    @if (block.type === 'richtext') {
-                      <div class="form-text">{{ 'cms.richtext_hint' | translate }}</div>
-                    }
-                  }
-                }
-              </div>
-            }
           </div>
         </div>
       }

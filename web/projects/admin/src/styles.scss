@@ -46,12 +46,10 @@ h1.h3 {
 // Quiet uppercase headers on a faint tinted strip so columns stay scannable
 // without a heavy rule; the strip rounds into the leading/trailing corners.
 .table > thead th {
-  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--ink-3);
-  background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
   border-block-end: 1px solid var(--line-strong);
   padding-block: 0.62rem;
   white-space: nowrap;
@@ -909,4 +907,157 @@ h1.h3 {
   color: var(--ink);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
+}
+
+/* Site Content editor — each block renders as a discrete "field cell" laid out on a
+   responsive row/col grid, so a section card reads as a scannable grid of labelled
+   fields instead of one long vertical stack. */
+.cms-field {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid var(--line-2);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cms-field:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent);
+}
+.cms-field .form-label {
+  color: var(--ink-2);
+}
+/* Deactivated block reads as dimmed until its switch is toggled back on. */
+.cms-field--muted {
+  background: color-mix(in srgb, var(--surface-2) 65%, transparent);
+  opacity: 0.72;
+}
+.cms-field--muted:focus-within {
+  opacity: 1;
+}
+
+/* Section card footer — holds the per-section Save action at the bottom, on a
+   quiet surface separated from the field grid by a hairline. */
+.cms-section-footer {
+  padding: 0.85rem 1.25rem;
+  background: color-mix(in srgb, var(--surface-2) 35%, var(--surface));
+  border-block-start: 1px solid var(--line-2);
+}
+
+/* ---------------------------------------------------------------------------
+   File pickers
+   --------------------------------------------------------------------------- */
+
+/* Rich picker: a full-width, clickable dropzone with a thumbnail preview and an
+   upload affordance. The native <input type="file"> is visually hidden inside
+   the <label>, so the whole card is the click target. */
+.file-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  inline-size: 100%;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--surface-2) 40%, var(--surface));
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.file-dropzone:hover {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 6%, var(--surface));
+}
+.file-dropzone:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent);
+}
+.file-dropzone.is-uploading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+.file-dropzone__preview {
+  inline-size: 72px;
+  block-size: 56px;
+  object-fit: cover;
+  border-radius: 0.45rem;
+  border: 1px solid var(--line-2);
+  flex-shrink: 0;
+}
+.file-dropzone__thumb {
+  display: grid;
+  place-items: center;
+  inline-size: 72px;
+  block-size: 56px;
+  flex-shrink: 0;
+  border-radius: 0.45rem;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 1.4rem;
+}
+.file-dropzone__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+.file-dropzone__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--green-strong);
+}
+.file-dropzone__hint {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+.file-dropzone__spinner {
+  margin-inline-start: auto;
+  color: var(--green);
+}
+
+/* Lean picker: restyles a bare native file input into a compact dropzone with a
+   branded selector button. Drop-in replacement for `form-control` on file inputs. */
+.file-field {
+  display: block;
+  inline-size: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 0.55rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.file-field:hover:not(:disabled) {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 6%, var(--surface));
+}
+.file-field:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent);
+}
+.file-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.file-field::file-selector-button {
+  margin-inline-end: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--green);
+  border: 0;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.file-field:hover:not(:disabled)::file-selector-button {
+  background: var(--green-strong);
 }

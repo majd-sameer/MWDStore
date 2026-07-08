@@ -135,6 +135,22 @@ export class AdminContentBlocks {
     return key ? this.translate.instant(key) : blockKey;
   }
 
+  /**
+   * Grid width for a block, so a section card reads as a responsive field grid instead of one
+   * long vertical stack. Rich text needs the full row; images are compact; short text/link
+   * fields pair two-up on wide screens (safe — `<multi-lang-input>` is a single inline field).
+   */
+  protected colClass(type: string): string {
+    switch (type) {
+      case 'richtext':
+        return 'col-12';
+      case 'image':
+        return 'col-12 col-md-6 col-xl-4';
+      default:
+        return 'col-12 col-lg-6';
+    }
+  }
+
   private patch(id: number, patch: Partial<BlockEdit>): void {
     this.edits.update((map) => ({ ...map, [id]: { ...this.edit(id), ...patch } }));
   }
