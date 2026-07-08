@@ -377,6 +377,11 @@ export const routes: Routes = [
       },
       {
         path: 'site-content',
+        pathMatch: 'full',
+        redirectTo: 'site-content/home',
+      },
+      {
+        path: 'site-content/:page',
         title: 'Site content · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.content)],
         loadComponent: () =>

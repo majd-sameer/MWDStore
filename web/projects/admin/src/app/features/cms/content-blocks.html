@@ -1,6 +1,6 @@
 
     <app-page-header
-      [title]="'cms.title' | translate"
+      [title]="('cms.title' | translate) + ' — ' + ('cms.pages.' + page() | translate)"
       [subtitle]="'cms.subtitle' | translate"
     >
       <a href="/" target="_blank" rel="noopener" class="btn btn-outline-secondary">
@@ -8,15 +8,7 @@
       </a>
     </app-page-header>
 
-    <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
-      <div>
-        <label for="cms-page" class="form-label small mb-1">{{ 'cms.page' | translate }}</label>
-        <select id="cms-page" class="form-select w-auto" [value]="page()" (change)="setPage($event)">
-          @for (p of pages; track p) {
-            <option [value]="p">{{ 'cms.pages.' + p | translate }}</option>
-          }
-        </select>
-      </div>
+    <div class="d-flex mb-3">
       <div class="ms-auto">
         <div class="btn-group" role="group" [attr.aria-label]="'cms.language' | translate">
           <button type="button" class="btn btn-outline-secondary" [class.active]="lang() === 'ar'"
@@ -26,6 +18,39 @@
         </div>
       </div>
     </div>
+
+    @if (isFaq()) {
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-body fw-semibold">{{ 'cms.faq.add_title' | translate }}</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="new-q-ar" class="form-label fw-medium">{{ 'cms.faq.question_ar' | translate }}</label>
+              <input id="new-q-ar" type="text" class="form-control" dir="rtl"
+                [value]="newQuestion().questionAr" (input)="setNewQuestion('questionAr', $event)" />
+            </div>
+            <div class="col-md-6">
+              <label for="new-q-en" class="form-label fw-medium">{{ 'cms.faq.question_en' | translate }}</label>
+              <input id="new-q-en" type="text" class="form-control" dir="ltr"
+                [value]="newQuestion().questionEn" (input)="setNewQuestion('questionEn', $event)" />
+            </div>
+            <div class="col-md-6">
+              <label for="new-a-ar" class="form-label fw-medium">{{ 'cms.faq.answer_ar' | translate }}</label>
+              <textarea id="new-a-ar" class="form-control" rows="2" dir="rtl"
+                [value]="newQuestion().answerAr" (input)="setNewQuestion('answerAr', $event)"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label for="new-a-en" class="form-label fw-medium">{{ 'cms.faq.answer_en' | translate }}</label>
+              <textarea id="new-a-en" class="form-control" rows="2" dir="ltr"
+                [value]="newQuestion().answerEn" (input)="setNewQuestion('answerEn', $event)"></textarea>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary mt-3" [disabled]="addingQuestion()" (click)="addQuestion()">
+            {{ (addingQuestion() ? 'cms.saving' : 'cms.faq.add_button') | translate }}
+          </button>
+        </div>
+      </div>
+    }
 
     @if (list.isLoading()) {
       <div class="text-center py-5">
@@ -57,17 +82,25 @@
                     {{ label(block.blockKey) }}
                     <span class="badge text-bg-light ms-1">{{ block.type }}</span>
                   </label>
-                  <div class="form-check form-switch mb-0">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      [id]="'active-' + block.id"
-                      [checked]="edit(block.id).isActive"
-                      (change)="setActive(block.id, $event)"
-                    />
-                    <label class="form-check-label small" [attr.for]="'active-' + block.id">
-                      {{ 'cms.active' | translate }}
-                    </label>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch mb-0">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'active-' + block.id"
+                        [checked]="edit(block.id).isActive"
+                        (change)="setActive(block.id, $event)"
+                      />
+                      <label class="form-check-label small" [attr.for]="'active-' + block.id">
+                        {{ 'cms.active' | translate }}
+                      </label>
+                    </div>
+                    @if (isFaq() && isFaqQuestion(block.blockKey)) {
+                      <button type="button" class="btn btn-outline-danger btn-sm"
+                        (click)="deleteQuestion(block.blockKey)">
+                        {{ 'cms.faq.delete' | translate }}
+                      </button>
+                    }
                   </div>
                 </div>
 

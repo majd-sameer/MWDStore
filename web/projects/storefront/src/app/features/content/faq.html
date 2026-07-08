@@ -13,15 +13,22 @@
 
     <section class="sec">
       <div class="wrap faq-list">
-        @for (n of items; track n) {
-          <details class="faq-item">
-            <summary class="faq-q">
-              {{ content.block('faq-list', 'q' + n)?.value || ('faq.q' + n | translate) }}
-            </summary>
-            <p class="faq-a">
-              {{ content.block('faq-list', 'a' + n)?.value || ('faq.a' + n | translate) }}
-            </p>
-          </details>
+        @if (content.questions(); as questions) {
+          @if (questions.length) {
+            @for (item of questions; track item.index) {
+              <details class="faq-item">
+                <summary class="faq-q">{{ item.question }}</summary>
+                <p class="faq-a">{{ item.answer }}</p>
+              </details>
+            }
+          } @else {
+            @for (n of fallbackItems; track n) {
+              <details class="faq-item">
+                <summary class="faq-q">{{ 'faq.q' + n | translate }}</summary>
+                <p class="faq-a">{{ 'faq.a' + n | translate }}</p>
+              </details>
+            }
+          }
         }
       </div>
     </section>

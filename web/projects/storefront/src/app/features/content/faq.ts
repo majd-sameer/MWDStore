@@ -27,8 +27,8 @@ export class Faq {
   private readonly translate = inject(TranslateService);
   protected readonly content = inject(FaqContentStore);
 
-  /** Number of seeded Q&A pairs (`q1`/`a1` … `q6`/`a6`). */
-  protected readonly items = [1, 2, 3, 4, 5, 6] as const;
+  /** Built-in Q&A used only when the API returns no blocks (offline/first paint). */
+  protected readonly fallbackItems = [1, 2, 3, 4, 5, 6] as const;
 
   private readonly metaTitle = toSignal(this.translate.stream('faq.meta_title'));
   private readonly metaDescription = toSignal(

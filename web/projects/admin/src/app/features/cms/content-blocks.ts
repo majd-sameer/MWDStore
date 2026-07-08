@@ -1,10 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs';
 import {
   AdminContentBlocksService,
   AdminMediaService,
@@ -74,15 +78,24 @@ export class AdminContentBlocks {
   private readonly media = inject(AdminMediaService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly pages = ['home', 'about', 'footer', 'faq'];
-  protected readonly page = signal('home');
+  /** Page being edited, taken from the `:page` route segment (each sidebar link targets one). */
+  protected readonly page = toSignal(
+    this.route.paramMap.pipe(map((p) => p.get('page') ?? 'home')),
+    { initialValue: 'home' },
+  );
   protected readonly lang = signal<'ar' | 'en'>('ar');
 
   protected readonly list = this.service.listResource(this.page);
   protected readonly savingSection = signal<string | null>(null);
   protected readonly uploadingId = signal<number | null>(null);
   protected readonly edits = signal<Record<number, BlockEdit>>({});
+
+  /** The FAQ list is the one repeatable section: questions can be added/removed here. */
+  protected readonly isFaq = computed(() => this.page() === 'faq');
+  protected readonly newQuestion = signal({ questionAr: '', questionEn: '', answerAr: '', answerEn: '' });
+  protected readonly addingQuestion = signal(false);
 
   private seededFor = '';
 
@@ -175,7 +188,61 @@ export class AdminContentBlocks {
       .finally(() => this.savingSection.set(null));
   }
 
-  protected setPage(event: Event): void {
-    this.page.set((event.target as HTMLSelectElement).value);
+  /** True for FAQ question blocks (`q1`, `q2`, …) — the ones that carry a "remove" action. */
+  protected isFaqQuestion(blockKey: string): boolean {
+    return /^q\d+$/.test(blockKey);
+  }
+
+  protected setNewQuestion(field: 'questionAr' | 'questionEn' | 'answerAr' | 'answerEn', event: Event): void {
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+    this.newQuestion.update((q) => ({ ...q, [field]: value }));
+  }
+
+  protected addQuestion(): void {
+    const q = this.newQuestion();
+    if (!q.questionAr.trim() && !q.questionEn.trim()) {
+      this.toast.error(this.translate.instant('cms.faq.need_question'));
+      return;
+    }
+    this.addingQuestion.set(true);
+    this.service
+      .addFaqQuestion({
+        questionAr: q.questionAr || null,
+        questionEn: q.questionEn || null,
+        answerAr: q.answerAr || null,
+        answerEn: q.answerEn || null,
+      })
+      .subscribe({
+        next: () => {
+          this.newQuestion.set({ questionAr: '', questionEn: '', answerAr: '', answerEn: '' });
+          this.reloadBlocks();
+          this.toast.success(this.translate.instant('cms.faq.added'));
+          this.addingQuestion.set(false);
+        },
+        error: () => {
+          this.toast.error(this.translate.instant('cms.faq.add_failed'));
+          this.addingQuestion.set(false);
+        },
+      });
+  }
+
+  protected deleteQuestion(blockKey: string): void {
+    if (!confirm(this.translate.instant('cms.faq.confirm_delete'))) {
+      return;
+    }
+    const index = Number(blockKey.slice(1));
+    this.service.deleteFaqQuestion(index).subscribe({
+      next: () => {
+        this.reloadBlocks();
+        this.toast.success(this.translate.instant('cms.faq.deleted'));
+      },
+      error: () => this.toast.error(this.translate.instant('cms.faq.delete_failed')),
+    });
+  }
+
+  /** Reload the section list and force the editable copy to reseed (so new blocks get fields). */
+  private reloadBlocks(): void {
+    this.seededFor = '';
+    this.list.reload();
   }
 }

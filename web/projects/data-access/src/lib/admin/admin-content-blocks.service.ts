@@ -32,6 +32,21 @@ export interface ContentBlockUpdateRequest {
   isActive: boolean;
 }
 
+/** A new FAQ question/answer pair (both languages; English optional). */
+export interface FaqQuestionRequest {
+  questionAr?: string | null;
+  questionEn?: string | null;
+  answerAr?: string | null;
+  answerEn?: string | null;
+}
+
+/** Identity of a newly added FAQ pair. */
+export interface FaqQuestionResult {
+  index: number;
+  questionId: number;
+  answerId: number;
+}
+
 /** Admin CMS content blocks (`/api/admin/content-blocks`). */
 @Injectable({ providedIn: 'root' })
 export class AdminContentBlocksService {
@@ -53,6 +68,21 @@ export class AdminContentBlocksService {
     return this.http.put<AdminContentBlock>(
       `${API_ROOT}/admin/content-blocks/${id}`,
       body,
+    );
+  }
+
+  /** POST /api/admin/content-blocks/faq-questions — append a new FAQ pair. */
+  addFaqQuestion(body: FaqQuestionRequest): Observable<FaqQuestionResult> {
+    return this.http.post<FaqQuestionResult>(
+      `${API_ROOT}/admin/content-blocks/faq-questions`,
+      body,
+    );
+  }
+
+  /** DELETE /api/admin/content-blocks/faq-questions/{index} — remove a FAQ pair. */
+  deleteFaqQuestion(index: number): Observable<void> {
+    return this.http.delete<void>(
+      `${API_ROOT}/admin/content-blocks/faq-questions/${index}`,
     );
   }
 }

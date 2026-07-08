@@ -83,7 +83,10 @@ export class AdminLayout {
       key: 'content',
       items: [
         { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
-        { path: '/site-content', key: 'siteContent', icon: 'bi-card-text', roles: AREA.content },
+        { path: '/site-content/home', key: 'siteHome', icon: 'bi-house-door', roles: AREA.content },
+        { path: '/site-content/about', key: 'siteAbout', icon: 'bi-info-circle', roles: AREA.content },
+        { path: '/site-content/footer', key: 'siteFooter', icon: 'bi-layout-text-window-reverse', roles: AREA.content },
+        { path: '/site-content/faq', key: 'siteFaq', icon: 'bi-question-circle', roles: AREA.content },
         { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation },
       ],
     },
