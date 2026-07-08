@@ -57,24 +57,28 @@
                 </div>
                 <lib-form-field [label]="'common.country' | translate" controlId="wh-country" [required]="true"
                   [error]="err(f.countryId())">
-                  <select id="wh-country" class="form-select"
-                    [class.is-invalid]="!!err(f.countryId())" [formField]="f.countryId"
-                    (change)="onCountryChange($any($event.target).value)">
-                    <option value="">{{ 'common.choose' | translate }}</option>
-                    @for (c of countries.value() ?? []; track c.id) {
-                      <option value="{{ c.id }}">{{ c.name }}</option>
-                    }
-                  </select>
+                  <ng-select
+                    id="wh-country"
+                    [class.is-invalid]="!!err(f.countryId())"
+                    [items]="countries.value() ?? []"
+                    bindLabel="name"
+                    bindValue="id"
+                    [formField]="f.countryId"
+                    (change)="onCountryChange(f.countryId().value())"
+                    [placeholder]="'common.choose' | translate"
+                  />
                 </lib-form-field>
                 <lib-form-field [label]="'common.state' | translate" controlId="wh-state" [required]="true"
                   [error]="err(f.stateOrProvinceId())">
-                  <select id="wh-state" class="form-select"
-                    [class.is-invalid]="!!err(f.stateOrProvinceId())" [formField]="f.stateOrProvinceId">
-                    <option value="">{{ 'common.choose' | translate }}</option>
-                    @for (s of states(); track s.id) {
-                      <option value="{{ s.id }}">{{ s.name }}</option>
-                    }
-                  </select>
+                  <ng-select
+                    id="wh-state"
+                    [class.is-invalid]="!!err(f.stateOrProvinceId())"
+                    [items]="stateItems()"
+                    bindLabel="name"
+                    bindValue="id"
+                    [formField]="f.stateOrProvinceId"
+                    [placeholder]="'common.choose' | translate"
+                  />
                 </lib-form-field>
 
                 <div class="form-actions">

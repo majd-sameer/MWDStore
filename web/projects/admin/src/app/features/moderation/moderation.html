@@ -20,13 +20,18 @@
     </ul>
 
     <div class="d-flex gap-2 mb-3">
-      <select class="form-select form-select-sm w-auto"
-        (change)="statusFilter.set($any($event.target).value === '' ? null : +$any($event.target).value)">
-        <option value="">{{ 'moderation.all_statuses' | translate }}</option>
-        <option value="1">{{ 'moderation.status_pending' | translate }}</option>
-        <option value="5">{{ 'moderation.status_approved' | translate }}</option>
-        <option value="8">{{ 'moderation.status_not_approved' | translate }}</option>
-      </select>
+      <ng-select
+        class="filter-select"
+        [items]="statusOptions"
+        bindValue="value"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+        [placeholder]="'moderation.all_statuses' | translate"
+        [attr.aria-label]="'common.status' | translate"
+      >
+        <ng-template ng-label-tmp let-item>{{ item.key | translate }}</ng-template>
+        <ng-template ng-option-tmp let-item>{{ item.key | translate }}</ng-template>
+      </ng-select>
     </div>
 
     @if (tab() === 'reviews') {

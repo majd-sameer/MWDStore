@@ -6,10 +6,17 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
+import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
 import { AdminAuditService, type AdminAuditQuery } from 'data-access';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Icon } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { dayBoundary } from '../../shared/date-range';
 
 const PAGE_SIZE = 50;
 
@@ -30,7 +37,16 @@ interface DiffRow {
 @Component({
   selector: 'app-admin-audit-log',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icon, TranslatePipe, PageHeader],
+  imports: [
+    DatePipe,
+    FormsModule,
+    NgSelectModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    Icon,
+    TranslatePipe,
+    PageHeader,
+  ],
   templateUrl: './audit-log.html',
   styles: [
     `
@@ -75,9 +91,9 @@ export class AdminAuditLog {
 
   protected readonly term = signal('');
   protected readonly action = signal<string>('');
-  protected readonly area = signal<string>('');
-  protected readonly from = signal<string>('');
-  protected readonly to = signal<string>('');
+  protected readonly area = signal<string | null>(null);
+  protected readonly from = signal<Date | null>(null);
+  protected readonly to = signal<Date | null>(null);
   protected readonly page = signal(1);
 
   protected readonly selectedId = signal<number | null>(null);
@@ -91,8 +107,8 @@ export class AdminAuditLog {
     search: this.term() || undefined,
     action: this.action() || undefined,
     area: this.area() || undefined,
-    from: this.from() ? `${this.from()}T00:00:00` : undefined,
-    to: this.to() ? `${this.to()}T23:59:59` : undefined,
+    from: dayBoundary(this.from(), false),
+    to: dayBoundary(this.to(), true),
     page: this.page(),
     pageSize: PAGE_SIZE,
   }));
@@ -108,9 +124,9 @@ export class AdminAuditLog {
     () =>
       Boolean(this.term()) ||
       this.action() !== '' ||
-      this.area() !== '' ||
-      this.from() !== '' ||
-      this.to() !== '',
+      this.area() !== null ||
+      this.from() !== null ||
+      this.to() !== null,
   );
 
   /** Distinct areas present on the loaded page, for the area select. */
@@ -171,27 +187,27 @@ export class AdminAuditLog {
     this.page.set(1);
   }
 
-  protected setArea(event: Event): void {
-    this.area.set((event.target as HTMLSelectElement).value);
+  protected setArea(value: string | null): void {
+    this.area.set(value);
     this.page.set(1);
   }
 
-  protected setFrom(event: Event): void {
-    this.from.set((event.target as HTMLInputElement).value);
+  protected setFrom(value: Date | null): void {
+    this.from.set(value);
     this.page.set(1);
   }
 
-  protected setTo(event: Event): void {
-    this.to.set((event.target as HTMLInputElement).value);
+  protected setTo(value: Date | null): void {
+    this.to.set(value);
     this.page.set(1);
   }
 
   protected clearFilters(): void {
     this.term.set('');
     this.action.set('');
-    this.area.set('');
-    this.from.set('');
-    this.to.set('');
+    this.area.set(null);
+    this.from.set(null);
+    this.to.set(null);
     this.page.set(1);
   }
 

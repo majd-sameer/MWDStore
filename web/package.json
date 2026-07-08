@@ -17,6 +17,8 @@
   "private": true,
   "packageManager": "npm@10.9.8",
   "dependencies": {
+    "@angular/animations": "^22.0.5",
+    "@angular/cdk": "^22.0.4",
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "@angular/core": "^22.0.0",
@@ -26,7 +28,9 @@
     "@angular/platform-server": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@angular/ssr": "^22.0.0",
+    "@danielmoncada/angular-datetime-picker": "^21.0.0",
     "@ng-bootstrap/ng-bootstrap": "^20.0.0",
+    "@ng-select/ng-select": "^23.2.0",
     "@ngx-translate/core": "^18.0.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",

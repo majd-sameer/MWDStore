@@ -7,6 +7,8 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminLocationsService,
@@ -38,7 +40,7 @@ function emptyModel(): RateFormModel {
 @Component({
   selector: 'app-admin-tax-rate-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Button, RouterLink, TranslatePipe, PageHeader, FormsModule, NgSelectModule],
   templateUrl: './tax-rate-form.html',
 })
 export class AdminTaxRateForm {
@@ -62,6 +64,16 @@ export class AdminTaxRateForm {
 
   private readonly existing = computed(
     () => this.rates.value()?.find((r) => r.id === this.rateId()) ?? null,
+  );
+
+  // ng-select compares the bound value against bindValue with strict `===`.
+  // The model fields are strings, but tax-class and state ids are numbers, so
+  // map those sources to string ids. Countries already have string ids.
+  protected readonly classItems = computed(() =>
+    (this.classes.value() ?? []).map((c) => ({ id: String(c.id), name: c.name })),
+  );
+  protected readonly stateItems = computed(() =>
+    this.states().map((s) => ({ id: String(s.id), name: s.name })),
   );
 
   protected readonly model = signal<RateFormModel>(emptyModel());

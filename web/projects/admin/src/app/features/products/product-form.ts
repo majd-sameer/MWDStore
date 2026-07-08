@@ -14,7 +14,13 @@ import {
   required,
   submit,
 } from '@angular/forms/signals';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
+import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
 import {
   AdminBrandsService,
   AdminCategoriesService,
@@ -47,8 +53,8 @@ interface ProductFormModel {
   price: number;
   oldPrice: string;
   specialPrice: string;
-  specialPriceStart: string;
-  specialPriceEnd: string;
+  specialPriceStart: Date | null;
+  specialPriceEnd: Date | null;
   stockQuantity: number;
   brandId: string;
   isPublished: boolean;
@@ -75,8 +81,8 @@ function emptyModel(): ProductFormModel {
     price: 0,
     oldPrice: '',
     specialPrice: '',
-    specialPriceStart: '',
-    specialPriceEnd: '',
+    specialPriceStart: null,
+    specialPriceEnd: null,
     stockQuantity: 0,
     brandId: '',
     isPublished: true,
@@ -146,7 +152,19 @@ interface AttributeRow {
 @Component({
   selector: 'app-admin-product-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [
+    Control,
+    FormsModule,
+    NgSelectModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    FormField,
+    Button,
+    RouterLink,
+    TranslatePipe,
+    PageHeader,
+    MultiLangInput,
+  ],
   templateUrl: './product-form.html',
 })
 export class AdminProductForm {
@@ -203,6 +221,21 @@ export class AdminProductForm {
     return (this.allOptions.value() ?? []).filter((o) => !used.has(o.id));
   });
 
+  /** Pending picks in the "add attribute / add option" ng-selects (numeric ids). */
+  protected readonly pendingAttributeId = signal<number | null>(null);
+  protected readonly pendingOptionId = signal<number | null>(null);
+
+  /** Brand options with string ids so ng-select's strict compare matches the string `brandId` field. */
+  protected readonly brandItems = computed(() =>
+    (this.brands.value() ?? []).map((b) => ({ id: String(b.id), name: b.name })),
+  );
+
+  /** Option display-type choices for the per-option ng-select (translated labels). */
+  protected readonly displayTypeOptions = [
+    { value: 'text', key: 'product_form.display_text' },
+    { value: 'color', key: 'product_form.display_color' },
+  ];
+
   protected readonly serverError = signal<string | null>(null);
   protected readonly err = firstError;
 
@@ -239,8 +272,8 @@ export class AdminProductForm {
       price: p.price,
       oldPrice: p.oldPrice === null ? '' : String(p.oldPrice),
       specialPrice: p.specialPrice === null ? '' : String(p.specialPrice),
-      specialPriceStart: p.specialPriceStart?.slice(0, 10) ?? '',
-      specialPriceEnd: p.specialPriceEnd?.slice(0, 10) ?? '',
+      specialPriceStart: p.specialPriceStart ? new Date(p.specialPriceStart) : null,
+      specialPriceEnd: p.specialPriceEnd ? new Date(p.specialPriceEnd) : null,
       stockQuantity: p.stockQuantity,
       brandId: p.brandId === null ? '' : String(p.brandId),
       isPublished: p.isPublished,
@@ -368,8 +401,10 @@ export class AdminProductForm {
 
   // ----- Attributes ----------------------------------------------------------
 
-  protected addAttribute(idValue: string): void {
-    const id = Number(idValue);
+  protected addAttribute(id: number | null): void {
+    if (id === null) {
+      return;
+    }
     const attribute = (this.allAttributes.value() ?? []).find((a) => a.id === id);
     if (!attribute || this.attributeRows().some((r) => r.attributeId === id)) {
       return;
@@ -397,8 +432,10 @@ export class AdminProductForm {
 
   // ----- Options & variations -------------------------------------------------
 
-  protected addOption(idValue: string): void {
-    const id = Number(idValue);
+  protected addOption(id: number | null): void {
+    if (id === null) {
+      return;
+    }
     const option = (this.allOptions.value() ?? []).find((o) => o.id === id);
     if (!option || this.optionRows().some((r) => r.optionId === id)) {
       return;
@@ -569,10 +606,11 @@ export class AdminProductForm {
         price: Number(m.price),
         oldPrice: m.oldPrice.trim() === '' ? null : Number(m.oldPrice),
         specialPrice: m.specialPrice.trim() === '' ? null : Number(m.specialPrice),
-        specialPriceStart: m.specialPriceStart ? new Date(m.specialPriceStart).toISOString() : null,
-        specialPriceEnd: m.specialPriceEnd ? new Date(m.specialPriceEnd).toISOString() : null,
+        specialPriceStart: m.specialPriceStart ? m.specialPriceStart.toISOString() : null,
+        specialPriceEnd: m.specialPriceEnd ? m.specialPriceEnd.toISOString() : null,
         stockQuantity: Number(m.stockQuantity),
-        brandId: m.brandId.trim() === '' ? null : Number(m.brandId),
+        // ng-select clears to null (not ''), so treat any falsy brand as "none".
+        brandId: m.brandId ? Number(m.brandId) : null,
         isPublished: m.isPublished,
         isFeatured: m.isFeatured,
         isSignature: m.isSignature,

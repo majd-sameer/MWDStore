@@ -7,6 +7,8 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminLocationsService,
@@ -48,7 +50,7 @@ function emptyModel(): TableRateFormModel {
 @Component({
   selector: 'app-admin-table-rate-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Button, RouterLink, TranslatePipe, PageHeader, FormsModule, NgSelectModule],
   templateUrl: './table-rate-form.html',
 })
 export class AdminTableRateForm {
@@ -74,6 +76,11 @@ export class AdminTableRateForm {
     () => (this.providers.value() ?? []).filter((p) => p.id !== 'Free'),
   );
   private readonly providers = this.service.providersResource();
+
+  /** State ids are numeric but the form model stores strings — map for ng-select strict `===` matching. */
+  protected readonly stateItems = computed(() =>
+    this.states().map((s) => ({ id: String(s.id), name: s.name })),
+  );
 
   private readonly existing = computed(
     () => this.rates.value()?.find((r) => r.id === this.rateId()) ?? null,

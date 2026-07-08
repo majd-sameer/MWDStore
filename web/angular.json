@@ -133,6 +133,9 @@
               }
             ],
             "styles": [
+              "@angular/cdk/overlay-prebuilt.css",
+              "@danielmoncada/angular-datetime-picker/assets/style/picker.min.css",
+              "@ng-select/ng-select/themes/default.theme.css",
               "projects/ui/styles/index.scss",
               "projects/admin/src/styles.scss"
             ]

@@ -12,6 +12,8 @@ import {
   type StockOutRequest,
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
@@ -49,7 +51,7 @@ const CHANNEL_REASONS: number[] = [
 @Component({
   selector: 'app-admin-stock-out',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, PageHeader],
+  imports: [FormsModule, NgSelectModule, TranslatePipe, PageHeader],
   templateUrl: './stock-out.html',
 })
 export class AdminStockOut {
@@ -125,21 +127,19 @@ export class AdminStockOut {
     this.note.set('');
   }
 
-  protected setWarehouse(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.warehouseId.set(value === '' ? null : Number(value));
+  protected setWarehouse(value: number | null): void {
+    this.warehouseId.set(value);
   }
 
-  protected setReason(event: Event): void {
-    this.reason.set(Number((event.target as HTMLSelectElement).value));
+  protected setReason(value: number): void {
+    this.reason.set(value);
     if (this.channelVisible() && this.channel() === null) {
       this.channel.set(SALES_CHANNEL.Showroom);
     }
   }
 
-  protected setChannel(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.channel.set(value === '' ? null : Number(value));
+  protected setChannel(value: number | null): void {
+    this.channel.set(value);
   }
 
   protected submit(): void {

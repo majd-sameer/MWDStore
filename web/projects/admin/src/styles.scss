@@ -379,6 +379,200 @@ h1.h3 {
   box-shadow: var(--shadow-md);
 }
 
+// =============================================================================
+// Rich form controls — @ng-select/ng-select + owl date-time picker
+// -----------------------------------------------------------------------------
+// The vendor base CSS (default.theme.css / picker.min.css) ships neutral greys;
+// we re-skin every visual token to the brand palette here so the controls read
+// as native. Token-driven only, and logical properties throughout for RTL.
+// =============================================================================
+
+// --- @ng-select/ng-select --------------------------------------------------
+.ng-select {
+  --ng-select-highlight: var(--green);
+  --ng-select-primary-text: var(--ink);
+  --ng-select-disabled-text: var(--ink-3);
+  --ng-select-border: var(--line-strong);
+  --ng-select-bg: var(--surface);
+  --ng-select-marked: color-mix(in srgb, var(--green-soft) 60%, transparent);
+  --ng-select-selected: var(--green-soft);
+  --ng-select-selected-text: var(--green-strong);
+  font-size: 0.9rem;
+  min-inline-size: 180px;
+}
+.ng-select .ng-select-container {
+  min-block-size: 40px;
+  border-radius: var(--r-sm);
+  border-color: var(--line-strong);
+  background-color: var(--surface);
+  color: var(--ink);
+}
+.ng-select.ng-select-focused:not(.ng-select-opened) > .ng-select-container,
+.ng-select.ng-select-opened > .ng-select-container {
+  border-color: var(--green);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 18%, transparent);
+}
+.ng-select .ng-select-container .ng-value-container .ng-placeholder {
+  color: var(--ink-3);
+}
+.ng-select .ng-arrow-wrapper .ng-arrow {
+  border-color: var(--ink-3) transparent transparent;
+}
+.ng-select .ng-clear-wrapper {
+  color: var(--ink-3);
+}
+.ng-select.ng-select-multiple .ng-select-container .ng-value-container .ng-value {
+  background-color: var(--green-soft);
+  color: var(--green-strong);
+  border-radius: 999px;
+  border: 0;
+}
+.ng-select.ng-select-multiple
+  .ng-select-container
+  .ng-value-container
+  .ng-value
+  .ng-value-icon:hover {
+  background-color: color-mix(in srgb, var(--green) 22%, transparent);
+}
+.ng-dropdown-panel {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+  color: var(--ink);
+  background: var(--surface);
+  padding-block: 0.5rem;
+}
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-marked {
+  background: color-mix(in srgb, var(--green-soft) 60%, transparent);
+  color: var(--ink);
+}
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected,
+.ng-dropdown-panel
+  .ng-dropdown-panel-items
+  .ng-option.ng-option-selected.ng-option-marked {
+  background: var(--green-soft);
+  color: var(--green-strong);
+  font-weight: 600;
+}
+
+// Invalid state — ng-select renders its own container, so Bootstrap's `.is-invalid`
+// border doesn't reach it; re-apply the danger hairline (matches native form-select).
+.ng-select.is-invalid .ng-select-container {
+  border-color: #d6455d;
+}
+.ng-select.is-invalid.ng-select-focused .ng-select-container {
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, #d6455d 18%, transparent);
+}
+
+// Compact inline selects (e.g. per-option display-type) — shrink to content.
+.ng-select.option-display-select {
+  min-inline-size: 130px;
+}
+.ng-select.option-display-select .ng-select-container {
+  min-block-size: 34px;
+}
+
+// An ng-select sharing an `.input-group` with a button (order status) keeps
+// square inner corners so it reads as one control with the button.
+.input-group > .ng-select:not(:last-child) .ng-select-container {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+// Toolbar variant: the soft filled pill that matches .search-box / .form-select.w-auto
+// so an ng-select filter sits flush in the .list-toolbar row.
+.ng-select.filter-select {
+  min-inline-size: 190px;
+}
+.ng-select.filter-select .ng-select-container {
+  border-radius: 999px;
+  border-color: transparent;
+  background-color: var(--surface-2);
+  padding-inline-start: 0.35rem;
+}
+.ng-select.filter-select.ng-select-focused:not(.ng-select-opened)
+  > .ng-select-container,
+.ng-select.filter-select.ng-select-opened > .ng-select-container {
+  background-color: var(--surface);
+}
+// Count badge shown when a multi-select filter has selections
+// (rendered via a custom header/label template in the toolbar).
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 1.35em;
+  block-size: 1.35em;
+  padding-inline: 0.4em;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+// --- owl date-time picker --------------------------------------------------
+.owl-dt-container {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font);
+}
+.owl-dt-calendar-control,
+.owl-dt-control-button {
+  color: var(--ink);
+}
+.owl-dt-calendar-table .owl-dt-calendar-header .owl-dt-weekday {
+  color: var(--ink-3);
+}
+.owl-dt-calendar-table .owl-dt-calendar-cell-content {
+  color: var(--ink);
+  border-radius: var(--r-sm);
+}
+.owl-dt-calendar-table
+  .owl-dt-calendar-cell-selected {
+  background-color: var(--green);
+  color: #fff;
+}
+.owl-dt-calendar-table .owl-dt-calendar-cell-today:not(.owl-dt-calendar-cell-selected) {
+  border-color: var(--green);
+}
+.owl-dt-calendar-table
+  .owl-dt-calendar-cell-content:not(.owl-dt-calendar-cell-out):hover,
+.owl-dt-calendar-table
+  .owl-dt-calendar-cell-content.owl-dt-calendar-cell-in-range {
+  background: color-mix(in srgb, var(--green-soft) 65%, transparent);
+}
+.owl-dt-timer-content .owl-dt-timer-input {
+  border-color: var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+.owl-dt-control-arrow-button:hover,
+.owl-dt-control-button:hover .owl-dt-control-button-content {
+  background: var(--surface-2);
+}
+// Owl inline trigger button sitting inside a date-field wrapper.
+.owl-dt-trigger {
+  cursor: pointer;
+}
+// Wraps a date input + its <owl-date-time> popup so the trigger keeps its
+// intrinsic width in the flex .list-toolbar row and shows a calendar cursor.
+.date-field {
+  display: inline-flex;
+  position: relative;
+}
+.date-field > .form-control {
+  cursor: pointer;
+}
+
 // Stat cards (dashboard) ----------------------------------------------------------
 .stat-card .stat-icon {
   display: inline-flex;

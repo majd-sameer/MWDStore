@@ -6,7 +6,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   AdminBrandsService,
   AdminCategoriesService,
@@ -32,7 +34,15 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
 @Component({
   selector: 'app-admin-product-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [
+    MoneyPipe,
+    FormsModule,
+    RouterLink,
+    NgSelectModule,
+    Icon,
+    TranslatePipe,
+    PageHeader,
+  ],
   templateUrl: './product-list.html',
 })
 export class AdminProductList {
@@ -134,15 +144,13 @@ export class AdminProductList {
     });
   }
 
-  protected setBrand(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.brandId.set(value === '' ? null : Number(value));
+  protected setBrand(id: number | null): void {
+    this.brandId.set(id);
     this.page.set(1);
   }
 
-  protected setCategory(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.categoryId.set(value === '' ? null : Number(value));
+  protected setCategory(id: number | null): void {
+    this.categoryId.set(id);
     this.page.set(1);
   }
 

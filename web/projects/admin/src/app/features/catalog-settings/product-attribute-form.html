@@ -25,13 +25,15 @@
                   <multi-lang-input controlId="attr-name" [formField]="f.name" />
                 </lib-form-field>
                 <lib-form-field [label]="'attributes.col_group' | translate" controlId="attr-group" [required]="true" [error]="err(f.groupId())">
-                  <select id="attr-group" class="form-select"
-                    [class.is-invalid]="!!err(f.groupId())" [formField]="f.groupId">
-                    <option value="">{{ 'attributes.choose_group' | translate }}</option>
-                    @for (g of groups.value() ?? []; track g.id) {
-                      <option value="{{ g.id }}">{{ g.name }}</option>
-                    }
-                  </select>
+                  <ng-select
+                    id="attr-group"
+                    [class.is-invalid]="!!err(f.groupId())"
+                    [items]="groupItems()"
+                    bindLabel="name"
+                    bindValue="id"
+                    [formField]="f.groupId"
+                    [placeholder]="'attributes.choose_group' | translate"
+                  />
                 </lib-form-field>
 
                 <div class="form-actions">

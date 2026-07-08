@@ -79,11 +79,9 @@
                 <div class="row g-2 mb-2">
                   <div class="col-md-6">
                     <label class="form-label small" for="ship-warehouse">{{ 'inventory.warehouse' | translate }}</label>
-                    <select id="ship-warehouse" class="form-select form-select-sm" #warehouseSel>
-                      @for (w of warehouses.value() ?? []; track w.id) {
-                        <option value="{{ w.id }}">{{ w.name }}</option>
-                      }
-                    </select>
+                    <ng-select id="ship-warehouse" [items]="warehouses.value() ?? []" bindLabel="name"
+                      bindValue="id" [ngModel]="selectedShipWarehouse()" (ngModelChange)="setShipWarehouse($event)"
+                      [clearable]="false" [attr.aria-label]="'inventory.warehouse' | translate" />
                   </div>
                   <div class="col-md-6">
                     <label class="form-label small" for="ship-tracking">{{ 'order_detail.tracking_number' | translate }}</label>
@@ -104,7 +102,7 @@
                 }
                 <button type="button" class="btn btn-primary btn-sm mt-2"
                   [disabled]="saving() || !(warehouses.value() ?? []).length"
-                  (click)="createShipment(o, warehouseSel.value, trackingInput.value)">
+                  (click)="createShipment(o, selectedShipWarehouse(), trackingInput.value)">
                   {{ (saving() ? 'common.saving' : 'order_detail.create_shipment') | translate }}
                 </button>
                 @if (!(warehouses.value() ?? []).length) {
@@ -181,16 +179,18 @@
             <div class="card-header bg-body fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
             <div class="card-body">
               <div class="input-group mb-2">
-                <select class="form-select" [value]="o.orderStatus" #sel>
-                  @for (opt of statusOptions; track opt.value) {
-                    <option [value]="opt.value">{{ 'orders.status_' + opt.value | translate }}</option>
-                  }
-                </select>
+                <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
+                  [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
+                  [clearable]="false" [searchable]="false"
+                  [attr.aria-label]="'order_detail.update_status' | translate">
+                  <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                  <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                </ng-select>
                 <button
                   type="button"
                   class="btn btn-primary"
                   [disabled]="saving()"
-                  (click)="updateStatus(o.id, sel.value)"
+                  (click)="updateStatus(o.id, statusChoice())"
                 >
                   {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
                 </button>

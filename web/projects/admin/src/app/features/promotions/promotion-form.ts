@@ -14,6 +14,11 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
+import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
 import {
   AdminCategoriesService,
   AdminPromotionsService,
@@ -31,8 +36,8 @@ interface RuleModel {
   name: string;
   description: string;
   isActive: boolean;
-  startOn: string;
-  endOn: string;
+  startOn: Date | null;
+  endOn: Date | null;
   isCouponRequired: boolean;
   ruleToApply: string;
   discountAmount: number;
@@ -47,8 +52,8 @@ function emptyModel(): RuleModel {
     name: '',
     description: '',
     isActive: true,
-    startOn: '',
-    endOn: '',
+    startOn: null,
+    endOn: null,
     isCouponRequired: true,
     ruleToApply: 'cart_fixed',
     discountAmount: 0,
@@ -72,7 +77,17 @@ interface LinkedProductRow {
 @Component({
   selector: 'app-admin-promotion-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [
+    Control,
+    NgSelectModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    FormField,
+    Button,
+    RouterLink,
+    TranslatePipe,
+    PageHeader,
+  ],
   templateUrl: './promotion-form.html',
 })
 export class AdminPromotionForm {
@@ -91,6 +106,12 @@ export class AdminPromotionForm {
   private readonly ruleId = computed(() => Number(this.idParam().get('id')));
 
   protected readonly categories = this.categoriesService.listResource(() => false);
+
+  /** Discount-type options for the ng-select (translated via label templates). */
+  protected readonly ruleOptions = [
+    { value: 'cart_fixed', key: 'promotions.type_fixed' },
+    { value: 'by_percent', key: 'promotions.type_percent' },
+  ];
 
   protected readonly loading = signal(false);
   protected readonly loadError = signal(false);
@@ -117,8 +138,8 @@ export class AdminPromotionForm {
             name: detail.name ?? '',
             description: detail.description ?? '',
             isActive: detail.isActive,
-            startOn: detail.startOn?.slice(0, 10) ?? '',
-            endOn: detail.endOn?.slice(0, 10) ?? '',
+            startOn: detail.startOn ? new Date(detail.startOn) : null,
+            endOn: detail.endOn ? new Date(detail.endOn) : null,
             isCouponRequired: detail.isCouponRequired,
             ruleToApply: detail.ruleToApply ?? 'cart_fixed',
             discountAmount: detail.discountAmount,
@@ -185,8 +206,8 @@ export class AdminPromotionForm {
         name: m.name,
         description: m.description || null,
         isActive: m.isActive,
-        startOn: m.startOn ? new Date(m.startOn).toISOString() : null,
-        endOn: m.endOn ? new Date(m.endOn).toISOString() : null,
+        startOn: m.startOn ? m.startOn.toISOString() : null,
+        endOn: m.endOn ? m.endOn.toISOString() : null,
         isCouponRequired: m.isCouponRequired,
         ruleToApply: m.ruleToApply,
         discountAmount: Number(m.discountAmount),

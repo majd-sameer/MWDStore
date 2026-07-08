@@ -9,15 +9,18 @@
         <div class="row g-2 align-items-end mb-3">
           <div class="col-md-3">
             <label class="form-label small" for="loc-culture">{{ 'localization.culture' | translate }}</label>
-            <select id="loc-culture" class="form-select form-select-sm"
-              (change)="cultureId.set($any($event.target).value)">
-              <option value="">{{ 'common.choose' | translate }}</option>
-              @for (c of cultures.value() ?? []; track c.id) {
-                <option value="{{ c.id }}" [selected]="cultureId() === c.id">
-                  {{ c.id }} — {{ c.name }}
-                </option>
-              }
-            </select>
+            <ng-select
+              id="loc-culture"
+              [items]="cultures.value() ?? []"
+              bindValue="id"
+              [ngModel]="cultureId() || null"
+              (ngModelChange)="cultureId.set($event ?? '')"
+              [placeholder]="'common.choose' | translate"
+              [attr.aria-label]="'localization.culture' | translate"
+            >
+              <ng-template ng-label-tmp let-item>{{ item.id }} — {{ item.name }}</ng-template>
+              <ng-template ng-option-tmp let-item>{{ item.id }} — {{ item.name }}</ng-template>
+            </ng-select>
           </div>
           <div class="col-md-4">
             <label class="form-label small" for="loc-search">{{ 'localization.search' | translate }}</label>

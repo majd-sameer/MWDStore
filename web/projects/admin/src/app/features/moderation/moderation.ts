@@ -5,6 +5,8 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { AdminModerationService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
@@ -23,7 +25,7 @@ const STATUS_KEYS: Record<number, string> = {
 @Component({
   selector: 'app-admin-moderation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, TranslatePipe, PageHeader],
+  imports: [DatePipe, FormsModule, NgSelectModule, TranslatePipe, PageHeader],
   templateUrl: './moderation.html',
 })
 export class AdminModeration {
@@ -33,6 +35,13 @@ export class AdminModeration {
 
   protected readonly tab = signal<'reviews' | 'comments'>('reviews');
   protected readonly statusFilter = signal<number | null>(null);
+
+  /** Status filter options for the ng-select above the table. */
+  protected readonly statusOptions = [
+    { value: 1, key: 'moderation.status_pending' },
+    { value: 5, key: 'moderation.status_approved' },
+    { value: 8, key: 'moderation.status_not_approved' },
+  ];
 
   protected readonly reviews = this.service.reviewsResource(() => this.statusFilter());
   protected readonly comments = this.service.commentsResource(() => this.statusFilter());

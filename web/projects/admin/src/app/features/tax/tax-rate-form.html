@@ -19,37 +19,37 @@
             <div class="card-body">
               <div class="mb-3">
                 <label class="form-label" for="rate-class">{{ 'taxes.tax_class' | translate }}</label>
-                <select id="rate-class" class="form-select"
-                  [value]="model().taxClassId"
-                  (change)="patch({ taxClassId: $any($event.target).value })">
-                  <option value="">{{ 'common.choose' | translate }}</option>
-                  @for (c of classes.value() ?? []; track c.id) {
-                    <option value="{{ c.id }}">{{ c.name }}</option>
-                  }
-                </select>
+                <ng-select
+                  id="rate-class"
+                  [items]="classItems()"
+                  bindLabel="name"
+                  bindValue="id"
+                  [ngModel]="model().taxClassId"
+                  (ngModelChange)="patch({ taxClassId: $event })"
+                  [placeholder]="'common.choose' | translate" />
               </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label" for="rate-country">{{ 'common.country' | translate }}</label>
-                  <select id="rate-country" class="form-select"
-                    [value]="model().countryId"
-                    (change)="onCountryChange($any($event.target).value)">
-                    <option value="">{{ 'common.any' | translate }}</option>
-                    @for (c of countries.value() ?? []; track c.id) {
-                      <option value="{{ c.id }}">{{ c.name }}</option>
-                    }
-                  </select>
+                  <ng-select
+                    id="rate-country"
+                    [items]="countries.value() ?? []"
+                    bindLabel="name"
+                    bindValue="id"
+                    [ngModel]="model().countryId"
+                    (ngModelChange)="onCountryChange($event ?? '')"
+                    [placeholder]="'common.any' | translate" />
                 </div>
                 <div class="col-md-6 mb-3">
                   <label class="form-label" for="rate-state">{{ 'common.state' | translate }}</label>
-                  <select id="rate-state" class="form-select"
-                    [value]="model().stateOrProvinceId"
-                    (change)="patch({ stateOrProvinceId: $any($event.target).value })">
-                    <option value="">{{ 'common.any' | translate }}</option>
-                    @for (s of states(); track s.id) {
-                      <option value="{{ s.id }}">{{ s.name }}</option>
-                    }
-                  </select>
+                  <ng-select
+                    id="rate-state"
+                    [items]="stateItems()"
+                    bindLabel="name"
+                    bindValue="id"
+                    [ngModel]="model().stateOrProvinceId"
+                    (ngModelChange)="patch({ stateOrProvinceId: $event })"
+                    [placeholder]="'common.any' | translate" />
                 </div>
               </div>
               <div class="row">

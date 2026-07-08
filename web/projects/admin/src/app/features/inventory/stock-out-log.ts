@@ -6,6 +6,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
+import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
 import {
   AdminInventoryService,
   type AdminStockOutQuery,
@@ -13,6 +19,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { dayBoundary } from '../../shared/date-range';
 
 const PAGE_SIZE = 50;
 
@@ -43,7 +50,16 @@ const CHANNEL_KEYS: Record<number, string> = {
 @Component({
   selector: 'app-admin-stock-out-log',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Icon, TranslatePipe, PageHeader],
+  imports: [
+    DatePipe,
+    FormsModule,
+    NgSelectModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    Icon,
+    TranslatePipe,
+    PageHeader,
+  ],
   templateUrl: './stock-out-log.html',
 })
 export class AdminStockOutLog {
@@ -55,8 +71,8 @@ export class AdminStockOutLog {
   protected readonly channel = signal<number | null>(null);
   protected readonly warehouseId = signal<number | null>(null);
   protected readonly performedById = signal<number | null>(null);
-  protected readonly from = signal('');
-  protected readonly to = signal('');
+  protected readonly from = signal<Date | null>(null);
+  protected readonly to = signal<Date | null>(null);
   protected readonly page = signal(1);
 
   protected readonly reasonKeys = REASON_KEYS;
@@ -72,8 +88,8 @@ export class AdminStockOutLog {
     channel: this.channel() ?? undefined,
     warehouseId: this.warehouseId() ?? undefined,
     performedById: this.performedById() ?? undefined,
-    from: this.from() ? `${this.from()}T00:00:00` : undefined,
-    to: this.to() ? `${this.to()}T23:59:59` : undefined,
+    from: dayBoundary(this.from(), false),
+    to: dayBoundary(this.to(), true),
     page: this.page(),
     pageSize: PAGE_SIZE,
   }));
@@ -91,8 +107,8 @@ export class AdminStockOutLog {
       this.channel() !== null ||
       this.warehouseId() !== null ||
       this.performedById() !== null ||
-      this.from() !== '' ||
-      this.to() !== '',
+      this.from() !== null ||
+      this.to() !== null,
   );
 
   /** Warehouse options seen on the loaded page. */
@@ -141,37 +157,33 @@ export class AdminStockOutLog {
     }, 300);
   }
 
-  protected setReason(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.reason.set(value === '' ? null : Number(value));
+  protected setReason(value: number | null): void {
+    this.reason.set(value);
     this.page.set(1);
   }
 
-  protected setChannel(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.channel.set(value === '' ? null : Number(value));
+  protected setChannel(value: number | null): void {
+    this.channel.set(value);
     this.page.set(1);
   }
 
-  protected setWarehouse(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.warehouseId.set(value === '' ? null : Number(value));
+  protected setWarehouse(value: number | null): void {
+    this.warehouseId.set(value);
     this.page.set(1);
   }
 
-  protected setPerformer(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.performedById.set(value === '' ? null : Number(value));
+  protected setPerformer(value: number | null): void {
+    this.performedById.set(value);
     this.page.set(1);
   }
 
-  protected setFrom(event: Event): void {
-    this.from.set((event.target as HTMLInputElement).value);
+  protected setFrom(value: Date | null): void {
+    this.from.set(value);
     this.page.set(1);
   }
 
-  protected setTo(event: Event): void {
-    this.to.set((event.target as HTMLInputElement).value);
+  protected setTo(value: Date | null): void {
+    this.to.set(value);
     this.page.set(1);
   }
 
@@ -181,8 +193,8 @@ export class AdminStockOutLog {
     this.channel.set(null);
     this.warehouseId.set(null);
     this.performedById.set(null);
-    this.from.set('');
-    this.to.set('');
+    this.from.set(null);
+    this.to.set(null);
     this.page.set(1);
   }
 

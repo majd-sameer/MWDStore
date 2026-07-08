@@ -9,7 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   AdminOperationsService,
   AdminOrdersService,
@@ -35,7 +37,7 @@ import {
 @Component({
   selector: 'app-admin-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, RouterLink, TranslatePipe, PageHeader],
+  imports: [MoneyPipe, DatePipe, FormsModule, NgSelectModule, RouterLink, TranslatePipe, PageHeader],
   templateUrl: './order-detail.html',
 })
 export class AdminOrderDetail {
@@ -60,6 +62,18 @@ export class AdminOrderDetail {
 
   protected readonly shipments = signal<AdminShipmentDto[]>([]);
   protected readonly shipQty = signal<Record<number, number>>({});
+
+  /** Warehouse chosen for a new shipment; falls back to the first warehouse. */
+  private readonly shipWarehouseId = signal<number | null>(null);
+  protected readonly selectedShipWarehouse = computed(
+    () => this.shipWarehouseId() ?? this.warehouses.value()?.[0]?.id ?? null,
+  );
+  protected setShipWarehouse(id: number | null): void {
+    this.shipWarehouseId.set(id);
+  }
+
+  /** Status picked in the update-status ng-select; seeded from the loaded order. */
+  protected readonly statusChoice = signal<number | null>(null);
 
   /** Order items with shipped quantities subtracted; the create-shipment form lists these. */
   protected readonly unshippedItems = computed(() => {
@@ -92,6 +106,14 @@ export class AdminOrderDetail {
         this.loadShipments(id);
       }
     });
+    // Seed the status dropdown from the (re)loaded order so it always shows the
+    // current status; picking a new one overrides until the next reload.
+    effect(() => {
+      const o = this.order.value();
+      if (o) {
+        this.statusChoice.set(o.orderStatus);
+      }
+    });
   }
 
   private loadShipments(orderId: number): void {
@@ -105,7 +127,10 @@ export class AdminOrderDetail {
     this.shipQty.update((q) => ({ ...q, [orderItemId]: Number.isFinite(quantity) ? quantity : 0 }));
   }
 
-  protected createShipment(order: OrderDetailDto, warehouseId: string, tracking: string): void {
+  protected createShipment(order: OrderDetailDto, warehouseId: number | null, tracking: string): void {
+    if (warehouseId === null) {
+      return;
+    }
     const items = this.unshippedItems()
       .map((it) => ({
         orderItemId: it.id,
@@ -121,7 +146,7 @@ export class AdminOrderDetail {
     this.operations
       .createShipment({
         orderId: order.id,
-        warehouseId: Number(warehouseId),
+        warehouseId,
         trackingNumber: tracking.trim() || null,
         items,
       })
@@ -140,9 +165,12 @@ export class AdminOrderDetail {
       });
   }
 
-  protected updateStatus(id: number, value: string): void {
+  protected updateStatus(id: number, value: number | null): void {
+    if (value === null) {
+      return;
+    }
     this.saving.set(true);
-    void firstValueFrom(this.service.updateStatus(id, { orderStatus: Number(value) }))
+    void firstValueFrom(this.service.updateStatus(id, { orderStatus: value }))
       .then(() => {
         this.toast.success(this.translate.instant('order_detail.status_updated'));
         this.order.reload();

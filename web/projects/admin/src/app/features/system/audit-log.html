@@ -17,31 +17,40 @@
               [attr.aria-label]="'audit.search_ph' | translate"
             />
           </div>
-          <select
-            class="form-select w-auto"
-            [value]="area()"
-            (change)="setArea($event)"
+          <ng-select
+            class="filter-select"
+            [items]="areas()"
+            [ngModel]="area()"
+            (ngModelChange)="setArea($event)"
+            [placeholder]="'audit.all_areas' | translate"
             [attr.aria-label]="'audit.area' | translate"
-          >
-            <option value="">{{ 'audit.all_areas' | translate }}</option>
-            @for (a of areas(); track a) {
-              <option [value]="a">{{ a }}</option>
-            }
-          </select>
-          <input
-            type="date"
-            class="form-control w-auto"
-            [value]="from()"
-            (change)="setFrom($event)"
-            [attr.aria-label]="'audit.from' | translate"
           />
-          <input
-            type="date"
-            class="form-control w-auto"
-            [value]="to()"
-            (change)="setTo($event)"
-            [attr.aria-label]="'audit.to' | translate"
-          />
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtFrom"
+              [owlDateTimeTrigger]="dtFrom"
+              [ngModel]="from()"
+              (ngModelChange)="setFrom($event)"
+              [placeholder]="'audit.from' | translate"
+              [attr.aria-label]="'audit.from' | translate"
+              readonly
+            />
+            <owl-date-time #dtFrom pickerType="calendar" />
+          </div>
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtTo"
+              [owlDateTimeTrigger]="dtTo"
+              [ngModel]="to()"
+              (ngModelChange)="setTo($event)"
+              [placeholder]="'audit.to' | translate"
+              [attr.aria-label]="'audit.to' | translate"
+              readonly
+            />
+            <owl-date-time #dtTo pickerType="calendar" />
+          </div>
           <div class="filter-chips" role="group" [attr.aria-label]="'audit.action' | translate">
             @for (a of actions; track a) {
               <button

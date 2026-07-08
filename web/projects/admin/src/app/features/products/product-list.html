@@ -23,28 +23,26 @@
               [attr.aria-label]="'products.search_ph' | translate"
             />
           </div>
-          <select
-            class="form-select w-auto"
+          <ng-select
+            class="filter-select"
+            [items]="brands.value() ?? []"
+            bindLabel="name"
+            bindValue="id"
+            [ngModel]="brandId()"
+            (ngModelChange)="setBrand($event)"
+            [placeholder]="'products.all_brands' | translate"
             [attr.aria-label]="'products.brand' | translate"
-            [value]="brandId() ?? ''"
-            (change)="setBrand($event)"
-          >
-            <option value="">{{ 'products.all_brands' | translate }}</option>
-            @for (b of brands.value() ?? []; track b.id) {
-              <option [value]="b.id">{{ b.name }}</option>
-            }
-          </select>
-          <select
-            class="form-select w-auto"
+          />
+          <ng-select
+            class="filter-select"
+            [items]="categories.value() ?? []"
+            bindLabel="name"
+            bindValue="id"
+            [ngModel]="categoryId()"
+            (ngModelChange)="setCategory($event)"
+            [placeholder]="'products.all_categories' | translate"
             [attr.aria-label]="'products.category' | translate"
-            [value]="categoryId() ?? ''"
-            (change)="setCategory($event)"
-          >
-            <option value="">{{ 'products.all_categories' | translate }}</option>
-            @for (c of categories.value() ?? []; track c.id) {
-              <option [value]="c.id">{{ c.name }}</option>
-            }
-          </select>
+          />
           <div class="filter-chips" role="group" [attr.aria-label]="'common.status' | translate">
             <button type="button" class="filter-chip" [class.active]="status() === 'all'"
               (click)="setStatus('all')">{{ 'common.all' | translate }}</button>

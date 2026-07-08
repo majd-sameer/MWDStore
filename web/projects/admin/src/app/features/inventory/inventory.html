@@ -84,16 +84,18 @@
             } @else {
               <div class="mb-3">
                 <label for="adj-wh" class="form-label">{{ 'inventory.warehouse' | translate }}</label>
-                <select
+                <ng-select
                   id="adj-wh"
-                  class="form-select"
-                  [value]="selectedWarehouse() ?? ''"
-                  (change)="warehouseId.set(+$any($event.target).value)"
+                  [items]="stock.value()?.warehouses ?? []"
+                  bindValue="warehouseId"
+                  [ngModel]="selectedWarehouse()"
+                  (ngModelChange)="warehouseId.set($event)"
+                  [clearable]="false"
+                  [attr.aria-label]="'inventory.warehouse' | translate"
                 >
-                  @for (w of stock.value()?.warehouses ?? []; track w.warehouseId) {
-                    <option [value]="w.warehouseId">{{ w.warehouseName }} (#{{ w.warehouseId }})</option>
-                  }
-                </select>
+                  <ng-template ng-label-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-option-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                </ng-select>
               </div>
               <div class="mb-3">
                 <label for="adj-qty" class="form-label">{{ 'inventory.adjustment' | translate }}</label>

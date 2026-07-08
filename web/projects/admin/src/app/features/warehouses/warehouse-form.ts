@@ -14,6 +14,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   AdminLocationsService,
   AdminWarehousesService,
@@ -60,7 +61,7 @@ function emptyModel(): WarehouseModel {
 @Component({
   selector: 'app-admin-warehouse-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, NgSelectModule],
   templateUrl: './warehouse-form.html',
 })
 export class AdminWarehouseForm {
@@ -80,6 +81,9 @@ export class AdminWarehouseForm {
   protected readonly list = this.service.listResource();
   protected readonly countries = this.locations.countriesResource();
   protected readonly states = signal<StateOrProvinceLookupDto[]>([]);
+  protected readonly stateItems = computed(() =>
+    this.states().map((s) => ({ id: String(s.id), name: s.name })),
+  );
 
   private readonly existing = computed(
     () => this.list.value()?.find((w) => w.id === this.warehouseId()) ?? null,

@@ -5,6 +5,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   AdminSystemService,
   type AdminResourceDto,
@@ -20,7 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-localization',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslatePipe, PageHeader],
+  imports: [Button, FormsModule, NgSelectModule, TranslatePipe, PageHeader],
   templateUrl: './localization.html',
 })
 export class AdminLocalization {

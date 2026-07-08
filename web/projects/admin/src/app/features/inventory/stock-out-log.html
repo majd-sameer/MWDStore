@@ -27,36 +27,80 @@
               [attr.aria-label]="'stockoutlog.search_ph' | translate"
             />
           </div>
-          <select class="form-select w-auto" (change)="setReason($event)" [attr.aria-label]="'stockout.reason' | translate">
-            <option value="">{{ 'stockoutlog.all_reasons' | translate }}</option>
-            @for (r of reasonOptions; track r.value) {
-              <option [value]="r.value">{{ 'stock.reason.' + r.key | translate }}</option>
-            }
-          </select>
-          <select class="form-select w-auto" (change)="setChannel($event)" [attr.aria-label]="'stockout.channel' | translate">
-            <option value="">{{ 'stockoutlog.all_channels' | translate }}</option>
-            @for (c of channelOptions; track c.value) {
-              <option [value]="c.value">{{ 'stock.channel.' + c.key | translate }}</option>
-            }
-          </select>
+          <ng-select
+            class="filter-select"
+            [items]="reasonOptions"
+            bindValue="value"
+            [ngModel]="reason()"
+            (ngModelChange)="setReason($event)"
+            [placeholder]="'stockoutlog.all_reasons' | translate"
+            [attr.aria-label]="'stockout.reason' | translate"
+          >
+            <ng-template ng-label-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+            <ng-template ng-option-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+          </ng-select>
+          <ng-select
+            class="filter-select"
+            [items]="channelOptions"
+            bindValue="value"
+            [ngModel]="channel()"
+            (ngModelChange)="setChannel($event)"
+            [placeholder]="'stockoutlog.all_channels' | translate"
+            [attr.aria-label]="'stockout.channel' | translate"
+          >
+            <ng-template ng-label-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+            <ng-template ng-option-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+          </ng-select>
           @if (warehouses().length) {
-            <select class="form-select w-auto" (change)="setWarehouse($event)" [attr.aria-label]="'inventory.warehouse' | translate">
-              <option value="">{{ 'stockoutlog.all_warehouses' | translate }}</option>
-              @for (w of warehouses(); track w.id) {
-                <option [value]="w.id">{{ w.name }}</option>
-              }
-            </select>
+            <ng-select
+              class="filter-select"
+              [items]="warehouses()"
+              bindLabel="name"
+              bindValue="id"
+              [ngModel]="warehouseId()"
+              (ngModelChange)="setWarehouse($event)"
+              [placeholder]="'stockoutlog.all_warehouses' | translate"
+              [attr.aria-label]="'inventory.warehouse' | translate"
+            />
           }
           @if (performers().length) {
-            <select class="form-select w-auto" (change)="setPerformer($event)" [attr.aria-label]="'stockoutlog.col_performed_by' | translate">
-              <option value="">{{ 'stockoutlog.all_performers' | translate }}</option>
-              @for (p of performers(); track p.id) {
-                <option [value]="p.id">{{ p.name }}</option>
-              }
-            </select>
+            <ng-select
+              class="filter-select"
+              [items]="performers()"
+              bindLabel="name"
+              bindValue="id"
+              [ngModel]="performedById()"
+              (ngModelChange)="setPerformer($event)"
+              [placeholder]="'stockoutlog.all_performers' | translate"
+              [attr.aria-label]="'stockoutlog.col_performed_by' | translate"
+            />
           }
-          <input type="date" class="form-control w-auto" [value]="from()" (change)="setFrom($event)" [attr.aria-label]="'audit.from' | translate" />
-          <input type="date" class="form-control w-auto" [value]="to()" (change)="setTo($event)" [attr.aria-label]="'audit.to' | translate" />
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtFrom"
+              [owlDateTimeTrigger]="dtFrom"
+              [ngModel]="from()"
+              (ngModelChange)="setFrom($event)"
+              [placeholder]="'audit.from' | translate"
+              [attr.aria-label]="'audit.from' | translate"
+              readonly
+            />
+            <owl-date-time #dtFrom pickerType="calendar" />
+          </div>
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtTo"
+              [owlDateTimeTrigger]="dtTo"
+              [ngModel]="to()"
+              (ngModelChange)="setTo($event)"
+              [placeholder]="'audit.to' | translate"
+              [attr.aria-label]="'audit.to' | translate"
+              readonly
+            />
+            <owl-date-time #dtTo pickerType="calendar" />
+          </div>
           @if (hasFilters()) {
             <button
               type="button"

@@ -5,6 +5,7 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { AuthService, LanguageService, provideCore } from 'core';
@@ -18,6 +19,9 @@ import { JsonTranslateLoader } from './core/translate-loader';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Owl date-time picker and any CDK-overlay dropdowns animate via the
+    // browser animations builder (owl uses @angular/animations triggers).
+    provideAnimations(),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     provideCore({ apiBaseUrl: environment.apiBaseUrl }),
     // Jordanian dinar is the store currency. Prices render through core's

@@ -14,6 +14,7 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { AdminProductAttributesService } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -35,7 +36,7 @@ interface AttributeModel {
 @Component({
   selector: 'app-admin-product-attribute-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [Control, NgSelectModule, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './product-attribute-form.html',
 })
 export class AdminProductAttributeForm {
@@ -53,6 +54,13 @@ export class AdminProductAttributeForm {
 
   protected readonly list = this.service.listResource();
   protected readonly groups = this.service.groupsResource();
+  /**
+   * Group options with string ids so ng-select's strict `compareWith` matches
+   * the string `groupId` field (native `<option value>` was implicitly string).
+   */
+  protected readonly groupItems = computed(() =>
+    (this.groups.value() ?? []).map((g) => ({ id: String(g.id), name: g.name })),
+  );
   private readonly existing = computed(
     () => this.list.value()?.find((a) => a.id === this.attributeId()) ?? null,
   );

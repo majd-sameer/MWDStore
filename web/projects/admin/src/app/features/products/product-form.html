@@ -77,14 +77,14 @@
               <div class="card-header bg-body fw-semibold">{{ 'nav.attributes' | translate }}</div>
               <div class="card-body">
                 <div class="d-flex gap-2 mb-3">
-                  <select class="form-select w-auto flex-grow-1" #attrSelect>
-                    <option value="">{{ 'product_form.choose_attribute' | translate }}</option>
-                    @for (a of availableAttributes(); track a.id) {
-                      <option value="{{ a.id }}">{{ a.groupName }} / {{ a.name }}</option>
-                    }
-                  </select>
+                  <ng-select class="flex-grow-1" [items]="availableAttributes()" bindValue="id"
+                    [ngModel]="pendingAttributeId()" (ngModelChange)="pendingAttributeId.set($event)"
+                    [placeholder]="'product_form.choose_attribute' | translate">
+                    <ng-template ng-label-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
+                    <ng-template ng-option-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
+                  </ng-select>
                   <button type="button" libButton variant="secondary" [outline]="true"
-                    (click)="addAttribute(attrSelect.value); attrSelect.value = ''">
+                    (click)="addAttribute(pendingAttributeId()); pendingAttributeId.set(null)">
                     {{ 'common.add' | translate }}
                   </button>
                 </div>
@@ -108,14 +108,11 @@
               <div class="card-header bg-body fw-semibold">{{ 'product_form.options_title' | translate }}</div>
               <div class="card-body">
                 <div class="d-flex gap-2 mb-3">
-                  <select class="form-select w-auto flex-grow-1" #optSelect>
-                    <option value="">{{ 'product_form.choose_option' | translate }}</option>
-                    @for (o of availableOptions(); track o.id) {
-                      <option value="{{ o.id }}">{{ o.name }}</option>
-                    }
-                  </select>
+                  <ng-select class="flex-grow-1" [items]="availableOptions()" bindLabel="name" bindValue="id"
+                    [ngModel]="pendingOptionId()" (ngModelChange)="pendingOptionId.set($event)"
+                    [placeholder]="'product_form.choose_option' | translate" />
                   <button type="button" libButton variant="secondary" [outline]="true"
-                    (click)="addOption(optSelect.value); optSelect.value = ''">
+                    (click)="addOption(pendingOptionId()); pendingOptionId.set(null)">
                     {{ 'product_form.add_option' | translate }}
                   </button>
                 </div>
@@ -124,12 +121,12 @@
                   <div class="border rounded p-3 mb-3">
                     <div class="d-flex align-items-center gap-3 mb-2">
                       <span class="fw-semibold">{{ row.name }}</span>
-                      <select class="form-select form-select-sm w-auto"
-                        [value]="row.displayType"
-                        (change)="setOptionDisplayType(row.optionId, $any($event.target).value)">
-                        <option value="text">{{ 'product_form.display_text' | translate }}</option>
-                        <option value="color">{{ 'product_form.display_color' | translate }}</option>
-                      </select>
+                      <ng-select class="option-display-select" [items]="displayTypeOptions" bindValue="value"
+                        [ngModel]="row.displayType" (ngModelChange)="setOptionDisplayType(row.optionId, $event)"
+                        [clearable]="false" [searchable]="false">
+                        <ng-template ng-label-tmp let-item>{{ item.key | translate }}</ng-template>
+                        <ng-template ng-option-tmp let-item>{{ item.key | translate }}</ng-template>
+                      </ng-select>
                       <button type="button" class="btn btn-sm btn-outline-danger ms-auto"
                         (click)="removeOption(row.optionId)">{{ 'common.remove' | translate }}</button>
                     </div>
@@ -329,14 +326,20 @@
                 <div class="row">
                   <div class="col-6">
                     <lib-form-field [label]="'product_form.special_start' | translate" controlId="specialPriceStart">
-                      <input id="specialPriceStart" type="date" class="form-control"
-                        [formField]="f.specialPriceStart" />
+                      <div class="date-field">
+                        <input id="specialPriceStart" class="form-control" [owlDateTime]="dtSpStart"
+                          [owlDateTimeTrigger]="dtSpStart" [formField]="f.specialPriceStart" readonly />
+                        <owl-date-time #dtSpStart pickerType="calendar" />
+                      </div>
                     </lib-form-field>
                   </div>
                   <div class="col-6">
                     <lib-form-field [label]="'product_form.special_end' | translate" controlId="specialPriceEnd">
-                      <input id="specialPriceEnd" type="date" class="form-control"
-                        [formField]="f.specialPriceEnd" />
+                      <div class="date-field">
+                        <input id="specialPriceEnd" class="form-control" [owlDateTime]="dtSpEnd"
+                          [owlDateTimeTrigger]="dtSpEnd" [formField]="f.specialPriceEnd" readonly />
+                        <owl-date-time #dtSpEnd pickerType="calendar" />
+                      </div>
                     </lib-form-field>
                   </div>
                 </div>
@@ -351,12 +354,8 @@
               <div class="card-header bg-body fw-semibold">{{ 'product_form.organisation_title' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'products.brand' | translate" controlId="brandId">
-                  <select id="brandId" class="form-select" [formField]="f.brandId">
-                    <option value="">{{ 'product_form.none_option' | translate }}</option>
-                    @for (b of brands.value() ?? []; track b.id) {
-                      <option value="{{ b.id }}">{{ b.name }}</option>
-                    }
-                  </select>
+                  <ng-select id="brandId" [items]="brandItems()" bindLabel="name" bindValue="id"
+                    [formField]="f.brandId" [placeholder]="'product_form.none_option' | translate" />
                 </lib-form-field>
 
                 <div class="form-label">{{ 'nav.categories' | translate }}</div>

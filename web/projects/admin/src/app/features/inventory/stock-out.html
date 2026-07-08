@@ -81,16 +81,17 @@
             } @else {
               <div class="mb-3">
                 <label for="so-wh" class="form-label">{{ 'inventory.warehouse' | translate }}</label>
-                <select
+                <ng-select
                   id="so-wh"
-                  class="form-select"
-                  [value]="selectedWarehouse() ?? ''"
-                  (change)="setWarehouse($event)"
+                  [items]="stock.value()?.warehouses ?? []"
+                  bindValue="warehouseId"
+                  [ngModel]="selectedWarehouse()"
+                  (ngModelChange)="setWarehouse($event)"
+                  [clearable]="false"
                 >
-                  @for (w of stock.value()?.warehouses ?? []; track w.warehouseId) {
-                    <option [value]="w.warehouseId">{{ w.warehouseName }} (#{{ w.warehouseId }})</option>
-                  }
-                </select>
+                  <ng-template ng-label-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-option-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                </ng-select>
                 <div class="form-text">{{ 'stockout.on_hand' | translate: { count: onHand() } }}</div>
               </div>
 
@@ -109,11 +110,17 @@
 
               <div class="mb-3">
                 <label for="so-reason" class="form-label">{{ 'stockout.reason' | translate }}</label>
-                <select id="so-reason" class="form-select" [value]="reason()" (change)="setReason($event)">
-                  @for (r of reasons; track r.value) {
-                    <option [value]="r.value">{{ 'stock.reason.' + r.key | translate }}</option>
-                  }
-                </select>
+                <ng-select
+                  id="so-reason"
+                  [items]="reasons"
+                  bindValue="value"
+                  [ngModel]="reason()"
+                  (ngModelChange)="setReason($event)"
+                  [clearable]="false"
+                >
+                  <ng-template ng-label-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+                  <ng-template ng-option-tmp let-item>{{ 'stock.reason.' + item.key | translate }}</ng-template>
+                </ng-select>
               </div>
 
               @if (channelVisible()) {
@@ -124,19 +131,18 @@
                       <span class="text-body-secondary">({{ 'common.optional' | translate }})</span>
                     }
                   </label>
-                  <select
+                  <ng-select
                     id="so-channel"
-                    class="form-select"
-                    [value]="channel() ?? ''"
-                    (change)="setChannel($event)"
+                    [items]="channels"
+                    bindValue="value"
+                    [ngModel]="channel()"
+                    (ngModelChange)="setChannel($event)"
+                    [clearable]="!channelRequired()"
+                    [placeholder]="'stockout.no_channel' | translate"
                   >
-                    @if (!channelRequired()) {
-                      <option value="">{{ 'stockout.no_channel' | translate }}</option>
-                    }
-                    @for (c of channels; track c.value) {
-                      <option [value]="c.value">{{ 'stock.channel.' + c.key | translate }}</option>
-                    }
-                  </select>
+                    <ng-template ng-label-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+                    <ng-template ng-option-tmp let-item>{{ 'stock.channel.' + item.key | translate }}</ng-template>
+                  </ng-select>
                 </div>
               }
 

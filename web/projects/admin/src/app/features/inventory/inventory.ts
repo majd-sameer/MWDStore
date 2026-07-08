@@ -5,6 +5,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import {
   AdminInventoryService,
   type StockAdjustmentRequest,
@@ -22,7 +24,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-inventory',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, PageHeader],
+  imports: [FormsModule, NgSelectModule, TranslatePipe, PageHeader],
   templateUrl: './inventory.html',
 })
 export class AdminInventory {
