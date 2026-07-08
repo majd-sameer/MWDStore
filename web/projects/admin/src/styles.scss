@@ -72,6 +72,9 @@ h1.h3 {
 .table > tbody > tr:last-child > td {
   border-block-end: 0;
 }
+.table > tbody > tr:nth-of-type(even) > * {
+  --bs-table-bg-type: color-mix(in srgb, var(--ink) 4%, transparent);
+}
 
 // Status badges ---------------------------------------------------------------
 // Solid Bootstrap badges read heavy; soften every status into a tinted pill.
@@ -246,7 +249,7 @@ h1.h3 {
   inline-size: 32px;
   block-size: 32px;
   border: 1px solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: 22%;
   background: var(--surface);
   color: var(--ink-2);
   text-decoration: none;
@@ -1060,4 +1063,77 @@ h1.h3 {
 }
 .file-field:hover:not(:disabled)::file-selector-button {
   background: var(--green-strong);
+}
+
+// RTL utility flips -----------------------------------------------------------
+// We ship Bootstrap's LTR build and only flip <html dir> for Arabic, so its
+// "start/end" utilities are physical (left/right) and point the wrong way in
+// RTL. These targeted overrides make the ones we actually use behave logically:
+// `.text-end` trails to the LEFT, `.ms-*` spaces on the right, `.float-end`
+// floats left, `.end-0` pins to the left edge, etc. (Loading bootstrap.rtl.css
+// would flip everything wholesale, but we keep to one stylesheet.) Each flip
+// also zeroes the original physical side so the LTR rule doesn't leak through.
+[dir="rtl"] {
+  // Text alignment — the big one: numeric / action columns marked `.text-end`.
+  .text-start {
+    text-align: right !important;
+  }
+  .text-end {
+    text-align: left !important;
+  }
+
+  // Float
+  .float-start {
+    float: right !important;
+  }
+  .float-end {
+    float: left !important;
+  }
+
+  // Margins & paddings — flip start/end across Bootstrap's spacer scale.
+  @each $k, $v in (0: 0, 1: 0.25rem, 2: 0.5rem, 3: 1rem, 4: 1.5rem, 5: 3rem) {
+    .ms-#{$k} {
+      margin-left: 0 !important;
+      margin-right: $v !important;
+    }
+    .me-#{$k} {
+      margin-right: 0 !important;
+      margin-left: $v !important;
+    }
+    .ps-#{$k} {
+      padding-left: 0 !important;
+      padding-right: $v !important;
+    }
+    .pe-#{$k} {
+      padding-right: 0 !important;
+      padding-left: $v !important;
+    }
+  }
+  .ms-auto {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+  }
+  .me-auto {
+    margin-right: 0 !important;
+    margin-left: auto !important;
+  }
+
+  // Absolute positioning — `.start-*` / `.end-*` (e.g. a close button pinned
+  // to the trailing corner of a thumbnail).
+  @each $k, $v in (0: 0, 50: 50%, 100: 100%) {
+    .start-#{$k} {
+      left: auto !important;
+      right: $v !important;
+    }
+    .end-#{$k} {
+      right: auto !important;
+      left: $v !important;
+    }
+  }
+
+  // Owl date-time picker — flip the prev/next month arrows so they point the
+  // right way in RTL (the popup mounts under <html dir=rtl>, so this matches).
+  .owl-dt-control-arrow-button .owl-dt-control-button-content {
+    transform: rotate(180deg);
+  }
 }
