@@ -21,9 +21,8 @@
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="vn-name" [required]="true" [error]="err(f.name())">
-                  <input id="vn-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                <lib-form-field [label]="'common.name' | translate" controlId="vn-name" [required]="true" [error]="err(f.name.ar())">
+                  <multi-lang-input controlId="vn-name" [formField]="f.name" />
                 </lib-form-field>
                 <lib-form-field [label]="'common.slug' | translate" controlId="vn-slug" [hint]="'common.slug_hint' | translate">
                   <input id="vn-slug" type="text" class="form-control" [formField]="f.slug" />
@@ -32,7 +31,7 @@
                   <input id="vn-email" type="email" class="form-control" [formField]="f.email" />
                 </lib-form-field>
                 <lib-form-field [label]="'common.description' | translate" controlId="vn-desc">
-                  <textarea id="vn-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
+                  <multi-lang-input type="textarea" [rows]="3" controlId="vn-desc" [formField]="f.description" />
                 </lib-form-field>
                 <div class="form-check form-switch mb-3">
                   <input id="vn-active" type="checkbox" class="form-check-input" [formField]="f.isActive" />

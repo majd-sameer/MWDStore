@@ -20,9 +20,10 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface AttributeModel {
-  name: string;
+  name: MultiLangValue;
   groupId: string;
 }
 
@@ -34,7 +35,7 @@ interface AttributeModel {
 @Component({
   selector: 'app-admin-product-attribute-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './product-attribute-form.html',
 })
 export class AdminProductAttributeForm {
@@ -56,9 +57,9 @@ export class AdminProductAttributeForm {
     () => this.list.value()?.find((a) => a.id === this.attributeId()) ?? null,
   );
 
-  protected readonly model = signal<AttributeModel>({ name: '', groupId: '' });
+  protected readonly model = signal<AttributeModel>({ name: { ar: '', en: '' }, groupId: '' });
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
     required(path.groupId, { message: 'Group is required' });
   });
   protected readonly err = firstError;
@@ -76,7 +77,7 @@ export class AdminProductAttributeForm {
         return;
       }
       this.seeded = true;
-      this.model.set({ name: a.name ?? '', groupId: String(a.groupId) });
+      this.model.set({ name: { ar: a.name ?? '', en: a.nameEn ?? '' }, groupId: String(a.groupId) });
     });
   }
 
@@ -84,7 +85,8 @@ export class AdminProductAttributeForm {
     event.preventDefault();
     void submit(this.f, async () => {
       this.serverError.set(null);
-      const body = { name: this.model().name, groupId: Number(this.model().groupId) };
+      const m = this.model();
+      const body = { name: m.name.ar, nameEn: m.name.en || null, groupId: Number(m.groupId) };
       try {
         if (this.isNew()) {
           await firstValueFrom(this.service.create(body));

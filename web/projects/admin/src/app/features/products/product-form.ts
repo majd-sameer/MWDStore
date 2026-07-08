@@ -31,18 +31,19 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { firstError } from '../../shared/field-error';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface ProductFormModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
   sku: string;
   gtin: string;
-  shortDescription: string;
-  description: string;
-  specification: string;
-  metaTitle: string;
-  metaKeywords: string;
-  metaDescription: string;
+  shortDescription: MultiLangValue;
+  description: MultiLangValue;
+  specification: MultiLangValue;
+  metaTitle: MultiLangValue;
+  metaKeywords: MultiLangValue;
+  metaDescription: MultiLangValue;
   price: number;
   oldPrice: string;
   specialPrice: string;
@@ -61,16 +62,16 @@ interface ProductFormModel {
 
 function emptyModel(): ProductFormModel {
   return {
-    name: '',
+    name: { ar: '', en: '' },
     slug: '',
     sku: '',
     gtin: '',
-    shortDescription: '',
-    description: '',
-    specification: '',
-    metaTitle: '',
-    metaKeywords: '',
-    metaDescription: '',
+    shortDescription: { ar: '', en: '' },
+    description: { ar: '', en: '' },
+    specification: { ar: '', en: '' },
+    metaTitle: { ar: '', en: '' },
+    metaKeywords: { ar: '', en: '' },
+    metaDescription: { ar: '', en: '' },
     price: 0,
     oldPrice: '',
     specialPrice: '',
@@ -145,7 +146,7 @@ interface AttributeRow {
 @Component({
   selector: 'app-admin-product-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './product-form.html',
 })
 export class AdminProductForm {
@@ -175,7 +176,7 @@ export class AdminProductForm {
 
   protected readonly model = signal<ProductFormModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
     min(path.price, 0, { message: 'Price cannot be negative' });
     min(path.stockQuantity, 0, { message: 'Stock cannot be negative' });
   });
@@ -225,16 +226,16 @@ export class AdminProductForm {
 
   private seedFrom(p: AdminProductDetail): void {
     this.model.set({
-      name: p.name ?? '',
+      name: { ar: p.name ?? '', en: p.nameEn ?? '' },
       slug: p.slug ?? '',
       sku: p.sku ?? '',
       gtin: p.gtin ?? '',
-      shortDescription: p.shortDescription ?? '',
-      description: p.description ?? '',
-      specification: p.specification ?? '',
-      metaTitle: p.metaTitle ?? '',
-      metaKeywords: p.metaKeywords ?? '',
-      metaDescription: p.metaDescription ?? '',
+      shortDescription: { ar: p.shortDescription ?? '', en: p.shortDescriptionEn ?? '' },
+      description: { ar: p.description ?? '', en: p.descriptionEn ?? '' },
+      specification: { ar: p.specification ?? '', en: p.specificationEn ?? '' },
+      metaTitle: { ar: p.metaTitle ?? '', en: p.metaTitleEn ?? '' },
+      metaKeywords: { ar: p.metaKeywords ?? '', en: p.metaKeywordsEn ?? '' },
+      metaDescription: { ar: p.metaDescription ?? '', en: p.metaDescriptionEn ?? '' },
       price: p.price,
       oldPrice: p.oldPrice === null ? '' : String(p.oldPrice),
       specialPrice: p.specialPrice === null ? '' : String(p.specialPrice),
@@ -475,7 +476,7 @@ export class AdminProductForm {
       );
     });
 
-    const baseName = this.model().name.trim();
+    const baseName = this.model().name.ar.trim();
     const basePrice = Number(this.model().price) || 0;
     const existing = this.variationRows();
 
@@ -548,16 +549,23 @@ export class AdminProductForm {
       this.serverError.set(null);
       const m = this.model();
       const body: ProductUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
         sku: m.sku || null,
         gtin: m.gtin || null,
-        shortDescription: m.shortDescription || null,
-        description: m.description || null,
-        specification: m.specification || null,
-        metaTitle: m.metaTitle || null,
-        metaKeywords: m.metaKeywords || null,
-        metaDescription: m.metaDescription || null,
+        shortDescription: m.shortDescription.ar || null,
+        shortDescriptionEn: m.shortDescription.en || null,
+        description: m.description.ar || null,
+        descriptionEn: m.description.en || null,
+        specification: m.specification.ar || null,
+        specificationEn: m.specification.en || null,
+        metaTitle: m.metaTitle.ar || null,
+        metaTitleEn: m.metaTitle.en || null,
+        metaKeywords: m.metaKeywords.ar || null,
+        metaKeywordsEn: m.metaKeywords.en || null,
+        metaDescription: m.metaDescription.ar || null,
+        metaDescriptionEn: m.metaDescription.en || null,
         price: Number(m.price),
         oldPrice: m.oldPrice.trim() === '' ? null : Number(m.oldPrice),
         specialPrice: m.specialPrice.trim() === '' ? null : Number(m.specialPrice),

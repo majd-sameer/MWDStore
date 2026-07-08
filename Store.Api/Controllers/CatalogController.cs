@@ -126,6 +126,7 @@ public sealed class CatalogController : ControllerBase
                 product.Name = overlay.Apply(product.Id, LocalizedProperty.Name, product.Name) ?? product.Name;
                 product.ShortDescription = overlay.Apply(product.Id, LocalizedProperty.ShortDescription, product.ShortDescription);
                 product.Description = overlay.Apply(product.Id, LocalizedProperty.Description, product.Description);
+                product.Specification = overlay.Apply(product.Id, LocalizedProperty.Specification, product.Specification);
 
                 foreach (var related in product.RelatedProducts)
                 {
@@ -148,6 +149,19 @@ public sealed class CatalogController : ControllerBase
             .Select(c => new CategoryDto(c.Id, c.Name, c.Slug, c.ParentId, c.DisplayOrder, c.IncludeInMenu))
             .ToListAsync(cancellationToken);
 
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        if (cultureId is not null && categories.Count > 0)
+        {
+            var overlay = await _localization.GetOverlayAsync(
+                LocalizedEntity.Category, categories.Select(c => c.Id).ToList(), cultureId, cancellationToken);
+            if (!overlay.IsEmpty)
+            {
+                categories = categories
+                    .Select(c => c with { Name = overlay.Apply(c.Id, LocalizedProperty.Name, c.Name)! })
+                    .ToList();
+            }
+        }
+
         return Ok(categories);
     }
 
@@ -160,6 +174,19 @@ public sealed class CatalogController : ControllerBase
             .OrderBy(b => b.Name)
             .Select(b => new BrandDto(b.Id, b.Name, b.Slug))
             .ToListAsync(cancellationToken);
+
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        if (cultureId is not null && brands.Count > 0)
+        {
+            var overlay = await _localization.GetOverlayAsync(
+                LocalizedEntity.Brand, brands.Select(b => b.Id).ToList(), cultureId, cancellationToken);
+            if (!overlay.IsEmpty)
+            {
+                brands = brands
+                    .Select(b => b with { Name = overlay.Apply(b.Id, LocalizedProperty.Name, b.Name)! })
+                    .ToList();
+            }
+        }
 
         return Ok(brands);
     }

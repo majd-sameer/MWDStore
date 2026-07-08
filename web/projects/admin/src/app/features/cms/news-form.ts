@@ -23,17 +23,24 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface NewsModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
-  shortContent: string;
-  fullContent: string;
+  shortContent: MultiLangValue;
+  fullContent: MultiLangValue;
   isPublished: boolean;
 }
 
 function emptyModel(): NewsModel {
-  return { name: '', slug: '', shortContent: '', fullContent: '', isPublished: true };
+  return {
+    name: { ar: '', en: '' },
+    slug: '',
+    shortContent: { ar: '', en: '' },
+    fullContent: { ar: '', en: '' },
+    isPublished: true,
+  };
 }
 
 /**
@@ -44,7 +51,7 @@ function emptyModel(): NewsModel {
 @Component({
   selector: 'app-admin-news-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './news-form.html',
 })
 export class AdminNewsForm {
@@ -73,7 +80,7 @@ export class AdminNewsForm {
 
   protected readonly model = signal<NewsModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Title is required' });
+    required(path.name.ar, { message: 'Title is required' });
   });
   protected readonly err = firstError;
 
@@ -83,10 +90,10 @@ export class AdminNewsForm {
       this.service.getNewsItem(this.newsId()).subscribe({
         next: (detail) => {
           this.model.set({
-            name: detail.name ?? '',
+            name: { ar: detail.name ?? '', en: detail.nameEn ?? '' },
             slug: detail.slug ?? '',
-            shortContent: detail.shortContent ?? '',
-            fullContent: detail.fullContent ?? '',
+            shortContent: { ar: detail.shortContent ?? '', en: detail.shortContentEn ?? '' },
+            fullContent: { ar: detail.fullContent ?? '', en: detail.fullContentEn ?? '' },
             isPublished: detail.isPublished,
           });
           this.categoryIds.set(detail.categoryIds);
@@ -140,10 +147,13 @@ export class AdminNewsForm {
       this.serverError.set(null);
       const m = this.model();
       const body: NewsItemUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
-        shortContent: m.shortContent || null,
-        fullContent: m.fullContent || null,
+        shortContent: m.shortContent.ar || null,
+        shortContentEn: m.shortContent.en || null,
+        fullContent: m.fullContent.ar || null,
+        fullContentEn: m.fullContent.en || null,
         isPublished: m.isPublished,
         thumbnailImageId: this.thumbnailId(),
         categoryIds: this.categoryIds(),

@@ -3,20 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin brand management (CRUD). Deletes are soft.</summary>
+/// <summary>
+/// Admin brand management (CRUD). Deletes are soft. <c>Name</c> and <c>Description</c> are bilingual:
+/// Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay (edited here as
+/// <c>NameEn</c>/<c>DescriptionEn</c>, served to the storefront under <c>Accept-Language: en</c>).
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/brands")]
 public sealed class AdminBrandsController : ControllerBase
 {
-    private readonly StoreDbContext _db;
+    private const string EntityType = LocalizedEntity.Brand;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
-    public AdminBrandsController(StoreDbContext db) => _db = db;
+    private readonly StoreDbContext _db;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
+
+    public AdminBrandsController(
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+    {
+        _db = db;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AdminBrandDto>>> List(
@@ -30,17 +46,32 @@ public sealed class AdminBrandsController : ControllerBase
 
         var items = await brands
             .OrderBy(b => b.Name)
-            .Select(b => new AdminBrandDto(b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted))
+            .Select(b => new { b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted })
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        var overlay = await _localization.GetOverlayAsync(
+            EntityType, items.Select(b => b.Id).ToList(), EnCulture, cancellationToken);
+
+        var dtos = items
+            .Select(b => new AdminBrandDto(
+                b.Id, b.Name, overlay.Get(b.Id, LocalizedProperty.Name), b.Slug,
+                b.Description, overlay.Get(b.Id, LocalizedProperty.Description), b.IsPublished, b.IsDeleted))
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminBrandDto>> Get(long id, CancellationToken cancellationToken)
     {
         var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
-        return brand == null ? NotFound() : Ok(ToDto(brand));
+        if (brand == null)
+        {
+            return NotFound();
+        }
+
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        return Ok(ToDto(brand, overlay.Get(id, LocalizedProperty.Name), overlay.Get(id, LocalizedProperty.Description)));
     }
 
     [HttpPost]
@@ -57,7 +88,11 @@ public sealed class AdminBrandsController : ControllerBase
         _db.Brands.Add(brand);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(Get), new { id = brand.Id }, ToDto(brand));
+        await WriteEnglishAsync(brand.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(Get), new { id = brand.Id },
+            ToDto(brand, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -77,8 +112,10 @@ public sealed class AdminBrandsController : ControllerBase
             return Conflict(new { error = $"A brand with slug '{brand.Slug}' already exists." });
         }
 
+        await WriteEnglishAsync(brand.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
-        return Ok(ToDto(brand));
+
+        return Ok(ToDto(brand, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -103,5 +140,14 @@ public sealed class AdminBrandsController : ControllerBase
         brand.IsPublished = request.IsPublished;
     }
 
-    private static AdminBrandDto ToDto(Brand b) => new(b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted);
+    private async Task WriteEnglishAsync(long id, BrandUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+    }
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    private static AdminBrandDto ToDto(Brand b, string? nameEn, string? descriptionEn) =>
+        new(b.Id, b.Name, nameEn, b.Slug, b.Description, descriptionEn, b.IsPublished, b.IsDeleted);
 }

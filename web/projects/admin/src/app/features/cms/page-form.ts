@@ -20,25 +20,26 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface PageModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
-  body: string;
-  metaTitle: string;
-  metaKeywords: string;
-  metaDescription: string;
+  body: MultiLangValue;
+  metaTitle: MultiLangValue;
+  metaKeywords: MultiLangValue;
+  metaDescription: MultiLangValue;
   isPublished: boolean;
 }
 
 function emptyModel(): PageModel {
   return {
-    name: '',
+    name: { ar: '', en: '' },
     slug: '',
-    body: '',
-    metaTitle: '',
-    metaKeywords: '',
-    metaDescription: '',
+    body: { ar: '', en: '' },
+    metaTitle: { ar: '', en: '' },
+    metaKeywords: { ar: '', en: '' },
+    metaDescription: { ar: '', en: '' },
     isPublished: true,
   };
 }
@@ -51,7 +52,7 @@ function emptyModel(): PageModel {
 @Component({
   selector: 'app-admin-page-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './page-form.html',
 })
 export class AdminPageForm {
@@ -74,7 +75,7 @@ export class AdminPageForm {
 
   protected readonly model = signal<PageModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
   });
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
@@ -92,12 +93,12 @@ export class AdminPageForm {
       }
       this.seeded = true;
       this.model.set({
-        name: p.name ?? '',
+        name: { ar: p.name ?? '', en: p.nameEn ?? '' },
         slug: p.slug ?? '',
-        body: p.body ?? '',
-        metaTitle: p.metaTitle ?? '',
-        metaKeywords: p.metaKeywords ?? '',
-        metaDescription: p.metaDescription ?? '',
+        body: { ar: p.body ?? '', en: p.bodyEn ?? '' },
+        metaTitle: { ar: p.metaTitle ?? '', en: p.metaTitleEn ?? '' },
+        metaKeywords: { ar: p.metaKeywords ?? '', en: p.metaKeywordsEn ?? '' },
+        metaDescription: { ar: p.metaDescription ?? '', en: p.metaDescriptionEn ?? '' },
         isPublished: p.isPublished,
       });
     });
@@ -109,12 +110,17 @@ export class AdminPageForm {
       this.serverError.set(null);
       const m = this.model();
       const body: PageUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
-        body: m.body || null,
-        metaTitle: m.metaTitle || null,
-        metaKeywords: m.metaKeywords || null,
-        metaDescription: m.metaDescription || null,
+        body: m.body.ar || null,
+        bodyEn: m.body.en || null,
+        metaTitle: m.metaTitle.ar || null,
+        metaTitleEn: m.metaTitle.en || null,
+        metaKeywords: m.metaKeywords.ar || null,
+        metaKeywordsEn: m.metaKeywords.en || null,
+        metaDescription: m.metaDescription.ar || null,
+        metaDescriptionEn: m.metaDescription.en || null,
         isPublished: m.isPublished,
       };
       try {

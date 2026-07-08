@@ -21,9 +21,8 @@
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="attr-name" [required]="true" [error]="err(f.name())">
-                  <input id="attr-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                <lib-form-field [label]="'common.name' | translate" controlId="attr-name" [required]="true" [error]="err(f.name.ar())">
+                  <multi-lang-input controlId="attr-name" [formField]="f.name" />
                 </lib-form-field>
                 <lib-form-field [label]="'attributes.col_group' | translate" controlId="attr-group" [required]="true" [error]="err(f.groupId())">
                   <select id="attr-group" class="form-select"

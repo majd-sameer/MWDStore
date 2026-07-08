@@ -23,9 +23,8 @@
               <form (submit)="onSubmit($event)" novalidate>
                 <div class="row">
                   <div class="col-md-6">
-                    <lib-form-field [label]="'common.name' | translate" controlId="pg-name" [required]="true" [error]="err(f.name())">
-                      <input id="pg-name" type="text" class="form-control"
-                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    <lib-form-field [label]="'common.name' | translate" controlId="pg-name" [required]="true" [error]="err(f.name.ar())">
+                      <multi-lang-input controlId="pg-name" [formField]="f.name" />
                     </lib-form-field>
                   </div>
                   <div class="col-md-6">
@@ -35,23 +34,22 @@
                   </div>
                 </div>
                 <lib-form-field [label]="'pages.body_html' | translate" controlId="pg-body">
-                  <textarea id="pg-body" rows="12" class="form-control font-monospace"
-                    [formField]="f.body"></textarea>
+                  <multi-lang-input type="textarea" [rows]="12" controlId="pg-body" [formField]="f.body" />
                 </lib-form-field>
                 <div class="row">
                   <div class="col-md-6">
                     <lib-form-field [label]="'pages.meta_title' | translate" controlId="pg-mtitle">
-                      <input id="pg-mtitle" type="text" class="form-control" [formField]="f.metaTitle" />
+                      <multi-lang-input controlId="pg-mtitle" [formField]="f.metaTitle" />
                     </lib-form-field>
                   </div>
                   <div class="col-md-6">
                     <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="pg-mkey">
-                      <input id="pg-mkey" type="text" class="form-control" [formField]="f.metaKeywords" />
+                      <multi-lang-input controlId="pg-mkey" [formField]="f.metaKeywords" />
                     </lib-form-field>
                   </div>
                 </div>
                 <lib-form-field [label]="'pages.meta_description' | translate" controlId="pg-mdesc">
-                  <textarea id="pg-mdesc" rows="2" class="form-control" [formField]="f.metaDescription"></textarea>
+                  <multi-lang-input type="textarea" [rows]="2" controlId="pg-mdesc" [formField]="f.metaDescription" />
                 </lib-form-field>
                 <div class="form-check form-switch mb-3">
                   <input id="pg-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />

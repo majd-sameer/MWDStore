@@ -20,6 +20,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 /**
  * Create / edit a product option (Color, Size, …) on its own page. The options
@@ -28,7 +29,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-product-option-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './product-option-form.html',
 })
 export class AdminProductOptionForm {
@@ -49,9 +50,9 @@ export class AdminProductOptionForm {
     () => this.list.value()?.find((o) => o.id === this.optionId()) ?? null,
   );
 
-  protected readonly model = signal<{ name: string }>({ name: '' });
+  protected readonly model = signal<{ name: MultiLangValue }>({ name: { ar: '', en: '' } });
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
   });
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
@@ -68,7 +69,7 @@ export class AdminProductOptionForm {
         return;
       }
       this.seeded = true;
-      this.model.set({ name: o.name ?? '' });
+      this.model.set({ name: { ar: o.name ?? '', en: o.nameEn ?? '' } });
     });
   }
 
@@ -76,14 +77,13 @@ export class AdminProductOptionForm {
     event.preventDefault();
     void submit(this.f, async () => {
       this.serverError.set(null);
+      const body = { name: this.model().name.ar, nameEn: this.model().name.en || null };
       try {
         if (this.isNew()) {
-          await firstValueFrom(this.service.create({ name: this.model().name }));
+          await firstValueFrom(this.service.create(body));
           this.toast.success(this.translate.instant('options.created_ok'));
         } else {
-          await firstValueFrom(
-            this.service.update(this.optionId(), { name: this.model().name }),
-          );
+          await firstValueFrom(this.service.update(this.optionId(), body));
           this.toast.success(this.translate.instant('options.updated_ok'));
         }
         await this.router.navigate(['/product-options']);

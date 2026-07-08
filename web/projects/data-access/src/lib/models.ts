@@ -446,24 +446,30 @@ export interface OrderDetailDto {
 export interface AdminBrandDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   description: string | null;
+  descriptionEn: string | null;
   isPublished: boolean;
   isDeleted: boolean;
 }
 
 export interface BrandUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   isPublished?: boolean;
 }
 
 export interface AdminCategoryDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   description: string | null;
+  descriptionEn: string | null;
   displayOrder: number;
   isPublished: boolean;
   includeInMenu: boolean;
@@ -473,8 +479,10 @@ export interface AdminCategoryDto {
 
 export interface CategoryUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   metaTitle?: string | null;
   metaKeywords?: string | null;
   metaDescription?: string | null;
@@ -572,13 +580,20 @@ export interface ProductQuickSearchItem {
 export interface AdminProductDetail {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   shortDescription: string | null;
+  shortDescriptionEn: string | null;
   description: string | null;
+  descriptionEn: string | null;
   specification: string | null;
+  specificationEn: string | null;
   metaTitle: string | null;
+  metaTitleEn: string | null;
   metaKeywords: string | null;
+  metaKeywordsEn: string | null;
   metaDescription: string | null;
+  metaDescriptionEn: string | null;
   price: number;
   oldPrice: number | null;
   specialPrice: number | null;
@@ -639,13 +654,20 @@ export interface ProductAttributeValueRequest {
 
 export interface ProductUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   shortDescription?: string | null;
+  shortDescriptionEn?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   specification?: string | null;
+  specificationEn?: string | null;
   metaTitle?: string | null;
+  metaTitleEn?: string | null;
   metaKeywords?: string | null;
+  metaKeywordsEn?: string | null;
   metaDescription?: string | null;
+  metaDescriptionEn?: string | null;
   price?: number;
   oldPrice?: number | null;
   specialPrice?: number | null;
@@ -679,31 +701,38 @@ export interface ProductUpsertRequest {
 export interface AdminProductOptionListItem {
   id: number;
   name: string | null;
+  nameEn: string | null;
 }
 
 export interface ProductOptionUpsertRequest {
   name: string;
+  nameEn?: string | null;
 }
 
 export interface AdminProductAttributeDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   groupId: number;
   groupName: string | null;
+  groupNameEn: string | null;
 }
 
 export interface ProductAttributeUpsertRequest {
   name: string;
+  nameEn?: string | null;
   groupId: number;
 }
 
 export interface AdminProductAttributeGroupDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
 }
 
 export interface ProductAttributeGroupUpsertRequest {
   name: string;
+  nameEn?: string | null;
 }
 
 export interface UpdateOrderStatusRequest {
@@ -1034,11 +1063,16 @@ export interface ModerationStatusRequest {
 export interface AdminPageDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   body: string | null;
+  bodyEn: string | null;
   metaTitle: string | null;
+  metaTitleEn: string | null;
   metaKeywords: string | null;
+  metaKeywordsEn: string | null;
   metaDescription: string | null;
+  metaDescriptionEn: string | null;
   isPublished: boolean;
   publishedOn: string | null;
   createdOn: string;
@@ -1046,11 +1080,16 @@ export interface AdminPageDto {
 
 export interface PageUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   body?: string | null;
+  bodyEn?: string | null;
   metaTitle?: string | null;
+  metaTitleEn?: string | null;
   metaKeywords?: string | null;
+  metaKeywordsEn?: string | null;
   metaDescription?: string | null;
+  metaDescriptionEn?: string | null;
   isPublished?: boolean;
 }
 
@@ -1059,6 +1098,7 @@ export interface AdminMenuItemDto {
   menuId: number;
   parentId: number | null;
   name: string | null;
+  nameEn: string | null;
   customLink: string | null;
   displayOrder: number;
 }
@@ -1066,6 +1106,7 @@ export interface AdminMenuItemDto {
 export interface AdminMenuDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   isPublished: boolean;
   isSystem: boolean;
   items: AdminMenuItemDto[];
@@ -1073,11 +1114,13 @@ export interface AdminMenuDto {
 
 export interface MenuUpsertRequest {
   name: string;
+  nameEn?: string | null;
   isPublished?: boolean;
 }
 
 export interface MenuItemUpsertRequest {
   name: string;
+  nameEn?: string | null;
   customLink?: string | null;
   parentId?: number | null;
   displayOrder?: number;
@@ -1086,16 +1129,20 @@ export interface MenuItemUpsertRequest {
 export interface AdminNewsCategoryDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   description: string | null;
+  descriptionEn: string | null;
   displayOrder: number;
   isPublished: boolean;
 }
 
 export interface NewsCategoryUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   displayOrder?: number;
   isPublished?: boolean;
 }
@@ -1112,12 +1159,18 @@ export interface AdminNewsItemListItem {
 export interface AdminNewsItemDetail {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   shortContent: string | null;
+  shortContentEn: string | null;
   fullContent: string | null;
+  fullContentEn: string | null;
   metaTitle: string | null;
+  metaTitleEn: string | null;
   metaKeywords: string | null;
+  metaKeywordsEn: string | null;
   metaDescription: string | null;
+  metaDescriptionEn: string | null;
   isPublished: boolean;
   thumbnailImageId: number | null;
   thumbnailUrl: string | null;
@@ -1126,12 +1179,18 @@ export interface AdminNewsItemDetail {
 
 export interface NewsItemUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   shortContent?: string | null;
+  shortContentEn?: string | null;
   fullContent?: string | null;
+  fullContentEn?: string | null;
   metaTitle?: string | null;
+  metaTitleEn?: string | null;
   metaKeywords?: string | null;
+  metaKeywordsEn?: string | null;
   metaDescription?: string | null;
+  metaDescriptionEn?: string | null;
   isPublished?: boolean;
   thumbnailImageId?: number | null;
   categoryIds?: number[];
@@ -1264,17 +1323,21 @@ export interface ShipmentCreateRequest {
 export interface AdminVendorDto {
   id: number;
   name: string | null;
+  nameEn: string | null;
   slug: string | null;
   email: string | null;
   description: string | null;
+  descriptionEn: string | null;
   isActive: boolean;
 }
 
 export interface VendorUpsertRequest {
   name: string;
+  nameEn?: string | null;
   slug?: string | null;
   email?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   isActive?: boolean;
 }
 

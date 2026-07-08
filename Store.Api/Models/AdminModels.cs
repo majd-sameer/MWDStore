@@ -76,16 +76,25 @@ public sealed class ProductUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     /// <summary>Optional; generated from <see cref="Name"/> when omitted.</summary>
     public string? Slug { get; set; }
 
     public string? ShortDescription { get; set; }
+    public string? ShortDescriptionEn { get; set; }
     public string? Description { get; set; }
+    public string? DescriptionEn { get; set; }
     public string? Specification { get; set; }
+    public string? SpecificationEn { get; set; }
 
     public string? MetaTitle { get; set; }
+    public string? MetaTitleEn { get; set; }
     public string? MetaKeywords { get; set; }
+    public string? MetaKeywordsEn { get; set; }
     public string? MetaDescription { get; set; }
+    public string? MetaDescriptionEn { get; set; }
 
     [Range(0, double.MaxValue)]
     public decimal Price { get; set; }
@@ -144,8 +153,13 @@ public sealed record AdminProductLinkDto(long Id, string Name, bool IsPublished)
 public sealed record AdminProductAttributeValueDto(long AttributeId, string Name, string? GroupName, string? Value);
 
 public sealed record AdminProductDetail(
-    long Id, string Name, string Slug, string? ShortDescription, string? Description, string? Specification,
-    string? MetaTitle, string? MetaKeywords, string? MetaDescription,
+    long Id, string Name, string? NameEn, string Slug,
+    string? ShortDescription, string? ShortDescriptionEn,
+    string? Description, string? DescriptionEn,
+    string? Specification, string? SpecificationEn,
+    string? MetaTitle, string? MetaTitleEn,
+    string? MetaKeywords, string? MetaKeywordsEn,
+    string? MetaDescription, string? MetaDescriptionEn,
     decimal Price, decimal? OldPrice, decimal? SpecialPrice, DateTimeOffset? SpecialPriceStart, DateTimeOffset? SpecialPriceEnd,
     string? Sku, string? Gtin, bool IsPublished, bool IsFeatured, bool IsSignature, int SignatureSortOrder,
     bool IsAllowToOrder, bool IsCallForPricing,
@@ -172,33 +186,43 @@ public sealed record ProductQuickSearchItem(long Id, string Name, string? Sku, b
 
 // ----- Product options (admin CRUD) ----------------------------------------------------------------
 
-public sealed record AdminProductOptionListItem(long Id, string Name);
+public sealed record AdminProductOptionListItem(long Id, string Name, string? NameEn);
 
 public sealed class ProductOptionUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
 }
 
 // ----- Product attributes (admin CRUD) --------------------------------------------------------------
 
-public sealed record AdminProductAttributeDto(long Id, string Name, long GroupId, string GroupName);
+public sealed record AdminProductAttributeDto(
+    long Id, string Name, string? NameEn, long GroupId, string GroupName, string? GroupNameEn);
 
 public sealed class ProductAttributeUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     [Required]
     public long GroupId { get; set; }
 }
 
-public sealed record AdminProductAttributeGroupDto(long Id, string Name);
+public sealed record AdminProductAttributeGroupDto(long Id, string Name, string? NameEn);
 
 public sealed class ProductAttributeGroupUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
 }
 
 // ----- Categories ---------------------------------------------------------------------------------
@@ -208,8 +232,15 @@ public sealed class CategoryUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? Slug { get; set; }
     public string? Description { get; set; }
+
+    /// <summary>English overlay for <see cref="Description"/> (optional; blank clears it).</summary>
+    public string? DescriptionEn { get; set; }
+
     public string? MetaTitle { get; set; }
     public string? MetaKeywords { get; set; }
     public string? MetaDescription { get; set; }
@@ -220,8 +251,8 @@ public sealed class CategoryUpsertRequest
 }
 
 public sealed record AdminCategoryDto(
-    long Id, string Name, string Slug, string? Description, int DisplayOrder,
-    bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted);
+    long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
+    int DisplayOrder, bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted);
 
 // ----- Brands -------------------------------------------------------------------------------------
 
@@ -230,13 +261,21 @@ public sealed class BrandUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? Slug { get; set; }
     public string? Description { get; set; }
+
+    /// <summary>English overlay for <see cref="Description"/> (optional; blank clears it).</summary>
+    public string? DescriptionEn { get; set; }
+
     public bool IsPublished { get; set; } = true;
 }
 
 public sealed record AdminBrandDto(
-    long Id, string Name, string Slug, string? Description, bool IsPublished, bool IsDeleted);
+    long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
+    bool IsPublished, bool IsDeleted);
 
 // ----- Order management ---------------------------------------------------------------------------
 
@@ -513,32 +552,47 @@ public sealed class ModerationStatusRequest
 // ----- CMS: pages & menus --------------------------------------------------------------------------
 
 public sealed record AdminPageDto(
-    long Id, string Name, string Slug, string? Body, string? MetaTitle, string? MetaKeywords,
-    string? MetaDescription, bool IsPublished, DateTimeOffset? PublishedOn, DateTimeOffset CreatedOn);
+    long Id, string Name, string? NameEn, string Slug, string? Body, string? BodyEn,
+    string? MetaTitle, string? MetaTitleEn, string? MetaKeywords, string? MetaKeywordsEn,
+    string? MetaDescription, string? MetaDescriptionEn,
+    bool IsPublished, DateTimeOffset? PublishedOn, DateTimeOffset CreatedOn);
 
 public sealed class PageUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? Slug { get; set; }
     public string? Body { get; set; }
+
+    /// <summary>English overlay for <see cref="Body"/> (optional; blank clears it).</summary>
+    public string? BodyEn { get; set; }
+
     public string? MetaTitle { get; set; }
+    public string? MetaTitleEn { get; set; }
     public string? MetaKeywords { get; set; }
+    public string? MetaKeywordsEn { get; set; }
     public string? MetaDescription { get; set; }
+    public string? MetaDescriptionEn { get; set; }
     public bool IsPublished { get; set; } = true;
 }
 
 public sealed record AdminMenuItemDto(
-    long Id, long MenuId, long? ParentId, string? Name, string? CustomLink, int DisplayOrder);
+    long Id, long MenuId, long? ParentId, string? Name, string? NameEn, string? CustomLink, int DisplayOrder);
 
-public sealed record AdminMenuDto(long Id, string Name, bool IsPublished, bool IsSystem,
+public sealed record AdminMenuDto(long Id, string Name, string? NameEn, bool IsPublished, bool IsSystem,
     IReadOnlyList<AdminMenuItemDto> Items);
 
 public sealed class MenuUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
 
     public bool IsPublished { get; set; } = true;
 }
@@ -548,6 +602,9 @@ public sealed class MenuItemUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? CustomLink { get; set; }
     public long? ParentId { get; set; }
     public int DisplayOrder { get; set; }
@@ -556,15 +613,23 @@ public sealed class MenuItemUpsertRequest
 // ----- News -----------------------------------------------------------------------------------------
 
 public sealed record AdminNewsCategoryDto(
-    long Id, string Name, string Slug, string? Description, int DisplayOrder, bool IsPublished);
+    long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
+    int DisplayOrder, bool IsPublished);
 
 public sealed class NewsCategoryUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? Slug { get; set; }
     public string? Description { get; set; }
+
+    /// <summary>English overlay for <see cref="Description"/> (optional; blank clears it).</summary>
+    public string? DescriptionEn { get; set; }
+
     public int DisplayOrder { get; set; }
     public bool IsPublished { get; set; } = true;
 }
@@ -573,8 +638,10 @@ public sealed record AdminNewsItemListItem(
     long Id, string Name, string Slug, bool IsPublished, DateTimeOffset CreatedOn, string? ThumbnailUrl);
 
 public sealed record AdminNewsItemDetail(
-    long Id, string Name, string Slug, string? ShortContent, string? FullContent,
-    string? MetaTitle, string? MetaKeywords, string? MetaDescription,
+    long Id, string Name, string? NameEn, string Slug, string? ShortContent, string? ShortContentEn,
+    string? FullContent, string? FullContentEn,
+    string? MetaTitle, string? MetaTitleEn, string? MetaKeywords, string? MetaKeywordsEn,
+    string? MetaDescription, string? MetaDescriptionEn,
     bool IsPublished, long? ThumbnailImageId, string? ThumbnailUrl, IReadOnlyList<long> CategoryIds);
 
 public sealed class NewsItemUpsertRequest
@@ -582,12 +649,26 @@ public sealed class NewsItemUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
     public string? Slug { get; set; }
     public string? ShortContent { get; set; }
+
+    /// <summary>English overlay for <see cref="ShortContent"/> (optional; blank clears it).</summary>
+    public string? ShortContentEn { get; set; }
+
     public string? FullContent { get; set; }
+
+    /// <summary>English overlay for <see cref="FullContent"/> (optional; blank clears it).</summary>
+    public string? FullContentEn { get; set; }
+
     public string? MetaTitle { get; set; }
+    public string? MetaTitleEn { get; set; }
     public string? MetaKeywords { get; set; }
+    public string? MetaKeywordsEn { get; set; }
     public string? MetaDescription { get; set; }
+    public string? MetaDescriptionEn { get; set; }
     public bool IsPublished { get; set; } = true;
     public long? ThumbnailImageId { get; set; }
     public IList<long> CategoryIds { get; set; } = new List<long>();
@@ -701,12 +782,19 @@ public sealed class ShipmentCreateRequest
 // ----- Vendors -----------------------------------------------------------------------------------------
 
 public sealed record AdminVendorDto(
-    long Id, string Name, string Slug, string? Email, string? Description, bool IsActive);
+    long Id, string Name, string? NameEn, string Slug, string? Email, string? Description,
+    string? DescriptionEn, bool IsActive);
 
 public sealed class VendorUpsertRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
+    public string? NameEn { get; set; }
+
+    /// <summary>English overlay for <see cref="Description"/> (optional; blank clears it).</summary>
+    public string? DescriptionEn { get; set; }
 
     public string? Slug { get; set; }
     public string? Email { get; set; }

@@ -3,24 +3,37 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for vendors (old Vendors module). Deletes are soft.</summary>
+/// <summary>
+/// Admin CRUD for vendors (old Vendors module). Deletes are soft. <c>Name</c> and <c>Description</c>
+/// are bilingual: Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay.
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/vendors")]
 public sealed class AdminVendorsController : ControllerBase
 {
+    private const string EntityType = LocalizedEntity.Vendor;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
 
-    public AdminVendorsController(StoreDbContext db, TimeProvider timeProvider)
+    public AdminVendorsController(
+        StoreDbContext db, TimeProvider timeProvider,
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
     {
         _db = db;
         _timeProvider = timeProvider;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
     }
 
     [HttpGet]
@@ -29,10 +42,19 @@ public sealed class AdminVendorsController : ControllerBase
         var vendors = await _db.Vendors
             .Where(v => !v.IsDeleted)
             .OrderBy(v => v.Name)
-            .Select(v => new AdminVendorDto(v.Id, v.Name, v.Slug, v.Email, v.Description, v.IsActive))
+            .Select(v => new { v.Id, v.Name, v.Slug, v.Email, v.Description, v.IsActive })
             .ToListAsync(cancellationToken);
 
-        return Ok(vendors);
+        var overlay = await _localization.GetOverlayAsync(
+            EntityType, vendors.Select(v => v.Id).ToList(), EnCulture, cancellationToken);
+
+        var dtos = vendors
+            .Select(v => new AdminVendorDto(
+                v.Id, v.Name, overlay.Get(v.Id, LocalizedProperty.Name), v.Slug, v.Email,
+                v.Description, overlay.Get(v.Id, LocalizedProperty.Description), v.IsActive))
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpPost]
@@ -44,7 +66,10 @@ public sealed class AdminVendorsController : ControllerBase
         _db.Vendors.Add(vendor);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(vendor));
+        await WriteEnglishAsync(vendor.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(ToDto(vendor, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -59,9 +84,11 @@ public sealed class AdminVendorsController : ControllerBase
 
         Apply(vendor, request);
         vendor.LatestUpdatedOn = _timeProvider.GetUtcNow();
+
+        await WriteEnglishAsync(vendor.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(vendor));
+        return Ok(ToDto(vendor, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -89,5 +116,14 @@ public sealed class AdminVendorsController : ControllerBase
         vendor.IsActive = request.IsActive;
     }
 
-    private static AdminVendorDto ToDto(Vendor v) => new(v.Id, v.Name, v.Slug, v.Email, v.Description, v.IsActive);
+    private async Task WriteEnglishAsync(long id, VendorUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+    }
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    private static AdminVendorDto ToDto(Vendor v, string? nameEn, string? descriptionEn) =>
+        new(v.Id, v.Name, nameEn, v.Slug, v.Email, v.Description, descriptionEn, v.IsActive);
 }

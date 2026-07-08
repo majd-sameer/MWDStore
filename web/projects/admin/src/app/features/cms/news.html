@@ -98,8 +98,10 @@
           <div class="card-body">
             @for (c of categories.value() ?? []; track c.id) {
               <div class="d-flex align-items-center gap-2 mb-2">
-                <input type="text" class="form-control form-control-sm" [value]="c.name"
-                  (change)="renameCategory(c.id, $any($event.target).value)" />
+                <div class="flex-grow-1">
+                  <multi-lang-input [value]="{ ar: c.name ?? '', en: c.nameEn ?? '' }"
+                    (valueChange)="renameCategory(c.id, $event)" />
+                </div>
                 <button type="button" class="btn btn-sm btn-outline-danger"
                   (click)="removeCategory(c.id, c.name)">✕</button>
               </div>
@@ -107,10 +109,11 @@
               <p class="text-body-secondary small">{{ 'news.no_categories' | translate }}</p>
             }
             <div class="d-flex gap-2 mt-3">
-              <input type="text" class="form-control form-control-sm"
-                [placeholder]="'news.new_category_ph' | translate" #catName />
-              <button type="button" libButton variant="secondary" [outline]="true"
-                (click)="addCategory(catName)">
+              <div class="flex-grow-1">
+                <multi-lang-input [(value)]="newCategoryName"
+                  [placeholder]="'news.new_category_ph' | translate" />
+              </div>
+              <button type="button" libButton variant="secondary" [outline]="true" (click)="addCategory()">
                 {{ 'common.add' | translate }}
               </button>
             </div>

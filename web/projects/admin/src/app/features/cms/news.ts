@@ -13,6 +13,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 /**
  * News browser: the article list with a news-category manager alongside.
@@ -22,7 +23,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-news',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './news.html',
 })
 export class AdminNews {
@@ -33,6 +34,8 @@ export class AdminNews {
   protected readonly items = this.service.newsItemsResource();
   protected readonly categories = this.service.newsCategoriesResource();
   protected readonly deletingId = signal<number | null>(null);
+  /** Bilingual name for the "add category" box. */
+  protected readonly newCategoryName = signal<MultiLangValue>({ ar: '', en: '' });
 
   protected remove(n: AdminNewsItemListItem): void {
     if (!confirm(this.translate.instant('news.confirm_delete', { name: n.name ?? '#' + n.id }))) {
@@ -54,29 +57,32 @@ export class AdminNews {
 
   // ----- Categories ------------------------------------------------------------
 
-  protected addCategory(input: HTMLInputElement): void {
-    const name = input.value.trim();
+  protected addCategory(): void {
+    const value = this.newCategoryName();
+    const name = value.ar.trim();
     if (!name) {
       return;
     }
-    this.service.createNewsCategory({ name, isPublished: true }).subscribe({
+    this.service.createNewsCategory({ name, nameEn: value.en || null, isPublished: true }).subscribe({
       next: () => {
-        input.value = '';
+        this.newCategoryName.set({ ar: '', en: '' });
         this.categories.reload();
       },
       error: () => this.toast.error(this.translate.instant('news.category_create_failed')),
     });
   }
 
-  protected renameCategory(id: number, name: string): void {
-    const trimmed = name.trim();
+  protected renameCategory(id: number, value: MultiLangValue): void {
+    const trimmed = value.ar.trim();
     if (!trimmed) {
       return;
     }
-    this.service.updateNewsCategory(id, { name: trimmed, isPublished: true }).subscribe({
-      next: () => this.toast.success(this.translate.instant('news.category_updated')),
-      error: () => this.toast.error(this.translate.instant('news.category_update_failed')),
-    });
+    this.service
+      .updateNewsCategory(id, { name: trimmed, nameEn: value.en || null, isPublished: true })
+      .subscribe({
+        next: () => this.toast.success(this.translate.instant('news.category_updated')),
+        error: () => this.toast.error(this.translate.instant('news.category_update_failed')),
+      });
   }
 
   protected removeCategory(id: number, name: string | null): void {

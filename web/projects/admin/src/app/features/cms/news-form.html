@@ -23,9 +23,8 @@
               <form (submit)="onSubmit($event)" novalidate>
                 <div class="row">
                   <div class="col-md-6">
-                    <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name" [required]="true" [error]="err(f.name())">
-                      <input id="nw-name" type="text" class="form-control"
-                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name" [required]="true" [error]="err(f.name.ar())">
+                      <multi-lang-input controlId="nw-name" [formField]="f.name" />
                     </lib-form-field>
                   </div>
                   <div class="col-md-6">
@@ -35,11 +34,10 @@
                   </div>
                 </div>
                 <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short">
-                  <textarea id="nw-short" rows="2" class="form-control" [formField]="f.shortContent"></textarea>
+                  <multi-lang-input type="textarea" [rows]="2" controlId="nw-short" [formField]="f.shortContent" />
                 </lib-form-field>
                 <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full">
-                  <textarea id="nw-full" rows="10" class="form-control font-monospace"
-                    [formField]="f.fullContent"></textarea>
+                  <multi-lang-input type="textarea" [rows]="10" controlId="nw-full" [formField]="f.fullContent" />
                 </lib-form-field>
 
                 <label class="form-label" for="nw-thumb">{{ 'news.thumbnail' | translate }}</label>

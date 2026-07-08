@@ -23,16 +23,17 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface BrandModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
-  description: string;
+  description: MultiLangValue;
   isPublished: boolean;
 }
 
 function emptyModel(): BrandModel {
-  return { name: '', slug: '', description: '', isPublished: true };
+  return { name: { ar: '', en: '' }, slug: '', description: { ar: '', en: '' }, isPublished: true };
 }
 
 /**
@@ -43,7 +44,7 @@ function emptyModel(): BrandModel {
 @Component({
   selector: 'app-admin-brand-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './brand-form.html',
 })
 export class AdminBrandForm {
@@ -63,7 +64,7 @@ export class AdminBrandForm {
 
   protected readonly model = signal<BrandModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
   });
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
@@ -81,9 +82,9 @@ export class AdminBrandForm {
       }
       this.seeded = true;
       this.model.set({
-        name: b.name ?? '',
+        name: { ar: b.name ?? '', en: b.nameEn ?? '' },
         slug: b.slug ?? '',
-        description: b.description ?? '',
+        description: { ar: b.description ?? '', en: b.descriptionEn ?? '' },
         isPublished: b.isPublished,
       });
     });
@@ -95,9 +96,11 @@ export class AdminBrandForm {
       this.serverError.set(null);
       const m = this.model();
       const body: BrandUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
-        description: m.description || null,
+        description: m.description.ar || null,
+        descriptionEn: m.description.en || null,
         isPublished: m.isPublished,
       };
       try {

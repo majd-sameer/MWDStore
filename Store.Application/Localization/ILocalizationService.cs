@@ -25,7 +25,20 @@ public static class LocalizedEntity
 {
     public const string Product = "Product";
     public const string NewsItem = "NewsItem";
+    public const string NewsCategory = "NewsCategory";
     public const string ContentBlock = "ContentBlock";
+    public const string Category = "Category";
+    public const string Brand = "Brand";
+    public const string Vendor = "Vendor";
+    public const string Page = "Page";
+    public const string Menu = "Menu";
+    public const string MenuItem = "MenuItem";
+    public const string ProductAttribute = "ProductAttribute";
+    public const string ProductAttributeGroup = "ProductAttributeGroup";
+    public const string ProductOption = "ProductOption";
+    public const string CartRule = "CartRule";
+    public const string Country = "Country";
+    public const string StateOrProvince = "StateOrProvince";
 }
 
 /// <summary>Property-name keys used in <c>LocalizedContentProperty.ProperyName</c>.</summary>
@@ -34,8 +47,13 @@ public static class LocalizedProperty
     public const string Name = "Name";
     public const string ShortDescription = "ShortDescription";
     public const string Description = "Description";
+    public const string Specification = "Specification";
     public const string ShortContent = "ShortContent";
     public const string FullContent = "FullContent";
+    public const string Body = "Body";
+    public const string MetaTitle = "MetaTitle";
+    public const string MetaKeywords = "MetaKeywords";
+    public const string MetaDescription = "MetaDescription";
     public const string Value = "Value";
 }
 

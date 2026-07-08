@@ -15,6 +15,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 /**
  * Create / edit a navigation menu on its own page. The menus API has no
@@ -25,7 +26,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-menu-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './menu-form.html',
 })
 export class AdminMenuForm {
@@ -46,9 +47,12 @@ export class AdminMenuForm {
     () => this.list.value()?.find((m) => m.id === this.menuId()) ?? null,
   );
 
-  protected readonly name = signal('');
+  protected readonly name = signal<MultiLangValue>({ ar: '', en: '' });
   protected readonly isPublished = signal(true);
   protected readonly saving = signal(false);
+
+  /** Bilingual label for the "add item" row (link/order stay native inputs). */
+  protected readonly newItemName = signal<MultiLangValue>({ ar: '', en: '' });
 
   private seeded = false;
 
@@ -62,20 +66,22 @@ export class AdminMenuForm {
         return;
       }
       this.seeded = true;
-      this.name.set(m.name ?? '');
+      this.name.set({ ar: m.name ?? '', en: m.nameEn ?? '' });
       this.isPublished.set(m.isPublished);
     });
   }
 
   protected save(): void {
-    const name = this.name().trim();
+    const value = this.name();
+    const name = value.ar.trim();
     if (!name) {
       this.toast.error(this.translate.instant('common.name_required'));
       return;
     }
+    const body = { name, nameEn: value.en || null, isPublished: this.isPublished() };
     this.saving.set(true);
     if (this.isNew()) {
-      this.service.createMenu({ name, isPublished: this.isPublished() }).subscribe({
+      this.service.createMenu(body).subscribe({
         next: (menu) => {
           this.toast.success(this.translate.instant('menus.created_ok'));
           this.saving.set(false);
@@ -87,7 +93,7 @@ export class AdminMenuForm {
         },
       });
     } else {
-      this.service.updateMenu(this.menuId(), { name, isPublished: this.isPublished() }).subscribe({
+      this.service.updateMenu(this.menuId(), body).subscribe({
         next: () => {
           this.toast.success(this.translate.instant('menus.updated_ok'));
           this.saving.set(false);
@@ -103,23 +109,24 @@ export class AdminMenuForm {
 
   protected addItem(
     menuId: number,
-    name: HTMLInputElement,
     link: HTMLInputElement,
     order: HTMLInputElement,
   ): void {
-    const label = name.value.trim();
+    const value = this.newItemName();
+    const label = value.ar.trim();
     if (!label) {
       return;
     }
     this.service
       .addMenuItem(menuId, {
         name: label,
+        nameEn: value.en || null,
         customLink: link.value.trim() || null,
         displayOrder: Number(order.value) || 0,
       })
       .subscribe({
         next: () => {
-          name.value = '';
+          this.newItemName.set({ ar: '', en: '' });
           link.value = '';
           order.value = '0';
           this.list.reload();
@@ -131,11 +138,12 @@ export class AdminMenuForm {
   protected updateItem(
     menuId: number,
     item: AdminMenuItemDto,
-    patch: Partial<{ name: string; customLink: string; displayOrder: number }>,
+    patch: Partial<{ name: MultiLangValue; customLink: string; displayOrder: number }>,
   ): void {
     this.service
       .updateMenuItem(menuId, item.id, {
-        name: patch.name ?? item.name ?? '',
+        name: patch.name?.ar ?? item.name ?? '',
+        nameEn: patch.name ? patch.name.en || null : item.nameEn ?? null,
         customLink: patch.customLink ?? item.customLink,
         parentId: item.parentId,
         displayOrder: patch.displayOrder ?? item.displayOrder,

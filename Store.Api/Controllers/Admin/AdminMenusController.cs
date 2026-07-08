@@ -3,22 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for menus and their items (old Cms module's menu admin).</summary>
+/// <summary>
+/// Admin CRUD for menus and their items (old Cms module's menu admin). Menu and menu-item
+/// <c>Name</c>s are bilingual: Arabic in the base column, English in the
+/// <c>LocalizedContentProperty</c> overlay.
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/menus")]
 public sealed class AdminMenusController : ControllerBase
 {
-    private readonly StoreDbContext _db;
+    private const string MenuType = LocalizedEntity.Menu;
+    private const string ItemType = LocalizedEntity.MenuItem;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
-    public AdminMenusController(StoreDbContext db)
+    private readonly StoreDbContext _db;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
+
+    public AdminMenusController(
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
     {
         _db = db;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
     }
 
     [HttpGet]
@@ -29,7 +43,8 @@ public sealed class AdminMenusController : ControllerBase
             .OrderBy(m => m.Name)
             .ToListAsync(cancellationToken);
 
-        return Ok(menus.Select(ToDto).ToList());
+        var (menuOverlay, itemOverlay) = await LoadOverlaysAsync(menus, cancellationToken);
+        return Ok(menus.Select(m => ToDto(m, menuOverlay, itemOverlay)).ToList());
     }
 
     [HttpGet("{id:long}")]
@@ -38,8 +53,13 @@ public sealed class AdminMenusController : ControllerBase
         var menu = await _db.Menus
             .Include(m => m.MenuItems)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+        if (menu == null)
+        {
+            return NotFound();
+        }
 
-        return menu == null ? NotFound() : Ok(ToDto(menu));
+        var (menuOverlay, itemOverlay) = await LoadOverlaysAsync([menu], cancellationToken);
+        return Ok(ToDto(menu, menuOverlay, itemOverlay));
     }
 
     [HttpPost]
@@ -49,7 +69,11 @@ public sealed class AdminMenusController : ControllerBase
         _db.Menus.Add(menu);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(Get), new { id = menu.Id }, ToDto(menu));
+        await _localizedWriter.SetAsync(MenuType, menu.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        var (menuOverlay, itemOverlay) = await LoadOverlaysAsync([menu], cancellationToken);
+        return CreatedAtAction(nameof(Get), new { id = menu.Id }, ToDto(menu, menuOverlay, itemOverlay));
     }
 
     [HttpPut("{id:long}")]
@@ -64,9 +88,11 @@ public sealed class AdminMenusController : ControllerBase
 
         menu.Name = request.Name;
         menu.IsPublished = request.IsPublished;
+        await _localizedWriter.SetAsync(MenuType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(menu));
+        var (menuOverlay, itemOverlay) = await LoadOverlaysAsync([menu], cancellationToken);
+        return Ok(ToDto(menu, menuOverlay, itemOverlay));
     }
 
     [HttpDelete("{id:long}")]
@@ -83,6 +109,12 @@ public sealed class AdminMenusController : ControllerBase
             return Conflict(new { error = "System menus cannot be deleted." });
         }
 
+        foreach (var it in menu.MenuItems)
+        {
+            await _localizedWriter.RemoveAllAsync(ItemType, it.Id, cancellationToken);
+        }
+
+        await _localizedWriter.RemoveAllAsync(MenuType, menu.Id, cancellationToken);
         _db.MenuItems.RemoveRange(menu.MenuItems);
         _db.Menus.Remove(menu);
         await _db.SaveChangesAsync(cancellationToken);
@@ -113,7 +145,11 @@ public sealed class AdminMenusController : ControllerBase
         _db.MenuItems.Add(item);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminMenuItemDto(item.Id, item.MenuId, item.ParentId, item.Name, item.CustomLink, item.DisplayOrder));
+        await _localizedWriter.SetAsync(ItemType, item.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(new AdminMenuItemDto(
+            item.Id, item.MenuId, item.ParentId, item.Name, Normalize(request.NameEn), item.CustomLink, item.DisplayOrder));
     }
 
     [HttpPut("{menuId:long}/items/{itemId:long}")]
@@ -130,9 +166,11 @@ public sealed class AdminMenusController : ControllerBase
         item.CustomLink = request.CustomLink;
         item.ParentId = request.ParentId;
         item.DisplayOrder = request.DisplayOrder;
+        await _localizedWriter.SetAsync(ItemType, itemId, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminMenuItemDto(item.Id, item.MenuId, item.ParentId, item.Name, item.CustomLink, item.DisplayOrder));
+        return Ok(new AdminMenuItemDto(
+            item.Id, item.MenuId, item.ParentId, item.Name, Normalize(request.NameEn), item.CustomLink, item.DisplayOrder));
     }
 
     [HttpDelete("{menuId:long}/items/{itemId:long}")]
@@ -146,6 +184,12 @@ public sealed class AdminMenusController : ControllerBase
             return NotFound();
         }
 
+        foreach (var child in item.InverseParent)
+        {
+            await _localizedWriter.RemoveAllAsync(ItemType, child.Id, cancellationToken);
+        }
+
+        await _localizedWriter.RemoveAllAsync(ItemType, item.Id, cancellationToken);
         _db.MenuItems.RemoveRange(item.InverseParent);
         _db.MenuItems.Remove(item);
         await _db.SaveChangesAsync(cancellationToken);
@@ -153,10 +197,24 @@ public sealed class AdminMenusController : ControllerBase
         return NoContent();
     }
 
-    private static AdminMenuDto ToDto(Menu m) => new(
-        m.Id, m.Name, m.IsPublished, m.IsSystem,
+    private async Task<(LocalizedOverlay Menus, LocalizedOverlay Items)> LoadOverlaysAsync(
+        IReadOnlyCollection<Menu> menus, CancellationToken cancellationToken)
+    {
+        var menuOverlay = await _localization.GetOverlayAsync(
+            MenuType, menus.Select(m => m.Id).ToList(), EnCulture, cancellationToken);
+        var itemIds = menus.SelectMany(m => m.MenuItems).Select(i => i.Id).ToList();
+        var itemOverlay = await _localization.GetOverlayAsync(ItemType, itemIds, EnCulture, cancellationToken);
+        return (menuOverlay, itemOverlay);
+    }
+
+    private static AdminMenuDto ToDto(Menu m, LocalizedOverlay menuOverlay, LocalizedOverlay itemOverlay) => new(
+        m.Id, m.Name, menuOverlay.Get(m.Id, LocalizedProperty.Name), m.IsPublished, m.IsSystem,
         m.MenuItems
             .OrderBy(i => i.DisplayOrder)
-            .Select(i => new AdminMenuItemDto(i.Id, i.MenuId, i.ParentId, i.Name, i.CustomLink, i.DisplayOrder))
+            .Select(i => new AdminMenuItemDto(
+                i.Id, i.MenuId, i.ParentId, i.Name, itemOverlay.Get(i.Id, LocalizedProperty.Name),
+                i.CustomLink, i.DisplayOrder))
             .ToList());
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 }

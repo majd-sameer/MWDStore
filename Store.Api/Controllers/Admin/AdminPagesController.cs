@@ -3,24 +3,38 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft.</summary>
+/// <summary>
+/// Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft. <c>Name</c>, <c>Body</c>
+/// and the meta fields are bilingual: Arabic in the base columns, English in the
+/// <c>LocalizedContentProperty</c> overlay (served to the storefront under <c>Accept-Language: en</c>).
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/pages")]
 public sealed class AdminPagesController : ControllerBase
 {
+    private const string EntityType = LocalizedEntity.Page;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
 
-    public AdminPagesController(StoreDbContext db, TimeProvider timeProvider)
+    public AdminPagesController(
+        StoreDbContext db, TimeProvider timeProvider,
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
     {
         _db = db;
         _timeProvider = timeProvider;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
     }
 
     [HttpGet]
@@ -29,25 +43,25 @@ public sealed class AdminPagesController : ControllerBase
         var pages = await _db.Pages
             .Where(p => !p.IsDeleted)
             .OrderByDescending(p => p.Id)
-            .Select(p => new AdminPageDto(
-                p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
-                p.IsPublished, p.PublishedOn, p.CreatedOn))
             .ToListAsync(cancellationToken);
 
-        return Ok(pages);
+        var overlay = await _localization.GetOverlayAsync(
+            EntityType, pages.Select(p => p.Id).ToList(), EnCulture, cancellationToken);
+
+        return Ok(pages.Select(p => ToDto(p, overlay)).ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminPageDto>> Get(long id, CancellationToken cancellationToken)
     {
-        var page = await _db.Pages
-            .Where(p => p.Id == id && !p.IsDeleted)
-            .Select(p => new AdminPageDto(
-                p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
-                p.IsPublished, p.PublishedOn, p.CreatedOn))
-            .FirstOrDefaultAsync(cancellationToken);
+        var page = await _db.Pages.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+        if (page == null)
+        {
+            return NotFound();
+        }
 
-        return page == null ? NotFound() : Ok(page);
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        return Ok(ToDto(page, overlay));
     }
 
     [HttpPost]
@@ -72,7 +86,10 @@ public sealed class AdminPagesController : ControllerBase
         _db.Pages.Add(page);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(Get), new { id = page.Id }, ToDto(page));
+        await WriteEnglishAsync(page.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(Get), new { id = page.Id }, ToDto(page, request));
     }
 
     [HttpPut("{id:long}")]
@@ -95,9 +112,10 @@ public sealed class AdminPagesController : ControllerBase
             return Conflict(new { error = $"A page with slug '{page.Slug}' already exists." });
         }
 
+        await WriteEnglishAsync(page.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(page));
+        return Ok(ToDto(page, request));
     }
 
     [HttpDelete("{id:long}")]
@@ -129,7 +147,32 @@ public sealed class AdminPagesController : ControllerBase
         page.PublishedOn ??= request.IsPublished ? now : null;
     }
 
-    private static AdminPageDto ToDto(Page p) => new(
-        p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
+    private async Task WriteEnglishAsync(long id, PageUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Body, EnCulture, request.BodyEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
+    }
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    /// <summary>Builds the DTO from a loaded page + an overlay read from the DB.</summary>
+    private static AdminPageDto ToDto(Page p, LocalizedOverlay overlay) => new(
+        p.Id, p.Name, overlay.Get(p.Id, LocalizedProperty.Name), p.Slug,
+        p.Body, overlay.Get(p.Id, LocalizedProperty.Body),
+        p.MetaTitle, overlay.Get(p.Id, LocalizedProperty.MetaTitle),
+        p.MetaKeywords, overlay.Get(p.Id, LocalizedProperty.MetaKeywords),
+        p.MetaDescription, overlay.Get(p.Id, LocalizedProperty.MetaDescription),
+        p.IsPublished, p.PublishedOn, p.CreatedOn);
+
+    /// <summary>Builds the DTO straight from a just-saved request (English values echoed back).</summary>
+    private static AdminPageDto ToDto(Page p, PageUpsertRequest request) => new(
+        p.Id, p.Name, Normalize(request.NameEn), p.Slug,
+        p.Body, Normalize(request.BodyEn),
+        p.MetaTitle, Normalize(request.MetaTitleEn),
+        p.MetaKeywords, Normalize(request.MetaKeywordsEn),
+        p.MetaDescription, Normalize(request.MetaDescriptionEn),
         p.IsPublished, p.PublishedOn, p.CreatedOn);
 }

@@ -23,17 +23,18 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface VendorModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
   email: string;
-  description: string;
+  description: MultiLangValue;
   isActive: boolean;
 }
 
 function emptyModel(): VendorModel {
-  return { name: '', slug: '', email: '', description: '', isActive: true };
+  return { name: { ar: '', en: '' }, slug: '', email: '', description: { ar: '', en: '' }, isActive: true };
 }
 
 /**
@@ -44,7 +45,7 @@ function emptyModel(): VendorModel {
 @Component({
   selector: 'app-admin-vendor-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './vendor-form.html',
 })
 export class AdminVendorForm {
@@ -67,7 +68,7 @@ export class AdminVendorForm {
 
   protected readonly model = signal<VendorModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
   });
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
@@ -85,10 +86,10 @@ export class AdminVendorForm {
       }
       this.seeded = true;
       this.model.set({
-        name: v.name ?? '',
+        name: { ar: v.name ?? '', en: v.nameEn ?? '' },
         slug: v.slug ?? '',
         email: v.email ?? '',
-        description: v.description ?? '',
+        description: { ar: v.description ?? '', en: v.descriptionEn ?? '' },
         isActive: v.isActive,
       });
     });
@@ -100,10 +101,12 @@ export class AdminVendorForm {
       this.serverError.set(null);
       const m = this.model();
       const body: VendorUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
         email: m.email || null,
-        description: m.description || null,
+        description: m.description.ar || null,
+        descriptionEn: m.description.en || null,
         isActive: m.isActive,
       };
       try {

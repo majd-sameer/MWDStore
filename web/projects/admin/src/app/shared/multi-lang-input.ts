@@ -58,6 +58,14 @@ export class MultiLangInput implements FormValueControl<MultiLangValue> {
 
   /** Disabled state — bound automatically from the field when used with `[formField]`. */
   readonly disabled = input(false);
+  /**
+   * Validity + touched state. Both are reserved Signal Forms companion inputs: when the control is
+   * used with `[formField]` the `Field` directive populates them from the bound field, so the inline
+   * box turns red once the field is invalid *and* has been touched. (Standalone use leaves them
+   * false.) They must not be bound manually — that is an NG8022 error.
+   */
+  readonly invalid = input(false);
+  readonly touched = input(false);
 
   /** Render an `<input>` (single line) or a `<textarea>` (multi-line). */
   readonly type = input<'text' | 'textarea'>('text');
@@ -67,8 +75,6 @@ export class MultiLangInput implements FormValueControl<MultiLangValue> {
   readonly placeholder = input('');
   /** `id` for the inline field, so an outer `<label for>` can target it. */
   readonly controlId = input<string | null>(null);
-  /** Marks the inline field invalid (mirrors the field's error state). */
-  readonly invalid = input(false);
 
   /** The language edited inline: whichever the console is currently showing. */
   protected readonly primaryLang = computed<'ar' | 'en'>(() =>

@@ -22,9 +22,8 @@
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-body">
-                <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name())">
-                  <input id="name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name.ar())">
+                  <multi-lang-input controlId="name" [formField]="f.name" />
                 </lib-form-field>
 
                 <div class="row">
@@ -46,18 +45,15 @@
                 </div>
 
                 <lib-form-field [label]="'product_form.short_description' | translate" controlId="shortDescription">
-                  <textarea id="shortDescription" rows="2" class="form-control"
-                    [formField]="f.shortDescription"></textarea>
+                  <multi-lang-input type="textarea" [rows]="2" controlId="shortDescription" [formField]="f.shortDescription" />
                 </lib-form-field>
 
                 <lib-form-field [label]="'common.description' | translate" controlId="description">
-                  <textarea id="description" rows="5" class="form-control"
-                    [formField]="f.description"></textarea>
+                  <multi-lang-input type="textarea" [rows]="5" controlId="description" [formField]="f.description" />
                 </lib-form-field>
 
                 <lib-form-field [label]="'product_form.specification' | translate" controlId="specification">
-                  <textarea id="specification" rows="3" class="form-control"
-                    [formField]="f.specification"></textarea>
+                  <multi-lang-input type="textarea" [rows]="3" controlId="specification" [formField]="f.specification" />
                 </lib-form-field>
               </div>
             </div>
@@ -66,14 +62,13 @@
               <div class="card-header bg-body fw-semibold">{{ 'product_form.seo' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
-                  <input id="metaTitle" type="text" class="form-control" [formField]="f.metaTitle" />
+                  <multi-lang-input controlId="metaTitle" [formField]="f.metaTitle" />
                 </lib-form-field>
                 <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="metaKeywords">
-                  <input id="metaKeywords" type="text" class="form-control" [formField]="f.metaKeywords" />
+                  <multi-lang-input controlId="metaKeywords" [formField]="f.metaKeywords" />
                 </lib-form-field>
                 <lib-form-field [label]="'pages.meta_description' | translate" controlId="metaDescription">
-                  <textarea id="metaDescription" rows="2" class="form-control"
-                    [formField]="f.metaDescription"></textarea>
+                  <multi-lang-input type="textarea" [rows]="2" controlId="metaDescription" [formField]="f.metaDescription" />
                 </lib-form-field>
               </div>
             </div>

@@ -19,8 +19,7 @@
             <div class="card-body">
               <div class="mb-3">
                 <label class="form-label" for="menu-name">{{ 'common.name' | translate }}</label>
-                <input id="menu-name" type="text" class="form-control"
-                  [value]="name()" (input)="name.set($any($event.target).value)"
+                <multi-lang-input controlId="menu-name" [(value)]="name"
                   [disabled]="existing()?.isSystem ?? false" />
                 @if (existing()?.isSystem) {
                   <div class="form-text">{{ 'menus.system_hint' | translate }}</div>
@@ -54,9 +53,10 @@
                 @for (item of menu.items; track item.id) {
                   <div class="row g-2 align-items-center mb-2">
                     <div class="col-4">
-                      <input type="text" class="form-control form-control-sm" [value]="item.name"
+                      <multi-lang-input
+                        [value]="{ ar: item.name ?? '', en: item.nameEn ?? '' }"
                         [placeholder]="'menus.label' | translate"
-                        (change)="updateItem(menu.id, item, { name: $any($event.target).value })" />
+                        (valueChange)="updateItem(menu.id, item, { name: $event })" />
                     </div>
                     <div class="col-4">
                       <input type="text" class="form-control form-control-sm" [value]="item.customLink ?? ''"
@@ -80,7 +80,7 @@
                 <div class="row g-2 align-items-end">
                   <div class="col-4">
                     <label class="form-label small" for="mi-name">{{ 'menus.label' | translate }}</label>
-                    <input id="mi-name" type="text" class="form-control form-control-sm" #itemName />
+                    <multi-lang-input controlId="mi-name" [(value)]="newItemName" />
                   </div>
                   <div class="col-4">
                     <label class="form-label small" for="mi-link">{{ 'menus.link' | translate }}</label>
@@ -92,7 +92,7 @@
                   </div>
                   <div class="col-2">
                     <button type="button" libButton variant="primary" size="sm"
-                      (click)="addItem(menu.id, itemName, itemLink, itemOrder)">
+                      (click)="addItem(menu.id, itemLink, itemOrder)">
                       {{ 'common.add' | translate }}
                     </button>
                   </div>

@@ -7,7 +7,7 @@
       [dir]="primaryLang() === 'ar' ? 'rtl' : 'ltr'"
       [placeholder]="placeholder()"
       [disabled]="disabled()"
-      [class.is-invalid]="invalid()"
+      [class.is-invalid]="invalid() && touched()"
       [value]="inlineValue()"
       (input)="setInline($event)"
     ></textarea>
@@ -19,7 +19,7 @@
       [dir]="primaryLang() === 'ar' ? 'rtl' : 'ltr'"
       [placeholder]="placeholder()"
       [disabled]="disabled()"
-      [class.is-invalid]="invalid()"
+      [class.is-invalid]="invalid() && touched()"
       [value]="inlineValue()"
       (input)="setInline($event)"
     />

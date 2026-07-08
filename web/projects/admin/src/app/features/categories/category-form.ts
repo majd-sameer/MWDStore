@@ -23,11 +23,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface CategoryModel {
-  name: string;
+  name: MultiLangValue;
   slug: string;
-  description: string;
+  description: MultiLangValue;
   displayOrder: number;
   isPublished: boolean;
   includeInMenu: boolean;
@@ -35,9 +36,9 @@ interface CategoryModel {
 
 function emptyModel(): CategoryModel {
   return {
-    name: '',
+    name: { ar: '', en: '' },
     slug: '',
-    description: '',
+    description: { ar: '', en: '' },
     displayOrder: 0,
     isPublished: true,
     includeInMenu: true,
@@ -52,7 +53,7 @@ function emptyModel(): CategoryModel {
 @Component({
   selector: 'app-admin-category-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './category-form.html',
 })
 export class AdminCategoryForm {
@@ -72,7 +73,7 @@ export class AdminCategoryForm {
 
   protected readonly model = signal<CategoryModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
-    required(path.name, { message: 'Name is required' });
+    required(path.name.ar, { message: 'Name is required' });
   });
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
@@ -91,9 +92,9 @@ export class AdminCategoryForm {
       }
       this.seeded = true;
       this.model.set({
-        name: c.name ?? '',
+        name: { ar: c.name ?? '', en: c.nameEn ?? '' },
         slug: c.slug ?? '',
-        description: c.description ?? '',
+        description: { ar: c.description ?? '', en: c.descriptionEn ?? '' },
         displayOrder: c.displayOrder,
         isPublished: c.isPublished,
         includeInMenu: c.includeInMenu,
@@ -107,9 +108,11 @@ export class AdminCategoryForm {
       this.serverError.set(null);
       const m = this.model();
       const body: CategoryUpsertRequest = {
-        name: m.name,
+        name: m.name.ar,
+        nameEn: m.name.en || null,
         slug: m.slug || null,
-        description: m.description || null,
+        description: m.description.ar || null,
+        descriptionEn: m.description.en || null,
         displayOrder: Number(m.displayOrder),
         isPublished: m.isPublished,
         includeInMenu: m.includeInMenu,

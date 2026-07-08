@@ -43,10 +43,23 @@ public sealed class ContentController : ControllerBase
     {
         var page = await _db.Pages
             .Where(p => p.Slug == slug && p.IsPublished && !p.IsDeleted)
-            .Select(p => new PublicPageDto(p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription))
+            .Select(p => new { p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return page == null ? NotFound() : Ok(page);
+        if (page == null)
+        {
+            return NotFound();
+        }
+
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.Page, new[] { page.Id }, cultureId, cancellationToken);
+
+        return Ok(new PublicPageDto(
+            overlay.Apply(page.Id, LocalizedProperty.Name, page.Name) ?? page.Name,
+            page.Slug,
+            overlay.Apply(page.Id, LocalizedProperty.Body, page.Body),
+            page.MetaTitle, page.MetaKeywords, page.MetaDescription));
     }
 
     // ----- News ----------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Catalog;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -24,15 +25,24 @@ public sealed class AdminProductsController : ControllerBase
     /// <summary>PascalCase to stay byte-compatible with rows written by the old Newtonsoft-based admin.</summary>
     private static readonly JsonSerializerOptions OptionValueJson = new() { PropertyNamingPolicy = null };
 
+    private const string EntityType = LocalizedEntity.Product;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaStorage _mediaStorage;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
 
-    public AdminProductsController(StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage)
+    public AdminProductsController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage,
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaStorage = mediaStorage;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
     }
 
     /// <summary>Lists products (paged), optionally filtered by name, brand, category and publish state.
@@ -126,7 +136,13 @@ public sealed class AdminProductsController : ControllerBase
     public async Task<ActionResult<AdminProductDetail>> Get(long id, CancellationToken cancellationToken)
     {
         var product = await LoadAggregateAsync(id, cancellationToken);
-        return product == null ? NotFound() : Ok(ToDetail(product));
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        var overlay = await LoadEnglishAsync(id, cancellationToken);
+        return Ok(ToDetail(product, overlay));
     }
 
     [HttpPost]
@@ -156,10 +172,12 @@ public sealed class AdminProductsController : ControllerBase
         await _db.SaveChangesAsync(cancellationToken);
 
         await ReconcileChildCollectionsAsync(product, request, userId, now, cancellationToken);
+        await WriteEnglishAsync(product.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         var created = await LoadAggregateAsync(product.Id, cancellationToken);
-        return CreatedAtAction(nameof(Get), new { id = product.Id }, ToDetail(created!));
+        var overlay = await LoadEnglishAsync(product.Id, cancellationToken);
+        return CreatedAtAction(nameof(Get), new { id = product.Id }, ToDetail(created!, overlay));
     }
 
     [HttpPut("{id:long}")]
@@ -196,10 +214,12 @@ public sealed class AdminProductsController : ControllerBase
         }
 
         await ReconcileChildCollectionsAsync(product, request, userId, now, cancellationToken);
+        await WriteEnglishAsync(product.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         var updated = await LoadAggregateAsync(id, cancellationToken);
-        return Ok(ToDetail(updated!));
+        var overlay = await LoadEnglishAsync(id, cancellationToken);
+        return Ok(ToDetail(updated!, overlay));
     }
 
     /// <summary>Soft-deletes the product and its variation children.</summary>
@@ -556,7 +576,23 @@ public sealed class AdminProductsController : ControllerBase
 
     // ----- Mapping ------------------------------------------------------------------------------
 
-    private AdminProductDetail ToDetail(Product p)
+    /// <summary>Reads the English overlay for one product's localizable fields.</summary>
+    private Task<LocalizedOverlay> LoadEnglishAsync(long id, CancellationToken cancellationToken) =>
+        _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+
+    /// <summary>Upserts (or clears) the English overlay for the product's 7 localizable fields.</summary>
+    private async Task WriteEnglishAsync(long id, ProductUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.ShortDescription, EnCulture, request.ShortDescriptionEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Specification, EnCulture, request.SpecificationEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
+    }
+
+    private AdminProductDetail ToDetail(Product p, LocalizedOverlay overlay)
     {
         var media = p.ProductMedia
             .OrderBy(m => m.DisplayOrder)
@@ -592,8 +628,13 @@ public sealed class AdminProductsController : ControllerBase
         var crossSell = LinkedProducts(p, ProductLinkType.CrossSell);
 
         return new AdminProductDetail(
-            p.Id, p.Name, p.Slug, p.ShortDescription, p.Description, p.Specification,
-            p.MetaTitle, p.MetaKeywords, p.MetaDescription,
+            p.Id, p.Name, overlay.Get(p.Id, LocalizedProperty.Name), p.Slug,
+            p.ShortDescription, overlay.Get(p.Id, LocalizedProperty.ShortDescription),
+            p.Description, overlay.Get(p.Id, LocalizedProperty.Description),
+            p.Specification, overlay.Get(p.Id, LocalizedProperty.Specification),
+            p.MetaTitle, overlay.Get(p.Id, LocalizedProperty.MetaTitle),
+            p.MetaKeywords, overlay.Get(p.Id, LocalizedProperty.MetaKeywords),
+            p.MetaDescription, overlay.Get(p.Id, LocalizedProperty.MetaDescription),
             p.Price, p.OldPrice, p.SpecialPrice, p.SpecialPriceStart, p.SpecialPriceEnd,
             p.Sku, p.Gtin, p.IsPublished, p.IsFeatured, p.IsSignature, p.SignatureSortOrder,
             p.IsAllowToOrder, p.IsCallForPricing,

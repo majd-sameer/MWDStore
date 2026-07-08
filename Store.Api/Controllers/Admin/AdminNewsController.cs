@@ -3,26 +3,39 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for news categories and news items (old News module). Deletes are soft.</summary>
+/// <summary>
+/// Admin CRUD for news categories and news items (old News module). Deletes are soft. Human-readable
+/// copy (category Name/Description; item Name/ShortContent/FullContent/meta) is bilingual: Arabic in
+/// the base columns, English in the <c>LocalizedContentProperty</c> overlay.
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Content)]
 [Route("api/admin/news")]
 public sealed class AdminNewsController : ControllerBase
 {
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaStorage _mediaStorage;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
 
-    public AdminNewsController(StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage)
+    public AdminNewsController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage,
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaStorage = mediaStorage;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
     }
 
     // ----- Categories -----------------------------------------------------------------------------
@@ -33,10 +46,19 @@ public sealed class AdminNewsController : ControllerBase
         var categories = await _db.NewsCategories
             .Where(c => !c.IsDeleted)
             .OrderBy(c => c.DisplayOrder)
-            .Select(c => new AdminNewsCategoryDto(c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished))
+            .Select(c => new { c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished })
             .ToListAsync(cancellationToken);
 
-        return Ok(categories);
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.NewsCategory, categories.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
+
+        var dtos = categories
+            .Select(c => new AdminNewsCategoryDto(
+                c.Id, c.Name, overlay.Get(c.Id, LocalizedProperty.Name), c.Slug,
+                c.Description, overlay.Get(c.Id, LocalizedProperty.Description), c.DisplayOrder, c.IsPublished))
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpPost("categories")]
@@ -48,8 +70,10 @@ public sealed class AdminNewsController : ControllerBase
         _db.NewsCategories.Add(category);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminNewsCategoryDto(
-            category.Id, category.Name, category.Slug, category.Description, category.DisplayOrder, category.IsPublished));
+        await WriteCategoryEnglishAsync(category.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(CategoryDto(category, request));
     }
 
     [HttpPut("categories/{id:long}")]
@@ -63,10 +87,10 @@ public sealed class AdminNewsController : ControllerBase
         }
 
         ApplyCategory(category, request);
+        await WriteCategoryEnglishAsync(category.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminNewsCategoryDto(
-            category.Id, category.Name, category.Slug, category.Description, category.DisplayOrder, category.IsPublished));
+        return Ok(CategoryDto(category, request));
     }
 
     [HttpDelete("categories/{id:long}")]
@@ -93,6 +117,16 @@ public sealed class AdminNewsController : ControllerBase
         category.IsPublished = request.IsPublished;
     }
 
+    private async Task WriteCategoryEnglishAsync(long id, NewsCategoryUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+    }
+
+    private static AdminNewsCategoryDto CategoryDto(NewsCategory c, NewsCategoryUpsertRequest request) => new(
+        c.Id, c.Name, Normalize(request.NameEn), c.Slug, c.Description, Normalize(request.DescriptionEn),
+        c.DisplayOrder, c.IsPublished);
+
     // ----- News items ------------------------------------------------------------------------------
 
     [HttpGet("items")]
@@ -116,8 +150,14 @@ public sealed class AdminNewsController : ControllerBase
             .Include(n => n.Categories)
             .Include(n => n.ThumbnailImage)
             .FirstOrDefaultAsync(n => n.Id == id && !n.IsDeleted, cancellationToken);
+        if (item == null)
+        {
+            return NotFound();
+        }
 
-        return item == null ? NotFound() : Ok(ToDetail(item));
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.NewsItem, new[] { id }, EnCulture, cancellationToken);
+        return Ok(ToDetail(item, overlay));
     }
 
     [HttpPost("items")]
@@ -139,7 +179,10 @@ public sealed class AdminNewsController : ControllerBase
         _db.NewsItems.Add(item);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, ToDetail(item));
+        await WriteItemEnglishAsync(item.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, ToDetail(item, request));
     }
 
     [HttpPut("items/{id:long}")]
@@ -160,9 +203,11 @@ public sealed class AdminNewsController : ControllerBase
         item.LatestUpdatedById = User.GetUserId();
         item.LatestUpdatedOn = now;
         await SetCategoriesAsync(item, request.CategoryIds, cancellationToken);
+
+        await WriteItemEnglishAsync(item.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDetail(item));
+        return Ok(ToDetail(item, request));
     }
 
     [HttpDelete("items/{id:long}")]
@@ -196,6 +241,16 @@ public sealed class AdminNewsController : ControllerBase
         item.ThumbnailImageId = request.ThumbnailImageId;
     }
 
+    private async Task WriteItemEnglishAsync(long id, NewsItemUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.ShortContent, EnCulture, request.ShortContentEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.FullContent, EnCulture, request.FullContentEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
+    }
+
     private async Task SetCategoriesAsync(NewsItem item, IList<long> categoryIds, CancellationToken cancellationToken)
     {
         var categories = await _db.NewsCategories
@@ -209,9 +264,27 @@ public sealed class AdminNewsController : ControllerBase
         }
     }
 
-    private AdminNewsItemDetail ToDetail(NewsItem n) => new(
-        n.Id, n.Name, n.Slug, n.ShortContent, n.FullContent,
-        n.MetaTitle, n.MetaKeywords, n.MetaDescription,
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    /// <summary>Builds the detail from a loaded item + an overlay read from the DB.</summary>
+    private AdminNewsItemDetail ToDetail(NewsItem n, LocalizedOverlay overlay) => new(
+        n.Id, n.Name, overlay.Get(n.Id, LocalizedProperty.Name), n.Slug,
+        n.ShortContent, overlay.Get(n.Id, LocalizedProperty.ShortContent),
+        n.FullContent, overlay.Get(n.Id, LocalizedProperty.FullContent),
+        n.MetaTitle, overlay.Get(n.Id, LocalizedProperty.MetaTitle),
+        n.MetaKeywords, overlay.Get(n.Id, LocalizedProperty.MetaKeywords),
+        n.MetaDescription, overlay.Get(n.Id, LocalizedProperty.MetaDescription),
+        n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
+        n.Categories.Select(c => c.Id).ToList());
+
+    /// <summary>Builds the detail straight from a just-saved request (English values echoed back).</summary>
+    private AdminNewsItemDetail ToDetail(NewsItem n, NewsItemUpsertRequest request) => new(
+        n.Id, n.Name, Normalize(request.NameEn), n.Slug,
+        n.ShortContent, Normalize(request.ShortContentEn),
+        n.FullContent, Normalize(request.FullContentEn),
+        n.MetaTitle, Normalize(request.MetaTitleEn),
+        n.MetaKeywords, Normalize(request.MetaKeywordsEn),
+        n.MetaDescription, Normalize(request.MetaDescriptionEn),
         n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
         n.Categories.Select(c => c.Id).ToList());
 }

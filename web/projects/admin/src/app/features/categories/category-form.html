@@ -27,10 +27,9 @@
                   [label]="'categories.name' | translate"
                   controlId="cat-name"
                   [required]="true"
-                  [error]="err(f.name())"
+                  [error]="err(f.name.ar())"
                 >
-                  <input id="cat-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                  <multi-lang-input controlId="cat-name" [formField]="f.name" />
                 </lib-form-field>
                 <lib-form-field
                   [label]="'categories.slug' | translate"
@@ -40,7 +39,7 @@
                   <input id="cat-slug" type="text" class="form-control" [formField]="f.slug" />
                 </lib-form-field>
                 <lib-form-field [label]="'categories.description' | translate" controlId="cat-desc">
-                  <textarea id="cat-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
+                  <multi-lang-input type="textarea" [rows]="3" controlId="cat-desc" [formField]="f.description" />
                 </lib-form-field>
                 <lib-form-field [label]="'categories.display_order' | translate" controlId="cat-order">
                   <input id="cat-order" type="number" class="form-control" [formField]="f.displayOrder" />

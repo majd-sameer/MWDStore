@@ -3,20 +3,35 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin category management (CRUD). Deletes are soft.</summary>
+/// <summary>
+/// Admin category management (CRUD). Deletes are soft. <c>Name</c> and <c>Description</c> are
+/// bilingual: Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay.
+/// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/categories")]
 public sealed class AdminCategoriesController : ControllerBase
 {
-    private readonly StoreDbContext _db;
+    private const string EntityType = LocalizedEntity.Category;
+    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
-    public AdminCategoriesController(StoreDbContext db) => _db = db;
+    private readonly StoreDbContext _db;
+    private readonly ILocalizationService _localization;
+    private readonly ILocalizedContentWriter _localizedWriter;
+
+    public AdminCategoriesController(
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+    {
+        _db = db;
+        _localization = localization;
+        _localizedWriter = localizedWriter;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AdminCategoryDto>>> List(
@@ -30,18 +45,37 @@ public sealed class AdminCategoriesController : ControllerBase
 
         var items = await categories
             .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
-            .Select(c => new AdminCategoryDto(
-                c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted))
+            .Select(c => new
+            {
+                c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder,
+                c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted,
+            })
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        var overlay = await _localization.GetOverlayAsync(
+            EntityType, items.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
+
+        var dtos = items
+            .Select(c => new AdminCategoryDto(
+                c.Id, c.Name, overlay.Get(c.Id, LocalizedProperty.Name), c.Slug,
+                c.Description, overlay.Get(c.Id, LocalizedProperty.Description),
+                c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted))
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminCategoryDto>> Get(long id, CancellationToken cancellationToken)
     {
         var category = await _db.Categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-        return category == null ? NotFound() : Ok(ToDto(category));
+        if (category == null)
+        {
+            return NotFound();
+        }
+
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        return Ok(ToDto(category, overlay.Get(id, LocalizedProperty.Name), overlay.Get(id, LocalizedProperty.Description)));
     }
 
     [HttpPost]
@@ -59,7 +93,11 @@ public sealed class AdminCategoriesController : ControllerBase
         _db.Categories.Add(category);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(Get), new { id = category.Id }, ToDto(category));
+        await WriteEnglishAsync(category.Id, request, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(Get), new { id = category.Id },
+            ToDto(category, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -84,8 +122,10 @@ public sealed class AdminCategoriesController : ControllerBase
             return Conflict(new { error = $"A category with slug '{category.Slug}' already exists." });
         }
 
+        await WriteEnglishAsync(category.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
-        return Ok(ToDto(category));
+
+        return Ok(ToDto(category, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -121,6 +161,15 @@ public sealed class AdminCategoriesController : ControllerBase
         category.ParentId = request.ParentId;
     }
 
-    private static AdminCategoryDto ToDto(Category c) => new(
-        c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted);
+    private async Task WriteEnglishAsync(long id, CategoryUpsertRequest request, CancellationToken cancellationToken)
+    {
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+    }
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    private static AdminCategoryDto ToDto(Category c, string? nameEn, string? descriptionEn) => new(
+        c.Id, c.Name, nameEn, c.Slug, c.Description, descriptionEn,
+        c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted);
 }
