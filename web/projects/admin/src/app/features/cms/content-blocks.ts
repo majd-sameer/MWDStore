@@ -18,6 +18,7 @@ import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 /** Local editable state for one block (both languages + media/link/active). */
 interface BlockEdit {
@@ -63,14 +64,14 @@ const KEY_LABELS: Record<string, string> = {
 
 /**
  * Site Content editor: edit the words and images of designed storefront sections without touching
- * layout. A page selector loads its sections (cards); each block is a labeled field by type
- * (text/richtext → textarea, image → picker, link → URL), with an AR|EN toggle for text. Saves per
- * section. Keys and type are code-owned server-side, so this only ever changes content.
+ * layout. Each sidebar link loads one page's sections (cards); each block is a labeled field by type
+ * (text/richtext → bilingual `<multi-lang-input>`, image → picker, link → URL). Saves per section.
+ * Keys and type are code-owned server-side, so this only ever changes content.
  */
 @Component({
   selector: 'app-admin-content-blocks',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, PageHeader],
+  imports: [TranslatePipe, PageHeader, MultiLangInput],
   templateUrl: './content-blocks.html',
 })
 export class AdminContentBlocks {
@@ -85,8 +86,6 @@ export class AdminContentBlocks {
     this.route.paramMap.pipe(map((p) => p.get('page') ?? 'home')),
     { initialValue: 'home' },
   );
-  protected readonly lang = signal<'ar' | 'en'>('ar');
-
   protected readonly list = this.service.listResource(this.page);
   protected readonly savingSection = signal<string | null>(null);
   protected readonly uploadingId = signal<number | null>(null);
@@ -94,7 +93,10 @@ export class AdminContentBlocks {
 
   /** The FAQ list is the one repeatable section: questions can be added/removed here. */
   protected readonly isFaq = computed(() => this.page() === 'faq');
-  protected readonly newQuestion = signal({ questionAr: '', questionEn: '', answerAr: '', answerEn: '' });
+  protected readonly newQuestion = signal<{ question: MultiLangValue; answer: MultiLangValue }>({
+    question: { ar: '', en: '' },
+    answer: { ar: '', en: '' },
+  });
   protected readonly addingQuestion = signal(false);
 
   private seededFor = '';
@@ -137,9 +139,15 @@ export class AdminContentBlocks {
     this.edits.update((map) => ({ ...map, [id]: { ...this.edit(id), ...patch } }));
   }
 
-  protected setText(id: number, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-    this.patch(id, this.lang() === 'ar' ? { valueAr: value } : { valueEn: value });
+  /** Both-language value of a text block, for `<multi-lang-input [value]>`. */
+  protected multiValue(id: number): MultiLangValue {
+    const e = this.edit(id);
+    return { ar: e.valueAr, en: e.valueEn };
+  }
+
+  /** `<multi-lang-input (valueChange)>` → write both languages back into edit state. */
+  protected setMultiLang(id: number, value: MultiLangValue): void {
+    this.patch(id, { valueAr: value.ar, valueEn: value.en });
   }
 
   protected setLink(id: number, event: Event): void {
@@ -193,28 +201,27 @@ export class AdminContentBlocks {
     return /^q\d+$/.test(blockKey);
   }
 
-  protected setNewQuestion(field: 'questionAr' | 'questionEn' | 'answerAr' | 'answerEn', event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+  protected setNewQuestion(field: 'question' | 'answer', value: MultiLangValue): void {
     this.newQuestion.update((q) => ({ ...q, [field]: value }));
   }
 
   protected addQuestion(): void {
     const q = this.newQuestion();
-    if (!q.questionAr.trim() && !q.questionEn.trim()) {
+    if (!q.question.ar.trim() && !q.question.en.trim()) {
       this.toast.error(this.translate.instant('cms.faq.need_question'));
       return;
     }
     this.addingQuestion.set(true);
     this.service
       .addFaqQuestion({
-        questionAr: q.questionAr || null,
-        questionEn: q.questionEn || null,
-        answerAr: q.answerAr || null,
-        answerEn: q.answerEn || null,
+        questionAr: q.question.ar || null,
+        questionEn: q.question.en || null,
+        answerAr: q.answer.ar || null,
+        answerEn: q.answer.en || null,
       })
       .subscribe({
         next: () => {
-          this.newQuestion.set({ questionAr: '', questionEn: '', answerAr: '', answerEn: '' });
+          this.newQuestion.set({ question: { ar: '', en: '' }, answer: { ar: '', en: '' } });
           this.reloadBlocks();
           this.toast.success(this.translate.instant('cms.faq.added'));
           this.addingQuestion.set(false);

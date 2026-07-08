@@ -8,41 +8,29 @@
       </a>
     </app-page-header>
 
-    <div class="d-flex mb-3">
-      <div class="ms-auto">
-        <div class="btn-group" role="group" [attr.aria-label]="'cms.language' | translate">
-          <button type="button" class="btn btn-outline-secondary" [class.active]="lang() === 'ar'"
-            (click)="lang.set('ar')">{{ 'cms.ar' | translate }}</button>
-          <button type="button" class="btn btn-outline-secondary" [class.active]="lang() === 'en'"
-            (click)="lang.set('en')">{{ 'cms.en' | translate }}</button>
-        </div>
-      </div>
-    </div>
-
     @if (isFaq()) {
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-body fw-semibold">{{ 'cms.faq.add_title' | translate }}</div>
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label for="new-q-ar" class="form-label fw-medium">{{ 'cms.faq.question_ar' | translate }}</label>
-              <input id="new-q-ar" type="text" class="form-control" dir="rtl"
-                [value]="newQuestion().questionAr" (input)="setNewQuestion('questionAr', $event)" />
+              <label for="new-question" class="form-label fw-medium">{{ 'cms.faq.question' | translate }}</label>
+              <multi-lang-input
+                type="text"
+                controlId="new-question"
+                [value]="newQuestion().question"
+                (valueChange)="setNewQuestion('question', $event)"
+              />
             </div>
             <div class="col-md-6">
-              <label for="new-q-en" class="form-label fw-medium">{{ 'cms.faq.question_en' | translate }}</label>
-              <input id="new-q-en" type="text" class="form-control" dir="ltr"
-                [value]="newQuestion().questionEn" (input)="setNewQuestion('questionEn', $event)" />
-            </div>
-            <div class="col-md-6">
-              <label for="new-a-ar" class="form-label fw-medium">{{ 'cms.faq.answer_ar' | translate }}</label>
-              <textarea id="new-a-ar" class="form-control" rows="2" dir="rtl"
-                [value]="newQuestion().answerAr" (input)="setNewQuestion('answerAr', $event)"></textarea>
-            </div>
-            <div class="col-md-6">
-              <label for="new-a-en" class="form-label fw-medium">{{ 'cms.faq.answer_en' | translate }}</label>
-              <textarea id="new-a-en" class="form-control" rows="2" dir="ltr"
-                [value]="newQuestion().answerEn" (input)="setNewQuestion('answerEn', $event)"></textarea>
+              <label for="new-answer" class="form-label fw-medium">{{ 'cms.faq.answer' | translate }}</label>
+              <multi-lang-input
+                type="textarea"
+                controlId="new-answer"
+                [rows]="2"
+                [value]="newQuestion().answer"
+                (valueChange)="setNewQuestion('answer', $event)"
+              />
             </div>
           </div>
           <button type="button" class="btn btn-primary mt-3" [disabled]="addingQuestion()" (click)="addQuestion()">
@@ -132,14 +120,13 @@
                     />
                   }
                   @default {
-                    <textarea
-                      [id]="'block-' + block.id"
-                      class="form-control"
+                    <multi-lang-input
+                      type="textarea"
                       [rows]="block.type === 'richtext' ? 4 : 2"
-                      [dir]="lang() === 'ar' ? 'rtl' : 'ltr'"
-                      [value]="lang() === 'ar' ? edit(block.id).valueAr : edit(block.id).valueEn"
-                      (input)="setText(block.id, $event)"
-                    ></textarea>
+                      [controlId]="'block-' + block.id"
+                      [value]="multiValue(block.id)"
+                      (valueChange)="setMultiLang(block.id, $event)"
+                    />
                     @if (block.type === 'richtext') {
                       <div class="form-text">{{ 'cms.richtext_hint' | translate }}</div>
                     }

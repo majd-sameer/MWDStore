@@ -1,0 +1,126 @@
+<div class="mli">
+  @if (type() === 'textarea') {
+    <textarea
+      class="form-control mli__field"
+      [id]="controlId()"
+      [rows]="rows()"
+      [dir]="primaryLang() === 'ar' ? 'rtl' : 'ltr'"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [class.is-invalid]="invalid()"
+      [value]="inlineValue()"
+      (input)="setInline($event)"
+    ></textarea>
+  } @else {
+    <input
+      type="text"
+      class="form-control mli__field"
+      [id]="controlId()"
+      [dir]="primaryLang() === 'ar' ? 'rtl' : 'ltr'"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [class.is-invalid]="invalid()"
+      [value]="inlineValue()"
+      (input)="setInline($event)"
+    />
+  }
+
+  <button
+    type="button"
+    class="mli__globe"
+    [class.mli__globe--filled]="hasSecondary()"
+    [disabled]="disabled()"
+    [title]="'multilang.edit_translations' | translate"
+    [attr.aria-label]="'multilang.edit_translations' | translate"
+    (click)="openModal()"
+  >
+    <i class="bi bi-translate" aria-hidden="true"></i>
+  </button>
+</div>
+
+@if (modalOpen()) {
+  <button
+    type="button"
+    class="modal-backdrop fade show mli__backdrop"
+    [attr.aria-label]="'common.close' | translate"
+    (click)="closeModal()"
+  ></button>
+  <div
+    class="modal fade show d-block"
+    tabindex="-1"
+    role="dialog"
+    aria-modal="true"
+    (keydown.escape)="closeModal()"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ 'multilang.modal_title' | translate }}</h5>
+          <button
+            type="button"
+            class="btn-close"
+            [attr.aria-label]="'common.close' | translate"
+            (click)="closeModal()"
+          ></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="mli-ar">{{ 'multilang.arabic' | translate }}</label>
+            @if (type() === 'textarea') {
+              <textarea
+                id="mli-ar"
+                class="form-control"
+                dir="rtl"
+                [rows]="rows()"
+                [value]="draft().ar"
+                (input)="setDraft('ar', $event)"
+              ></textarea>
+            } @else {
+              <input
+                id="mli-ar"
+                type="text"
+                class="form-control"
+                dir="rtl"
+                [value]="draft().ar"
+                (input)="setDraft('ar', $event)"
+              />
+            }
+          </div>
+
+          <div class="mb-0">
+            <label class="form-label" for="mli-en">{{ 'multilang.english' | translate }}</label>
+            @if (type() === 'textarea') {
+              <textarea
+                id="mli-en"
+                class="form-control"
+                dir="ltr"
+                [rows]="rows()"
+                [value]="draft().en"
+                (input)="setDraft('en', $event)"
+              ></textarea>
+            } @else {
+              <input
+                id="mli-en"
+                type="text"
+                class="form-control"
+                dir="ltr"
+                [value]="draft().en"
+                (input)="setDraft('en', $event)"
+              />
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button type="button" class="btn btn-primary" (click)="applyModal()">
+            {{ 'multilang.save' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
