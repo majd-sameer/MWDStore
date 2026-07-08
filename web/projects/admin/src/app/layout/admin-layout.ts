@@ -70,18 +70,18 @@ export class AdminLayout {
         { path: '/stock-out-log', key: 'stockOutLog', icon: 'bi-journal-arrow-up', roles: AREA.inventory },
         { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },
         { path: '/shipping', key: 'shipping', icon: 'bi-truck', roles: AREA.fulfillment },
-      ],
-    },
-    // Content management — catalog ∪ content. Phase 5 adds content-blocks here.
-    {
-      key: 'content',
-      items: [
         { path: '/products', key: 'products', icon: 'bi-box-seam', roles: AREA.catalog },
         { path: '/categories', key: 'categories', icon: 'bi-folder2', roles: AREA.catalog },
         { path: '/brands', key: 'brands', icon: 'bi-tag', roles: AREA.catalog },
         { path: '/product-options', key: 'options', icon: 'bi-sliders', roles: AREA.catalog },
         { path: '/product-attributes', key: 'attributes', icon: 'bi-list-check', roles: AREA.catalog },
         { path: '/product-templates', key: 'templates', icon: 'bi-clipboard', roles: AREA.catalog },
+      ],
+    },
+    // Content management — catalog ∪ content. Phase 5 adds content-blocks here.
+    {
+      key: 'content',
+      items: [
         { path: '/news', key: 'news', icon: 'bi-newspaper', roles: AREA.content },
         { path: '/site-content', key: 'siteContent', icon: 'bi-card-text', roles: AREA.content },
         { path: '/moderation', key: 'moderation', icon: 'bi-shield-check', roles: AREA.moderation },

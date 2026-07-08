@@ -17,8 +17,8 @@
           @for (value of values; track value.key) {
             <div class="vcard">
               <span class="vcard-ic"><lib-icon [name]="value.icon" [size]="22" /></span>
-              <b>{{ 'about.value_' + value.key + '_title' | translate }}</b>
-              <span>{{ 'about.value_' + value.key + '_text' | translate }}</span>
+              <b>{{ about.block('about-values', value.key + '.title')?.value || ('about.value_' + value.key + '_title' | translate) }}</b>
+              <span>{{ about.block('about-values', value.key + '.text')?.value || ('about.value_' + value.key + '_text' | translate) }}</span>
             </div>
           }
         </div>

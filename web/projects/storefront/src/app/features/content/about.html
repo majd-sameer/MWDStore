@@ -3,11 +3,11 @@
     <section class="hero">
       <div class="wrap hero-grid">
         <div>
-          <span class="eyebrow">{{ 'about.eyebrow' | translate }}</span>
-          <h1 class="hero-title">{{ 'about.hero_title' | translate }}</h1>
-          <p class="hero-body">{{ 'about.hero_body' | translate }}</p>
+          <span class="eyebrow">{{ content.block('about-hero', 'eyebrow')?.value || ('about.eyebrow' | translate) }}</span>
+          <h1 class="hero-title">{{ content.block('about-hero', 'title')?.value || ('about.hero_title' | translate) }}</h1>
+          <p class="hero-body">{{ content.block('about-hero', 'body')?.value || ('about.hero_body' | translate) }}</p>
           <a routerLink="/shop" class="hero-cta">
-            {{ 'about.hero_cta' | translate }}
+            {{ content.block('about-hero', 'cta-label')?.value || ('about.hero_cta' | translate) }}
             <lib-icon name="arrowEnd" [size]="18" />
           </a>
         </div>
@@ -25,15 +25,15 @@
     <!-- Section 2 — how we work -->
     <section class="sec">
       <div class="sec-head">
-        <span class="eyebrow">{{ 'about.how_eyebrow' | translate }}</span>
-        <h2 class="sec-title">{{ 'about.how_title' | translate }}</h2>
+        <span class="eyebrow">{{ content.block('about-how', 'eyebrow')?.value || ('about.how_eyebrow' | translate) }}</span>
+        <h2 class="sec-title">{{ content.block('about-how', 'title')?.value || ('about.how_title' | translate) }}</h2>
       </div>
       <div class="steps">
         @for (n of steps; track n) {
           <article class="step">
-            <span class="step-n">{{ 'about.step' + n + '_n' | translate }}</span>
-            <h3 class="step-title">{{ 'about.step' + n + '_title' | translate }}</h3>
-            <p class="step-text">{{ 'about.step' + n + '_text' | translate }}</p>
+            <span class="step-n">{{ content.block('about-how', 'step' + n + '.number')?.value || ('about.step' + n + '_n' | translate) }}</span>
+            <h3 class="step-title">{{ content.block('about-how', 'step' + n + '.title')?.value || ('about.step' + n + '_title' | translate) }}</h3>
+            <p class="step-text">{{ content.block('about-how', 'step' + n + '.text')?.value || ('about.step' + n + '_text' | translate) }}</p>
           </article>
         }
       </div>
@@ -42,15 +42,15 @@
     <!-- Section 3 — our values (sits flush under the previous section) -->
     <section class="sec sec-flush">
       <div class="sec-head">
-        <span class="eyebrow">{{ 'about.values_eyebrow' | translate }}</span>
-        <h2 class="sec-title">{{ 'about.values_title' | translate }}</h2>
+        <span class="eyebrow">{{ content.block('about-values', 'eyebrow')?.value || ('about.values_eyebrow' | translate) }}</span>
+        <h2 class="sec-title">{{ content.block('about-values', 'title')?.value || ('about.values_title' | translate) }}</h2>
       </div>
       <div class="values">
         @for (value of values; track value.key) {
           <div class="value">
             <span class="value-ic"><lib-icon [name]="value.icon" [size]="28" /></span>
-            <h3 class="value-title">{{ 'about.value_' + value.key + '_title' | translate }}</h3>
-            <p class="value-text">{{ 'about.value_' + value.key + '_text' | translate }}</p>
+            <h3 class="value-title">{{ content.block('about-values', value.key + '.title')?.value || ('about.value_' + value.key + '_title' | translate) }}</h3>
+            <p class="value-text">{{ content.block('about-values', value.key + '.text')?.value || ('about.value_' + value.key + '_text' | translate) }}</p>
           </div>
         }
       </div>

@@ -8,34 +8,95 @@ using Store.Domain;
 namespace Store.Api.Infrastructure;
 
 /// <summary>
-/// Seeds the initial inventory of editable content blocks for the home page. Insert-by-key only, so
-/// re-runs never duplicate a block and never overwrite an admin edit (Arabic in the block's
-/// <c>Value</c>, English as a <c>LocalizedContentProperty</c> overlay — the same mechanism product and
-/// news translations use). Additive and idempotent, matching the other seeders.
+/// Seeds the initial inventory of editable content blocks for the storefront (home + about pages).
+/// Insert-by-key only, so re-runs never duplicate a block and never overwrite an admin edit (Arabic in
+/// the block's <c>Value</c>, English as a <c>LocalizedContentProperty</c> overlay — the same mechanism
+/// product and news translations use). Additive and idempotent, matching the other seeders.
 /// </summary>
 public static class ContentBlockSeeder
 {
-    private const string Page = "home";
-
     private sealed record BlockSeed(
-        string Section, string Key, string Type, string? Ar, string? En, string? LinkUrl = null, int Sort = 0);
+        string Page, string Section, string Key, string Type,
+        string? Ar, string? En, string? LinkUrl = null, int Sort = 0);
 
     private static readonly BlockSeed[] Blocks =
     [
-        new("hero-grid", "hero-copy.title", "text",
+        // ----- Home ---------------------------------------------------------------------------------
+        new("home", "hero-grid", "hero-copy.title", "text",
             "منتجات صُنعت بعزيمة وأيادٍ تستحق الفرصة",
             "Products made with determination by hands that deserve a chance", Sort: 0),
-        new("hero-grid", "hero-copy.subtitle", "text",
+        new("home", "hero-grid", "hero-copy.subtitle", "text",
             "قطع يدوية فريدة يصنعها نزلاء مراكز الإصلاح والتأهيل. كل عملية شراء تدعم تأهيلهم وتعيد لهم الكرامة والأمل.",
             "Unique handmade pieces crafted by inmates of the Reform & Rehabilitation Centers. "
             + "Every purchase supports their rehabilitation and restores dignity and hope.", Sort: 1),
-        new("hero-grid", "hero-copy.cta-label", "text", "تسوّق الآن", "Shop now", Sort: 2),
-        new("hero-grid", "hero-copy.cta", "link", null, null, LinkUrl: "/shop", Sort: 3),
-        new("hero-grid", "hero-media", "image", null, null, Sort: 4),
-        new("mission-band", "mission.title", "text",
+        new("home", "hero-grid", "hero-copy.cta-label", "text", "تسوّق الآن", "Shop now", Sort: 2),
+        new("home", "hero-grid", "hero-copy.cta", "link", null, null, LinkUrl: "/shop", Sort: 3),
+        new("home", "hero-grid", "hero-media", "image", null, null, Sort: 4),
+        new("home", "mission-band", "mission.title", "text",
             "وراء كل قطعة… إنسانٌ يستعيد كرامته", "Behind every piece… a person reclaiming their dignity"),
-        new("cta-band", "cta.title", "text",
+        new("home", "cta-band", "cta.title", "text",
             "كن أول من يعرف عن المنتجات الجديدة", "Be the first to know about new products"),
+
+        // ----- About (/pages/about-us) — every visible line of copy, fixed design -------------------
+        new("about", "about-hero", "eyebrow", "text", "من نحن", "About us", Sort: 0),
+        new("about", "about-hero", "title", "text",
+            "صُنع بعزيمة — حين تتحوّل الإرادة إلى منتج",
+            "Made with Determination — when willpower becomes a product", Sort: 1),
+        new("about", "about-hero", "body", "text",
+            "مبادرة وطنية من مديرية الأمن العام / إدارة مراكز الإصلاح والتأهيل، تتيح لنزلاء المراكز عرض منتجاتهم اليدوية وبيعها رقميًا، فتتحوّل مهاراتهم إلى مصدر رزق كريم وجسرٍ لإعادة الاندماج في المجتمع.",
+            "A national initiative by the Public Security Directorate / Correction and Rehabilitation "
+            + "Centers Department that enables center residents to showcase and sell their handmade "
+            + "products online — turning their skills into a dignified livelihood and a bridge back into "
+            + "society.", Sort: 2),
+        new("about", "about-hero", "cta-label", "text", "تصفّح المنتجات", "Browse products", Sort: 3),
+
+        new("about", "about-how", "eyebrow", "text", "كيف نعمل", "How we work", Sort: 0),
+        new("about", "about-how", "title", "text",
+            "من المهارة إلى يديك في أربع خطوات", "From skill to your hands in four steps", Sort: 1),
+        new("about", "about-how", "step1.number", "text", "١", "1", Sort: 2),
+        new("about", "about-how", "step1.title", "text", "تدريب وتأهيل", "Training & rehabilitation", Sort: 3),
+        new("about", "about-how", "step1.text", "text",
+            "يتعلّم النزلاء حِرَفًا يدوية على يد مدرّبين متخصصين.",
+            "Residents learn handcrafts from specialized trainers.", Sort: 4),
+        new("about", "about-how", "step2.number", "text", "٢", "2", Sort: 5),
+        new("about", "about-how", "step2.title", "text", "صناعة بإتقان", "Crafted with care", Sort: 6),
+        new("about", "about-how", "step2.text", "text",
+            "تُصنع كل قطعة يدويًا من خامات طبيعية مختارة.",
+            "Every piece is handmade from carefully selected natural materials.", Sort: 7),
+        new("about", "about-how", "step3.number", "text", "٣", "3", Sort: 8),
+        new("about", "about-how", "step3.title", "text", "فحص الجودة", "Quality inspection", Sort: 9),
+        new("about", "about-how", "step3.text", "text",
+            "تخضع المنتجات لمعايير دقيقة قبل عرضها للبيع.",
+            "Products are held to strict standards before going on sale.", Sort: 10),
+        new("about", "about-how", "step4.number", "text", "٤", "4", Sort: 11),
+        new("about", "about-how", "step4.title", "text", "دعم وإعادة دمج", "Support & reintegration", Sort: 12),
+        new("about", "about-how", "step4.text", "text",
+            "يُوجَّه العائد لتمكين الصانع وإعادة دمجه.",
+            "Proceeds go toward empowering makers and reintegrating them.", Sort: 13),
+
+        new("about", "about-values", "eyebrow", "text", "قيمنا", "Our values", Sort: 0),
+        new("about", "about-values", "title", "text", "ما الذي نؤمن به", "What we believe in", Sort: 1),
+        new("about", "about-values", "trust.title", "text", "الثقة", "Trust", Sort: 2),
+        new("about", "about-values", "trust.text", "text",
+            "منصّة حكومية رسمية تضمن أصالة كل قطعة ووضوح مصدرها.",
+            "An official government platform that guarantees the authenticity and provenance of every piece.",
+            Sort: 3),
+        new("about", "about-values", "empower.title", "text", "التمكين", "Empowerment", Sort: 4),
+        new("about", "about-values", "empower.text", "text",
+            "عائدات البيع تعود مباشرة لتأهيل النزلاء وإعادة دمجهم.",
+            "Sales proceeds go directly to rehabilitating residents and reintegrating them.", Sort: 5),
+        new("about", "about-values", "heritage.title", "text", "التراث", "Heritage", Sort: 6),
+        new("about", "about-values", "heritage.text", "text",
+            "حِرَف أردنية أصيلة تُصنع يدويًا وتحافظ على هويتنا.",
+            "Authentic Jordanian crafts, handmade to preserve our identity.", Sort: 7),
+        new("about", "about-values", "dignity.title", "text", "الكرامة", "Dignity", Sort: 8),
+        new("about", "about-values", "dignity.text", "text",
+            "عمل شريف يعيد بناء الإنسان ويمنحه فرصة جديدة.",
+            "Honest work that rebuilds a person and offers a new beginning.", Sort: 9),
+        new("about", "about-values", "quality.title", "text", "الجودة", "Quality", Sort: 10),
+        new("about", "about-values", "quality.text", "text",
+            "معايير دقيقة لكل منتج قبل أن يصل إلى يديك.",
+            "Strict standards for every product before it reaches your hands.", Sort: 11),
     ];
 
     public static async Task SeedAsync(IServiceProvider services, CancellationToken cancellationToken = default)
@@ -47,23 +108,22 @@ public static class ContentBlockSeeder
         var now = sp.GetRequiredService<TimeProvider>().GetUtcNow();
 
         var existing = (await db.ContentBlocks
-                .Where(b => b.PageKey == Page)
-                .Select(b => new { b.SectionKey, b.BlockKey })
+                .Select(b => new { b.PageKey, b.SectionKey, b.BlockKey })
                 .ToListAsync(cancellationToken))
-            .Select(k => (k.SectionKey, k.BlockKey))
+            .Select(k => (k.PageKey, k.SectionKey, k.BlockKey))
             .ToHashSet();
 
         var inserted = 0;
         foreach (var seed in Blocks)
         {
-            if (existing.Contains((seed.Section, seed.Key)))
+            if (existing.Contains((seed.Page, seed.Section, seed.Key)))
             {
                 continue;
             }
 
             db.ContentBlocks.Add(new ContentBlock
             {
-                PageKey = Page,
+                PageKey = seed.Page,
                 SectionKey = seed.Section,
                 BlockKey = seed.Key,
                 Type = seed.Type,
@@ -93,8 +153,7 @@ public static class ContentBlockSeeder
         }
 
         var blocks = await db.ContentBlocks
-            .Where(b => b.PageKey == Page)
-            .Select(b => new { b.Id, b.SectionKey, b.BlockKey })
+            .Select(b => new { b.Id, b.PageKey, b.SectionKey, b.BlockKey })
             .ToListAsync(cancellationToken);
         var blockIds = blocks.Select(b => b.Id).ToList();
 
@@ -110,7 +169,8 @@ public static class ContentBlockSeeder
         var overlayInserted = 0;
         foreach (var seed in Blocks.Where(s => !string.IsNullOrEmpty(s.En)))
         {
-            var block = blocks.FirstOrDefault(b => b.SectionKey == seed.Section && b.BlockKey == seed.Key);
+            var block = blocks.FirstOrDefault(
+                b => b.PageKey == seed.Page && b.SectionKey == seed.Section && b.BlockKey == seed.Key);
             if (block is null || overlaid.Contains(block.Id))
             {
                 continue;

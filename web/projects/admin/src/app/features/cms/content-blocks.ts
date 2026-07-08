@@ -34,6 +34,11 @@ const KEY_LABELS: Record<string, string> = {
   'hero-media': 'cms.keys.hero_media',
   'mission.title': 'cms.keys.mission_title',
   'cta.title': 'cms.keys.cta_title',
+  // About page — shared generic slots; the step/value item keys read fine raw.
+  eyebrow: 'cms.keys.eyebrow',
+  title: 'cms.keys.title',
+  body: 'cms.keys.body',
+  'cta-label': 'cms.keys.cta_label',
 };
 
 /**
@@ -54,7 +59,7 @@ export class AdminContentBlocks {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  protected readonly pages = ['home'];
+  protected readonly pages = ['home', 'about'];
   protected readonly page = signal('home');
   protected readonly lang = signal<'ar' | 'en'>('ar');
 
