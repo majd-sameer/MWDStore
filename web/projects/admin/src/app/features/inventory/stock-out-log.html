@@ -36,8 +36,8 @@
             [placeholder]="'stockoutlog.all_reasons' | translate"
             [attr.aria-label]="'stockout.reason' | translate"
           >
-            <ng-template ng-label-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
-            <ng-template ng-option-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
           </ng-select>
           <ng-select
             class="filter-select"
@@ -48,8 +48,8 @@
             [placeholder]="'stockoutlog.all_channels' | translate"
             [attr.aria-label]="'stockout.channel' | translate"
           >
-            <ng-template ng-label-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
-            <ng-template ng-option-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+            <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
           </ng-select>
           @if (warehouses().length) {
             <ng-select

@@ -89,8 +89,8 @@
                   (ngModelChange)="setWarehouse($event)"
                   [clearable]="false"
                 >
-                  <ng-template ng-label-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
-                  <ng-template ng-option-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-label-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-option-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
                 </ng-select>
                 <div class="form-text">{{ 'stockout.on_hand' | translate: { count: onHand() } }}</div>
               </div>
@@ -118,8 +118,8 @@
                   (ngModelChange)="setReason($event)"
                   [clearable]="false"
                 >
-                  <ng-template ng-label-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
-                  <ng-template ng-option-tmp let-item>{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+                  <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+                  <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
                 </ng-select>
               </div>
 
@@ -140,8 +140,8 @@
                     [clearable]="!channelRequired()"
                     [placeholder]="'stockout.no_channel' | translate"
                   >
-                    <ng-template ng-label-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
-                    <ng-template ng-option-tmp let-item>{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+                    <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+                    <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
                   </ng-select>
                 </div>
               }

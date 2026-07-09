@@ -121,8 +121,8 @@
                          [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
                          [clearable]="false" [searchable]="false"
                          [attr.aria-label]="'order_detail.update_status' | translate">
-                <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
-                <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                <ng-template ng-label-tmp let-item="item">{{ 'orders.status_' + item.value | translate }}</ng-template>
+                <ng-template ng-option-tmp let-item="item">{{ 'orders.status_' + item.value | translate }}</ng-template>
               </ng-select>
               <button
                 type="button"

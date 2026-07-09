@@ -89,8 +89,8 @@
                   [clearable]="false"
                   [attr.aria-label]="'inventory.warehouse' | translate"
                 >
-                  <ng-template ng-label-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
-                  <ng-template ng-option-tmp let-item>{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-label-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+                  <ng-template ng-option-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
                 </ng-select>
               </div>
               <div class="mb-3">

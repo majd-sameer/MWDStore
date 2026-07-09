@@ -18,8 +18,8 @@
               [placeholder]="'common.choose' | translate"
               [attr.aria-label]="'localization.culture' | translate"
             >
-              <ng-template ng-label-tmp let-item>{{ item.id }} — {{ item.name }}</ng-template>
-              <ng-template ng-option-tmp let-item>{{ item.id }} — {{ item.name }}</ng-template>
+              <ng-template ng-label-tmp let-item="item">{{ item.id }} — {{ item.name }}</ng-template>
+              <ng-template ng-option-tmp let-item="item">{{ item.id }} — {{ item.name }}</ng-template>
             </ng-select>
           </div>
           <div class="col-md-4">
