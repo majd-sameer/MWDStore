@@ -28,8 +28,8 @@ interface NavSection {
 
 /**
  * Authenticated admin chrome: a fixed navy sidebar with the feature links
- * grouped into the five business sections (Stock management / Content management
- * / Sales / People / System) plus a
+ * grouped into the business sections (Stock management / Content management
+ * / Sales / System) plus a
  * topbar with a language toggle (en ⇄ ar via the shared core LanguageService),
  * the signed-in user and a sign-out action. All copy keyed through
  * ngx-translate; positioning uses logical properties so RTL mirrors cleanly.
@@ -100,23 +100,15 @@ export class AdminLayout {
         { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.sales },
         { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
         { path: '/promotions', key: 'promotions', icon: 'bi-ticket-perforated', roles: AREA.marketing },
-        { path: '/taxes', key: 'taxes', icon: 'bi-percent', roles: AREA.taxes },
         { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.payments },
         { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.vendors },
       ],
     },
-    // People — users (staff + roles) / customers (same route as Sales, intentionally duplicated).
-    {
-      key: 'people',
-      items: [
-        { path: '/users', key: 'users', icon: 'bi-person-badge', roles: AREA.users },
-        { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
-      ],
-    },
-    // System — settings.
+    // System — user & role management plus settings.
     {
       key: 'system',
       items: [
+        { path: '/users', key: 'users', icon: 'bi-person-badge', roles: AREA.users },
         { path: '/locations', key: 'countries', icon: 'bi-globe2', roles: AREA.settings },
         { path: '/audit-log', key: 'auditLog', icon: 'bi-clipboard-check', roles: AREA.settings },
         { path: '/settings', key: 'settings', icon: 'bi-gear', roles: AREA.settings },

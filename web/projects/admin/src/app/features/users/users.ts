@@ -7,21 +7,16 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {
-  AdminUsersService,
-  type AdminUserListItem,
-  type CustomerGroupUpsertRequest,
-} from 'data-access';
+import { AdminUsersService, type AdminUserListItem } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, Icon, ToastService } from 'ui';
+import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 
 /**
- * User browser: a searchable list with the customer-group manager alongside.
- * Creating and editing a user happen on their own page (`/users/new`,
- * `/users/:id`); customer groups stay here as a secondary entity.
+ * User browser: a searchable list of staff users. Creating and editing a user
+ * happen on their own page (`/users/new`, `/users/:id`).
  */
 @Component({
   selector: 'app-admin-users',
@@ -29,7 +24,6 @@ import { TableFooter } from '../../shared/table-footer';
   imports: [
     RouterLink,
     DatePipe,
-    Button,
     Icon,
     TranslatePipe,
     PageHeader,
@@ -53,7 +47,6 @@ export class AdminUsers {
   }));
   protected readonly rows = computed(() => this.list.value()?.items ?? []);
   protected readonly total = computed(() => this.list.value()?.total ?? 0);
-  protected readonly groups = this.service.groupsResource();
   protected readonly deletingId = signal<number | null>(null);
 
   protected setSearch(value: string): void {
@@ -81,47 +74,6 @@ export class AdminUsers {
         this.toast.error(this.translate.instant('users.delete_failed'));
         this.deletingId.set(null);
       },
-    });
-  }
-
-  // ----- Customer groups -------------------------------------------------------
-
-  protected addGroup(input: HTMLInputElement): void {
-    const name = input.value.trim();
-    if (!name) {
-      return;
-    }
-    const body: CustomerGroupUpsertRequest = { name, isActive: true };
-    this.service.createGroup(body).subscribe({
-      next: () => {
-        input.value = '';
-        this.groups.reload();
-      },
-      error: () => this.toast.error(this.translate.instant('users.group_create_failed')),
-    });
-  }
-
-  protected renameGroup(id: number, name: string, isActive: boolean): void {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      return;
-    }
-    this.service.updateGroup(id, { name: trimmed, isActive }).subscribe({
-      next: () => {
-        this.toast.success(this.translate.instant('users.group_updated'));
-        this.groups.reload();
-      },
-      error: () => this.toast.error(this.translate.instant('users.group_update_failed')),
-    });
-  }
-
-  protected removeGroup(id: number, name: string | null): void {
-    if (!confirm(this.translate.instant('users.confirm_delete_group', { name: name ?? '' }))) {
-      return;
-    }
-    this.service.deleteGroup(id).subscribe({
-      next: () => this.groups.reload(),
-      error: () => this.toast.error(this.translate.instant('users.group_delete_failed')),
     });
   }
 }

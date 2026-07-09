@@ -9,7 +9,7 @@
     </app-page-header>
 
     <div class="row g-4">
-      <div class="col-lg-8">
+      <div class="col-12">
         <div class="card border-0 shadow-sm">
           <div class="card-body">
             <div class="list-toolbar">
@@ -32,7 +32,6 @@
                     <tr>
                       <th scope="col">{{ 'users.col_user' | translate }}</th>
                       <th scope="col">{{ 'users.col_roles' | translate }}</th>
-                      <th scope="col">{{ 'users.col_groups' | translate }}</th>
                       <th scope="col">{{ 'common.created' | translate }}</th>
                       <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
@@ -47,11 +46,6 @@
                         <td>
                           @for (r of u.roles; track r) {
                             <span class="badge text-bg-secondary me-1">{{ 'roles.' + r | translate }}</span>
-                          }
-                        </td>
-                        <td>
-                          @for (g of u.customerGroups; track g) {
-                            <span class="badge text-bg-light border me-1">{{ g }}</span>
                           }
                         </td>
                         <td class="small">{{ u.createdOn | date: 'mediumDate' }}</td>
@@ -74,7 +68,7 @@
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="5" class="text-center text-body-secondary py-4">
+                        <td colspan="4" class="text-center text-body-secondary py-4">
                           {{ 'users.empty' | translate }}
                         </td>
                       </tr>
@@ -93,40 +87,6 @@
                 />
               }
             }
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header fw-semibold">{{ 'users.groups_title' | translate }}</div>
-          <div class="card-body">
-            @for (g of groups.value() ?? []; track g.id) {
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <input type="text" class="form-control form-control-sm" [value]="g.name"
-                  (change)="renameGroup(g.id, $any($event.target).value, g.isActive)" />
-                <div class="form-check form-switch">
-                  <input type="checkbox" class="form-check-input" id="grp-active-{{ g.id }}"
-                    [checked]="g.isActive"
-                    (change)="renameGroup(g.id, g.name ?? '', $any($event.target).checked)" />
-                  <label class="form-check-label small" for="grp-active-{{ g.id }}">
-                    {{ 'common.active' | translate }}
-                  </label>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-danger"
-                  (click)="removeGroup(g.id, g.name)">✕</button>
-              </div>
-            } @empty {
-              <p class="text-body-secondary small">{{ 'users.no_groups' | translate }}</p>
-            }
-            <div class="d-flex gap-2 mt-3">
-              <input type="text" class="form-control form-control-sm"
-                [placeholder]="'users.new_group_ph' | translate" #groupName />
-              <button type="button" libButton variant="secondary" [outline]="true"
-                (click)="addGroup(groupName)">
-                {{ 'common.add' | translate }}
-              </button>
-            </div>
           </div>
         </div>
       </div>

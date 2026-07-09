@@ -33,8 +33,7 @@ function emptyModel(): UserModel {
 
 /**
  * Create / edit a user on its own page (mirrors the product form). Edit mode
- * fetches the full detail (`GET /api/admin/users/{id}`) to seed profile, roles
- * and group membership. Customer groups themselves are managed on the list page.
+ * fetches the full detail (`GET /api/admin/users/{id}`) to seed profile and roles.
  */
 @Component({
   selector: 'app-admin-user-form',
@@ -56,13 +55,11 @@ export class AdminUserForm {
   private readonly userId = computed(() => Number(this.idParam().get('id')));
 
   protected readonly roles = this.service.rolesResource();
-  protected readonly groups = this.service.groupsResource();
 
   protected readonly loading = signal(false);
   protected readonly loadError = signal(false);
   protected readonly serverError = signal<string | null>(null);
   protected readonly selectedRoles = signal<string[]>([]);
-  protected readonly selectedGroupIds = signal<number[]>([]);
 
   protected readonly model = signal<UserModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
@@ -83,7 +80,6 @@ export class AdminUserForm {
             phoneNumber: detail.phoneNumber ?? '',
           });
           this.selectedRoles.set(detail.roles);
-          this.selectedGroupIds.set(detail.customerGroupIds);
           this.loading.set(false);
         },
         error: () => {
@@ -97,12 +93,6 @@ export class AdminUserForm {
   protected toggleRole(name: string): void {
     this.selectedRoles.update((roles) =>
       roles.includes(name) ? roles.filter((r) => r !== name) : [...roles, name],
-    );
-  }
-
-  protected toggleGroup(id: number): void {
-    this.selectedGroupIds.update((ids) =>
-      ids.includes(id) ? ids.filter((g) => g !== id) : [...ids, id],
     );
   }
 
@@ -124,7 +114,6 @@ export class AdminUserForm {
               fullName: m.fullName,
               phoneNumber: m.phoneNumber || null,
               roles: this.selectedRoles(),
-              customerGroupIds: this.selectedGroupIds(),
             }),
           );
           this.toast.success(this.translate.instant('users.created_ok'));
@@ -134,7 +123,6 @@ export class AdminUserForm {
               fullName: m.fullName,
               phoneNumber: m.phoneNumber || null,
               roles: this.selectedRoles(),
-              customerGroupIds: this.selectedGroupIds(),
             }),
           );
           this.toast.success(this.translate.instant('users.updated_ok'));

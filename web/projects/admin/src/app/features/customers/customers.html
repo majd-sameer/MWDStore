@@ -20,7 +20,7 @@
         </div>
 
         @if (list.isLoading()) {
-          <app-table-skeleton [rows]="8" [columns]="[3, 2, 1, 1, 1, 1]" />
+          <app-table-skeleton [rows]="8" [columns]="[3, 1, 1, 1, 1]" />
         } @else if (list.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else {
@@ -29,7 +29,6 @@
               <thead>
                 <tr>
                   <th scope="col">{{ 'customers.col_customer' | translate }}</th>
-                  <th scope="col">{{ 'users.col_groups' | translate }}</th>
                   <th scope="col">{{ 'nav.orders' | translate }}</th>
                   <th scope="col">{{ 'customers.col_spend' | translate }}</th>
                   <th scope="col">{{ 'customers.col_joined' | translate }}</th>
@@ -42,13 +41,6 @@
                     <td>
                       <a [routerLink]="['/customers', c.id]" class="text-decoration-none fw-medium">{{ c.fullName }}</a>
                       <div class="small text-body-secondary">{{ c.email }}</div>
-                    </td>
-                    <td>
-                      @for (g of c.customerGroups; track g) {
-                        <span class="badge text-bg-light border me-1">{{ g }}</span>
-                      } @empty {
-                        <span class="text-body-secondary small">—</span>
-                      }
                     </td>
                     <td>{{ c.orderCount }}</td>
                     <td>{{ c.totalSpent | money }}</td>
@@ -72,7 +64,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="6" class="text-center text-body-secondary py-4">
+                    <td colspan="5" class="text-center text-body-secondary py-4">
                       {{ 'customers.empty' | translate }}
                     </td>
                   </tr>

@@ -35,7 +35,10 @@ public sealed class AdminUsersController : ControllerBase
         [FromQuery] string? query, [FromQuery] bool includeDeleted = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        var users = _db.Users.AsQueryable();
+        // Staff only — a user with no staff role is a storefront customer and
+        // belongs to the customer directory, not this screen (mirrors
+        // AdminCustomersController, which selects the complement).
+        var users = _db.Users.Where(u => u.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)));
         if (!includeDeleted)
         {
             users = users.Where(u => !u.IsDeleted);
@@ -72,7 +75,7 @@ public sealed class AdminUsersController : ControllerBase
     public async Task<ActionResult<AdminUserDetail>> Get(long id, CancellationToken cancellationToken)
     {
         var user = await _db.Users
-            .Where(u => u.Id == id)
+            .Where(u => u.Id == id && u.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)))
             .Select(u => new AdminUserDetail(
                 u.Id, u.Email, u.FullName, u.PhoneNumber,
                 u.Roles.Select(r => r.Role.Name!).ToList(),

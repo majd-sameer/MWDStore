@@ -34,7 +34,7 @@ function emptyModel(): CustomerModel {
 /**
  * Create / edit a customer on its own page (mirrors the user form, without roles).
  * Edit mode fetches the full detail (`GET /api/admin/customers/{id}`) to seed
- * profile and customer-group membership.
+ * the profile.
  */
 @Component({
   selector: 'app-admin-customer-form',
@@ -55,12 +55,9 @@ export class AdminCustomerForm {
   protected readonly isNew = computed(() => this.idParam().get('id') === 'new');
   private readonly customerId = computed(() => Number(this.idParam().get('id')));
 
-  protected readonly groups = this.service.groupsResource();
-
   protected readonly loading = signal(false);
   protected readonly loadError = signal(false);
   protected readonly serverError = signal<string | null>(null);
-  protected readonly selectedGroupIds = signal<number[]>([]);
 
   protected readonly model = signal<CustomerModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
@@ -80,7 +77,6 @@ export class AdminCustomerForm {
             fullName: detail.fullName ?? '',
             phoneNumber: detail.phoneNumber ?? '',
           });
-          this.selectedGroupIds.set(detail.customerGroupIds);
           this.loading.set(false);
         },
         error: () => {
@@ -89,12 +85,6 @@ export class AdminCustomerForm {
         },
       });
     }
-  }
-
-  protected toggleGroup(id: number): void {
-    this.selectedGroupIds.update((ids) =>
-      ids.includes(id) ? ids.filter((g) => g !== id) : [...ids, id],
-    );
   }
 
   protected onSubmit(event: Event): void {
@@ -114,7 +104,6 @@ export class AdminCustomerForm {
               password: m.password,
               fullName: m.fullName,
               phoneNumber: m.phoneNumber || null,
-              customerGroupIds: this.selectedGroupIds(),
             }),
           );
           this.toast.success(this.translate.instant('customers.created_ok'));
@@ -123,7 +112,6 @@ export class AdminCustomerForm {
             this.service.update(this.customerId(), {
               fullName: m.fullName,
               phoneNumber: m.phoneNumber || null,
-              customerGroupIds: this.selectedGroupIds(),
             }),
           );
           this.toast.success(this.translate.instant('customers.updated_ok'));

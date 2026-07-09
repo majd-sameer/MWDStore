@@ -1,33 +1,43 @@
-
-    <app-page-header
-      [title]="'promotions.title' | translate"
-      [subtitle]="'promotions.subtitle' | translate"
-    >
-      <a routerLink="/promotions/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
-        <lib-icon name="plus" [size]="18" /> {{ 'promotions.new' | translate }}
-      </a>
-    </app-page-header>
-
+<app-page-header
+  [title]="'promotions.title' | translate"
+  [subtitle]="'promotions.subtitle' | translate"
+>
+  <a routerLink="/promotions/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+    <lib-icon name="plus" [size]="18"/>
+    {{ 'promotions.new' | translate }}
+  </a>
+</app-page-header>
+<div class="row">
+  <div class="col-12 col-lg-6">
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17"/></span>
+            <input type="text" class="form-control" [placeholder]="'promotions.search_ph' | translate"
+              [attr.aria-label]="'promotions.search_label' | translate"
+              (input)="setSearch($any($event.target).value)"/>
+          </div>
+        </div>
+
         @if (list.isLoading()) {
-          <app-table-skeleton [rows]="6" [columns]="[3, 2, 1, 1, 1]" />
+          <app-table-skeleton [rows]="6" [columns]="[3, 2, 1, 1, 1]"/>
         } @else if (list.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-        } @else if (list.value(); as rows) {
+        } @else {
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  <th scope="col">{{ 'common.name' | translate }}</th>
-                  <th scope="col">{{ 'promotions.col_discount' | translate }}</th>
-                  <th scope="col">{{ 'common.status' | translate }}</th>
-                  <th scope="col">{{ 'promotions.col_used' | translate }}</th>
-                  <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
-                </tr>
+              <tr>
+                <th scope="col">{{ 'common.name' | translate }}</th>
+                <th scope="col">{{ 'promotions.col_discount' | translate }}</th>
+                <th scope="col">{{ 'common.status' | translate }}</th>
+                <th scope="col">{{ 'promotions.col_used' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
+              </tr>
               </thead>
               <tbody>
-                @for (r of rows; track r.id) {
+                @for (r of rows(); track r.id) {
                   <tr>
                     <td>
                       <a [routerLink]="['/promotions', r.id]" class="text-decoration-none fw-medium">{{ r.name }}</a>
@@ -47,7 +57,7 @@
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/promotions', r.id]" class="action-btn" [title]="'common.edit' | translate">
-                          <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
+                          <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate"/>
                         </a>
                         <button
                           type="button"
@@ -56,7 +66,7 @@
                           [disabled]="deletingId() === r.id"
                           (click)="remove(r)"
                         >
-                          <lib-icon name="trash" [size]="15" [label]="'common.delete' | translate" />
+                          <lib-icon name="trash" [size]="15" [label]="'common.delete' | translate"/>
                         </button>
                       </span>
                     </td>
@@ -64,28 +74,54 @@
                 } @empty {
                   <tr>
                     <td colspan="5">
-                      <div class="empty-state">
-                        <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
-                        <div class="empty-title">{{ 'promotions.empty' | translate }}</div>
-                        <a routerLink="/promotions/new" class="btn btn-primary btn-sm mt-2">
-                          {{ 'promotions.create_first' | translate }}
-                        </a>
-                      </div>
+                      @if ((list.value() ?? []).length === 0) {
+                        <div class="empty-state">
+                          <span class="empty-icon"><lib-icon name="box" [size]="26"/></span>
+                          <div class="empty-title">{{ 'promotions.empty' | translate }}</div>
+                          <a routerLink="/promotions/new" class="btn btn-primary btn-sm mt-2">
+                            {{ 'promotions.create_first' | translate }}
+                          </a>
+                        </div>
+                      } @else {
+                        <div class="text-center text-body-secondary py-4">
+                          {{ 'promotions.no_matches' | translate }}
+                        </div>
+                      }
                     </td>
                   </tr>
                 }
               </tbody>
             </table>
           </div>
+
+          @if (total() > 0) {
+            <app-table-footer
+              [total]="total()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              (pageChange)="page.set($event)"
+              (pageSizeChange)="setPageSize($event)"
+            />
+          }
         }
       </div>
     </div>
-
+  </div>
+  <div class="col-12 col-lg-6">
     <div class="card border-0 shadow-sm">
       <div class="card-header fw-semibold">{{ 'promotions.usages_title' | translate }}</div>
       <div class="card-body">
-        <table class="table table-sm align-middle mb-0">
-          <thead>
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17"/></span>
+            <input type="text" class="form-control" [placeholder]="'promotions.usages_search_ph' | translate"
+              [attr.aria-label]="'promotions.usages_search_label' | translate"
+              (input)="setUsageSearch($any($event.target).value)"/>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
             <tr>
               <th>{{ 'promotions.col_promotion' | translate }}</th>
               <th>{{ 'promotions.coupon_badge' | translate }}</th>
@@ -93,24 +129,44 @@
               <th>{{ 'dashboard.col_order' | translate }}</th>
               <th>{{ 'common.when' | translate }}</th>
             </tr>
-          </thead>
-          <tbody>
-            @for (u of usages(); track u.id) {
-              <tr>
-                <td>{{ u.cartRuleName }}</td>
-                <td>{{ u.couponCode ?? '—' }}</td>
-                <td>{{ u.userEmail ?? u.userId }}</td>
-                <td>#{{ u.orderId }}</td>
-                <td>{{ u.createdOn | date: 'medium' }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="text-center text-body-secondary py-3">
-                  {{ 'promotions.no_usages' | translate }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (u of usageRows(); track u.id) {
+                <tr>
+                  <td>{{ u.cartRuleName }}</td>
+                  <td>{{ u.couponCode ?? '—' }}</td>
+                  <td>{{ u.userEmail ?? u.userId }}</td>
+                  <td>#{{ u.orderId }}</td>
+                  <td>{{ u.createdOn | date: 'medium' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center text-body-secondary py-3">
+                    @if (usages().length === 0) {
+                      {{ 'promotions.no_usages' | translate }}
+                    } @else {
+                      {{ 'promotions.usages_no_matches' | translate }}
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (usagesTotal() > 0) {
+          <app-table-footer
+            [total]="usagesTotal()"
+            [page]="usagePage()"
+            [pageSize]="usagePageSize()"
+            (pageChange)="usagePage.set($event)"
+            (pageSizeChange)="setUsagePageSize($event)"
+          />
+        }
       </div>
     </div>
+  </div>
+</div>
+
+
+

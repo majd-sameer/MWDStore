@@ -3,7 +3,8 @@
       [title]="'payments.title' | translate"
       [subtitle]="'payments.subtitle' | translate"
     />
-
+<div class="row">
+  <div class="col-12 col-md-6 col-lg-5">
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header fw-semibold">{{ 'payments.providers_title' | translate }}</div>
       <div class="card-body">
@@ -13,12 +14,12 @@
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  <th>{{ 'payments.col_provider' | translate }}</th>
-                  <th>{{ 'payments.col_gateway' | translate }}</th>
-                  <th>{{ 'common.enabled' | translate }}</th>
-                  <th class="text-end">{{ 'common.actions' | translate }}</th>
-                </tr>
+              <tr>
+                <th>{{ 'payments.col_provider' | translate }}</th>
+                <th>{{ 'payments.col_gateway' | translate }}</th>
+                <th>{{ 'common.enabled' | translate }}</th>
+                <th class="text-end">{{ 'common.actions' | translate }}</th>
+              </tr>
               </thead>
               <tbody>
                 @for (p of rows; track p.id) {
@@ -30,8 +31,8 @@
                     <td>
                       <div class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" id="pay-prov-{{ p.id }}"
-                          [checked]="p.isEnabled"
-                          (change)="toggle(p, $any($event.target).checked)" />
+                               [checked]="p.isEnabled"
+                               (change)="toggle(p, $any($event.target).checked)" />
                         <label class="form-check-label visually-hidden" for="pay-prov-{{ p.id }}">
                           {{ 'payments.enable_label' | translate: { name: p.name } }}
                         </label>
@@ -50,7 +51,8 @@
         }
       </div>
     </div>
-
+  </div>
+  <div class="col-12 col-md-6 col-lg-7">
     <div class="card border-0 shadow-sm">
       <div class="card-header fw-semibold">{{ 'payments.transactions_title' | translate }}</div>
       <div class="card-body">
@@ -62,15 +64,15 @@
           <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  <th>#</th>
-                  <th>{{ 'dashboard.col_order' | translate }}</th>
-                  <th>{{ 'payments.col_method' | translate }}</th>
-                  <th>{{ 'payments.col_amount' | translate }}</th>
-                  <th>{{ 'payments.col_fee' | translate }}</th>
-                  <th>{{ 'payments.col_ref' | translate }}</th>
-                  <th>{{ 'common.when' | translate }}</th>
-                </tr>
+              <tr>
+                <th>#</th>
+                <th>{{ 'dashboard.col_order' | translate }}</th>
+                <th>{{ 'payments.col_method' | translate }}</th>
+                <th>{{ 'payments.col_amount' | translate }}</th>
+                <th>{{ 'payments.col_fee' | translate }}</th>
+                <th>{{ 'payments.col_ref' | translate }}</th>
+                <th>{{ 'common.when' | translate }}</th>
+              </tr>
               </thead>
               <tbody>
                 @for (t of paymentRows(); track t.id) {
@@ -80,7 +82,14 @@
                     <td>{{ t.paymentMethod ?? '—' }}</td>
                     <td>{{ t.amount | money }}</td>
                     <td>{{ t.paymentFee | money }}</td>
-                    <td class="small">{{ t.gatewayTransactionId ?? '—' }}</td>
+                    <td class="small">
+                      @if (t.gatewayTransactionId; as ref) {
+                        <span class="d-inline-block text-truncate align-bottom" style="max-width: 14ch"
+                          [title]="ref">{{ ref }}</span>
+                      } @else {
+                        —
+                      }
+                    </td>
                     <td class="small">{{ t.createdOn | date: 'medium' }}</td>
                   </tr>
                 } @empty {
@@ -106,3 +115,8 @@
         }
       </div>
     </div>
+  </div>
+</div>
+
+
+
