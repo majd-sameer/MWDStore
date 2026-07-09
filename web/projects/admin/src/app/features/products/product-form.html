@@ -81,8 +81,8 @@
                     [ngModel]="pendingAttributeId()" (ngModelChange)="pendingAttributeId.set($event)"
                     [ngModelOptions]="{ standalone: true }"
                     [placeholder]="'product_form.choose_attribute' | translate">
-                    <ng-template ng-label-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
-                    <ng-template ng-option-tmp let-item>{{ item.groupName }} / {{ item.name }}</ng-template>
+                    <ng-template ng-label-tmp let-item="item">{{ item?.groupName }} / {{ item?.name }}</ng-template>
+                    <ng-template ng-option-tmp let-item="item">{{ item.groupName }} / {{ item.name }}</ng-template>
                   </ng-select>
                   <button type="button" libButton variant="secondary" [outline]="true"
                     (click)="addAttribute(pendingAttributeId()); pendingAttributeId.set(null)">
@@ -127,8 +127,8 @@
                         [ngModel]="row.displayType" (ngModelChange)="setOptionDisplayType(row.optionId, $event)"
                         [ngModelOptions]="{ standalone: true }"
                         [clearable]="false" [searchable]="false">
-                        <ng-template ng-label-tmp let-item>{{ item.key | translate }}</ng-template>
-                        <ng-template ng-option-tmp let-item>{{ item.key | translate }}</ng-template>
+                        <ng-template ng-label-tmp let-item="item">{{ item?.key | translate }}</ng-template>
+                        <ng-template ng-option-tmp let-item="item">{{ item.key | translate }}</ng-template>
                       </ng-select>
                       <button type="button" class="btn btn-sm btn-outline-danger ms-auto"
                         (click)="removeOption(row.optionId)">{{ 'common.remove' | translate }}</button>

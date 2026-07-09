@@ -1,203 +1,209 @@
+<nav class="mb-3" aria-label="breadcrumb">
+  <a routerLink="/orders" class="text-decoration-none">← {{ 'orders.title' | translate }}</a>
+</nav>
 
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/orders" class="text-decoration-none">← {{ 'orders.title' | translate }}</a>
-    </nav>
-
-    @if (order.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    } @else if (order.error()) {
-      <div class="alert alert-danger">{{ 'order_detail.load_failed' | translate }}</div>
-    } @else if (order.value(); as o) {
-      <app-page-header
-        [title]="'order_detail.title' | translate: { id: o.id }"
-        [subtitle]="o.createdOn | date: 'medium'"
-      >
+@if (order.isLoading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+    </div>
+  </div>
+} @else if (order.error()) {
+  <div class="alert alert-danger">{{ 'order_detail.load_failed' | translate }}</div>
+} @else if (order.value(); as o) {
+  <app-page-header
+    [title]="'order_detail.title' | translate: { id: o.id }"
+    [subtitle]="o.createdOn | date: 'medium'"
+  >
         <span class="badge fs-6" [class]="badge(o.orderStatus)">
           {{ 'orders.status_' + o.orderStatus | translate }}
         </span>
-      </app-page-header>
+  </app-page-header>
 
-      <div class="row g-4">
-        <div class="col-lg-8">
-          <!--<div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
-            <div class="card-body p-0">
-              <table class="table align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">{{ 'products.col_product' | translate }}</th>
-                    <th scope="col">{{ 'products.col_price' | translate }}</th>
-                    <th scope="col">{{ 'order_detail.col_qty' | translate }}</th>
-                    <th scope="col" class="text-end">{{ 'order_detail.col_line_total' | translate }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (it of o.items ?? []; track it.productId) {
-                    <tr>
-                      <td>{{ it.productName }}</td>
-                      <td>{{ it.productPrice | money }}</td>
-                      <td>{{ it.quantity }}</td>
-                      <td class="text-end">
-                        {{ it.productPrice * it.quantity - it.discountAmount | money }}
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>-->
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-semibold">{{ 'order_detail.shipments_title' | translate }}</div>
-            <div class="card-body">
-              @for (s of shipments(); track s.id) {
-                <div class="border rounded p-2 mb-2 small">
-                  <div class="d-flex justify-content-between">
-                    <span class="fw-medium">
-                      {{ 'order_detail.shipment_label' | translate: { id: s.id, warehouse: s.warehouseName } }}
-                    </span>
-                    <span class="text-body-secondary">{{ s.createdOn | date: 'medium' }}</span>
-                  </div>
-                  <div class="text-body-secondary">
-                    {{ 'order_detail.tracking' | translate }} {{ s.trackingNumber || '—' }} ·
-                    @for (it of s.items; track it.id) {
-                      <span class="me-2">{{ it.productName }} × {{ it.quantity }}</span>
-                    }
-                  </div>
-                </div>
-              } @empty {
-                <p class="text-body-secondary small mb-2">{{ 'order_detail.no_shipments' | translate }}</p>
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!--<div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
+        <div class="card-body p-0">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'products.col_product' | translate }}</th>
+                <th scope="col">{{ 'products.col_price' | translate }}</th>
+                <th scope="col">{{ 'order_detail.col_qty' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'order_detail.col_line_total' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (it of o.items ?? []; track it.productId) {
+                <tr>
+                  <td>{{ it.productName }}</td>
+                  <td>{{ it.productPrice | money }}</td>
+                  <td>{{ it.quantity }}</td>
+                  <td class="text-end">
+                    {{ it.productPrice * it.quantity - it.discountAmount | money }}
+                  </td>
+                </tr>
               }
+            </tbody>
+          </table>
+        </div>
+      </div>-->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-semibold">{{ 'order_detail.shipments_title' | translate }}</div>
+        <div class="card-body">
+          @for (s of shipments(); track s.id) {
+            <div class="border rounded p-2 mb-2 small">
+              <div class="d-flex justify-content-between">
+                    <span class="fw-medium">
+                      {{ 'order_detail.shipment_label' | translate: {id: s.id, warehouse: s.warehouseName} }}
+                    </span>
+                <span class="text-body-secondary">{{ s.createdOn | date: 'medium' }}</span>
+              </div>
+              <div class="text-body-secondary">
+                {{ 'order_detail.tracking' | translate }} {{ s.trackingNumber || '—' }} ·
+                @for (it of s.items; track it.id) {
+                  <span class="me-2">{{ it.productName }} × {{ it.quantity }}</span>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="text-body-secondary small mb-2">{{ 'order_detail.no_shipments' | translate }}</p>
+          }
 
-              @if (canFulfill() && unshippedItems().length) {
-                <hr class="my-3" />
-                <div class="fw-semibold small mb-2">{{ 'order_detail.create_shipment' | translate }}</div>
-                <div class="row g-2 mb-2">
-                  <div class="col-md-6">
-                    <label class="form-label small" for="ship-warehouse">{{ 'inventory.warehouse' | translate }}</label>
-                    <ng-select id="ship-warehouse" [items]="warehouses.value() ?? []" bindLabel="name"
-                      bindValue="id" [ngModel]="selectedShipWarehouse()" (ngModelChange)="setShipWarehouse($event)"
-                      [clearable]="false" [attr.aria-label]="'inventory.warehouse' | translate" />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label small" for="ship-tracking">{{ 'order_detail.tracking_number' | translate }}</label>
-                    <input id="ship-tracking" type="text" class="form-control form-control-sm" #trackingInput
-                      [value]="o.trackingNumber || ''" disabled />
-                  </div>
-                </div>
-                @for (it of unshippedItems(); track it.id) {
-                  <div class="d-flex align-items-center gap-2 mb-1 small">
-                    <span class="flex-grow-1">{{ it.name }}</span>
-                    <span class="text-body-secondary">
+          @if (canFulfill() && unshippedItems().length) {
+            <hr class="my-3"/>
+            <div class="fw-semibold small mb-2">{{ 'order_detail.create_shipment' | translate }}</div>
+            <div class="row g-2 mb-2">
+              <div class="col-md-6">
+                <label class="form-label small" for="ship-warehouse">{{ 'inventory.warehouse' | translate }}</label>
+                <ng-select id="ship-warehouse" [items]="warehouses.value() ?? []" bindLabel="name"
+                           bindValue="id" [ngModel]="selectedShipWarehouse()" (ngModelChange)="setShipWarehouse($event)"
+                           [clearable]="false" [attr.aria-label]="'inventory.warehouse' | translate"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small"
+                       for="ship-tracking">{{ 'order_detail.tracking_number' | translate }}</label>
+                <input id="ship-tracking" type="text" class="form-control form-control-sm" #trackingInput
+                       [value]="o.trackingNumber || ''" disabled/>
+              </div>
+            </div>
+            @for (it of unshippedItems(); track it.id) {
+              <div class="d-flex align-items-center gap-2 mb-1 small">
+                <span class="flex-grow-1">{{ it.name }}</span>
+                <span class="text-body-secondary">
                       {{ 'order_detail.remaining' | translate }} {{ it.remaining }}
                     </span>
-                    <input type="number" class="form-control form-control-sm" style="width: 5rem"
-                      min="0" [max]="it.remaining" [value]="shipQty()[it.id] ?? it.remaining"
-                      (input)="setShipQty(it.id, $any($event.target).valueAsNumber)" />
-                  </div>
-                }
-                <button type="button" class="btn btn-primary btn-sm mt-2"
-                  [disabled]="saving() || !(warehouses.value() ?? []).length"
-                  (click)="createShipment(o, selectedShipWarehouse(), trackingInput.value)">
-                  {{ (saving() ? 'common.saving' : 'order_detail.create_shipment') | translate }}
-                </button>
-                @if (!(warehouses.value() ?? []).length) {
-                  <div class="small text-warning mt-1">{{ 'order_detail.create_warehouse_first' | translate }}</div>
-                }
-              }
+                <input type="number" class="form-control form-control-sm" style="width: 5rem"
+                       min="0" [max]="it.remaining" [value]="shipQty()[it.id] ?? it.remaining"
+                       (input)="setShipQty(it.id, $any($event.target).valueAsNumber)"/>
+              </div>
+            }
+            <div class="text-center">
+              <button type="button" class="btn btn-primary  mt-2"
+                      [disabled]="saving() || !(warehouses.value() ?? []).length"
+                      (click)="createShipment(o, selectedShipWarehouse(), trackingInput.value)">
+                {{ (saving() ? 'common.saving' : 'order_detail.create_shipment') | translate }}
+              </button>
             </div>
+            @if (!(warehouses.value() ?? []).length) {
+              <div class="small text-warning mt-1">{{ 'order_detail.create_warehouse_first' | translate }}</div>
+            }
+          }
+        </div>
+      </div>
+      @if (canManageOrder()) {
+        <div class="card border-0 shadow-sm">
+          <div class="card-header fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
+          <div class="card-body">
+            <div class="input-group mb-2">
+              <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
+                         [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
+                         [clearable]="false" [searchable]="false"
+                         [attr.aria-label]="'order_detail.update_status' | translate">
+                <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+              </ng-select>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="saving()"
+                (click)="updateStatus(o.id, statusChoice())"
+              >
+                {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
+              </button>
+            </div>
+            <div class="text-center">
+              <button
+                type="button"
+                class="btn btn-outline-danger"
+                [disabled]="saving() || o.orderStatus === canceledStatus"
+                (click)="cancel(o.id)"
+              >
+                {{ 'order_detail.cancel_order' | translate }}
+              </button>
+            </div>
+
           </div>
         </div>
+      }
+    </div>
 
-        <div class="col-lg-4">
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-semibold">{{ 'order_detail.summary' | translate }}</div>
-            <div class="card-body">
-              <dl class="row mb-0 small">
-                <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.customer_id' | translate }}</dt>
-                <dd class="col-5 text-end">{{ o.customerId }}</dd>
-                <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.subtotal' | translate }}</dt>
-                <dd class="col-5 text-end">{{ o.subTotal | money }}</dd>
-                <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.discount' | translate }}</dt>
-                <dd class="col-5 text-end">-{{ o.discountAmount | money }}</dd>
-                <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.tax' | translate }}</dt>
-                <dd class="col-5 text-end">{{ o.taxAmount | money }}</dd>
-                <dt class="col-7 fw-normal text-body-secondary">
-                  {{ 'nav.shipping' | translate }} ({{ o.shippingMethod }})
-                </dt>
-                <dd class="col-5 text-end">{{ o.shippingFeeAmount | money }}</dd>
-                <dt class="col-7 border-top pt-2 mt-2">{{ 'dashboard.col_total' | translate }}</dt>
-                <dd class="col-5 border-top pt-2 mt-2 text-end fw-semibold">
-                  {{ o.orderTotal | money }}
-                </dd>
-              </dl>
-              @if (o.orderNote) {
-                <hr />
-                <div class="small">
-                  <span class="text-body-secondary">{{ 'common.note' | translate }}:</span> {{ o.orderNote }}
-                </div>
-              }
-            </div>
-          </div>
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
-            <div class="card-body small">
-              <div>{{ o.shippingAddress.contactName }}</div>
-              <div>{{ o.shippingAddress.phone }}</div>
-              <div>{{ o.shippingAddress.addressLine1 }}</div>
-              @if (o.shippingAddress.addressLine2) {
-                <div>{{ o.shippingAddress.addressLine2 }}</div>
-              }
-              <div>{{ o.shippingAddress.city }} {{ o.shippingAddress.zipCode }}</div>
-            </div>
-          </div>
-          <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
-            <div class="card-body small">
-              <div>{{ o.billingAddress.contactName }}</div>
-              <div>{{ o.billingAddress.phone }}</div>
-              <div>{{ o.billingAddress.addressLine1 }}</div>
-              @if (o.billingAddress.addressLine2) {
-                <div>{{ o.billingAddress.addressLine2 }}</div>
-              }
-              <div>{{ o.billingAddress.city }} {{ o.billingAddress.zipCode }}</div>
-            </div>
-          </div>
-          @if (canManageOrder()) {
-            <div class="card border-0 shadow-sm">
-              <div class="card-header fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
-              <div class="card-body">
-                <div class="input-group mb-2">
-                  <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
-                    [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
-                    [clearable]="false" [searchable]="false"
-                    [attr.aria-label]="'order_detail.update_status' | translate">
-                    <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
-                    <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
-                  </ng-select>
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    [disabled]="saving()"
-                    (click)="updateStatus(o.id, statusChoice())"
-                  >
-                    {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm w-100"
-                  [disabled]="saving() || o.orderStatus === canceledStatus"
-                  (click)="cancel(o.id)"
-                >
-                  {{ 'order_detail.cancel_order' | translate }}
-                </button>
-              </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-semibold">{{ 'order_detail.summary' | translate }}</div>
+        <div class="card-body">
+          <dl class="row mb-0 small">
+            <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.customer_id' | translate }}</dt>
+            <dd class="col-5 text-end">{{ o.customerId }}</dd>
+            <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.subtotal' | translate }}</dt>
+            <dd class="col-5 text-end">{{ o.subTotal | money }}</dd>
+            <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.discount' | translate }}</dt>
+            <dd class="col-5 text-end">-{{ o.discountAmount | money }}</dd>
+            <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.tax' | translate }}</dt>
+            <dd class="col-5 text-end">{{ o.taxAmount | money }}</dd>
+            <dt class="col-7 fw-normal text-body-secondary">
+              {{ 'nav.shipping' | translate }} ({{ o.shippingMethod }})
+            </dt>
+            <dd class="col-5 text-end">{{ o.shippingFeeAmount | money }}</dd>
+            <dt class="col-7 border-top pt-2 mt-2">{{ 'dashboard.col_total' | translate }}</dt>
+            <dd class="col-5 border-top pt-2 mt-2 text-end fw-semibold">
+              {{ o.orderTotal | money }}
+            </dd>
+          </dl>
+          @if (o.orderNote) {
+            <hr/>
+            <div class="small">
+              <span class="text-body-secondary">{{ 'common.note' | translate }}:</span> {{ o.orderNote }}
             </div>
           }
         </div>
       </div>
-    }
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
+        <div class="card-body small">
+          <div>{{ o.shippingAddress.contactName }}</div>
+          <div>{{ o.shippingAddress.phone }}</div>
+          <div>{{ o.shippingAddress.addressLine1 }}</div>
+          @if (o.shippingAddress.addressLine2) {
+            <div>{{ o.shippingAddress.addressLine2 }}</div>
+          }
+          <div>{{ o.shippingAddress.city }} {{ o.shippingAddress.zipCode }}</div>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
+        <div class="card-body small">
+          <div>{{ o.billingAddress.contactName }}</div>
+          <div>{{ o.billingAddress.phone }}</div>
+          <div>{{ o.billingAddress.addressLine1 }}</div>
+          @if (o.billingAddress.addressLine2) {
+            <div>{{ o.billingAddress.addressLine2 }}</div>
+          }
+          <div>{{ o.billingAddress.city }} {{ o.billingAddress.zipCode }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+}
