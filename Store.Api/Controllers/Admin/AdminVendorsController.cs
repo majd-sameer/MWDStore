@@ -14,7 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// are bilingual: Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay.
 /// </summary>
 [ApiController]
-[Authorize(Policy = AuthPolicies.Settings)]
+[Authorize(Policy = AuthPolicies.Vendors)]
 [Route("api/admin/vendors")]
 public sealed class AdminVendorsController : ControllerBase
 {

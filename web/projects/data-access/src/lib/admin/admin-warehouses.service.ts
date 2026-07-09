@@ -10,10 +10,16 @@ export class AdminWarehousesService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/warehouses */
-  listResource() {
+  /**
+   * GET /api/admin/warehouses. Pass `enabled` to gate the request reactively —
+   * when it returns false the resource stays idle (no fetch), so callers without
+   * inventory access don't trigger a 403. Defaults to always-on.
+   */
+  listResource(enabled?: () => boolean) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<AdminWarehouseDto[]>(() => `${API_ROOT}/admin/warehouses`),
+      httpResource<AdminWarehouseDto[]>(() =>
+        enabled && !enabled() ? undefined : `${API_ROOT}/admin/warehouses`,
+      ),
     );
   }
 

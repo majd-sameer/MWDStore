@@ -23,7 +23,7 @@
 
       <div class="row g-4">
         <div class="col-lg-8">
-          <div class="card border-0 shadow-sm mb-4">
+          <!--<div class="card border-0 shadow-sm mb-4">
             <div class="card-header fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
             <div class="card-body p-0">
               <table class="table align-middle mb-0">
@@ -49,8 +49,7 @@
                 </tbody>
               </table>
             </div>
-          </div>
-
+          </div>-->
           <div class="card border-0 shadow-sm mb-4">
             <div class="card-header fw-semibold">{{ 'order_detail.shipments_title' | translate }}</div>
             <div class="card-body">
@@ -73,7 +72,7 @@
                 <p class="text-body-secondary small mb-2">{{ 'order_detail.no_shipments' | translate }}</p>
               }
 
-              @if (unshippedItems().length) {
+              @if (canFulfill() && unshippedItems().length) {
                 <hr class="my-3" />
                 <div class="fw-semibold small mb-2">{{ 'order_detail.create_shipment' | translate }}</div>
                 <div class="row g-2 mb-2">
@@ -111,37 +110,6 @@
               }
             </div>
           </div>
-
-          <div class="row g-4">
-            <div class="col-md-6">
-              <div class="card border-0 shadow-sm h-100">
-                <div class="card-header fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
-                <div class="card-body small">
-                  <div>{{ o.shippingAddress.contactName }}</div>
-                  <div>{{ o.shippingAddress.phone }}</div>
-                  <div>{{ o.shippingAddress.addressLine1 }}</div>
-                  @if (o.shippingAddress.addressLine2) {
-                    <div>{{ o.shippingAddress.addressLine2 }}</div>
-                  }
-                  <div>{{ o.shippingAddress.city }} {{ o.shippingAddress.zipCode }}</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card border-0 shadow-sm h-100">
-                <div class="card-header fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
-                <div class="card-body small">
-                  <div>{{ o.billingAddress.contactName }}</div>
-                  <div>{{ o.billingAddress.phone }}</div>
-                  <div>{{ o.billingAddress.addressLine1 }}</div>
-                  @if (o.billingAddress.addressLine2) {
-                    <div>{{ o.billingAddress.addressLine2 }}</div>
-                  }
-                  <div>{{ o.billingAddress.city }} {{ o.billingAddress.zipCode }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="col-lg-4">
@@ -174,37 +142,62 @@
               }
             </div>
           </div>
-
-          <div class="card border-0 shadow-sm">
-            <div class="card-header fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
-            <div class="card-body">
-              <div class="input-group mb-2">
-                <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
-                  [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
-                  [clearable]="false" [searchable]="false"
-                  [attr.aria-label]="'order_detail.update_status' | translate">
-                  <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
-                  <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
-                </ng-select>
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  [disabled]="saving()"
-                  (click)="updateStatus(o.id, statusChoice())"
-                >
-                  {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
-                </button>
-              </div>
-              <button
-                type="button"
-                class="btn btn-outline-danger btn-sm w-100"
-                [disabled]="saving() || o.orderStatus === canceledStatus"
-                (click)="cancel(o.id)"
-              >
-                {{ 'order_detail.cancel_order' | translate }}
-              </button>
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header fw-semibold">{{ 'order_detail.shipping_address' | translate }}</div>
+            <div class="card-body small">
+              <div>{{ o.shippingAddress.contactName }}</div>
+              <div>{{ o.shippingAddress.phone }}</div>
+              <div>{{ o.shippingAddress.addressLine1 }}</div>
+              @if (o.shippingAddress.addressLine2) {
+                <div>{{ o.shippingAddress.addressLine2 }}</div>
+              }
+              <div>{{ o.shippingAddress.city }} {{ o.shippingAddress.zipCode }}</div>
             </div>
           </div>
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header fw-semibold">{{ 'order_detail.billing_address' | translate }}</div>
+            <div class="card-body small">
+              <div>{{ o.billingAddress.contactName }}</div>
+              <div>{{ o.billingAddress.phone }}</div>
+              <div>{{ o.billingAddress.addressLine1 }}</div>
+              @if (o.billingAddress.addressLine2) {
+                <div>{{ o.billingAddress.addressLine2 }}</div>
+              }
+              <div>{{ o.billingAddress.city }} {{ o.billingAddress.zipCode }}</div>
+            </div>
+          </div>
+          @if (canManageOrder()) {
+            <div class="card border-0 shadow-sm">
+              <div class="card-header fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
+              <div class="card-body">
+                <div class="input-group mb-2">
+                  <ng-select class="flex-grow-1" [items]="statusOptions" bindValue="value"
+                    [ngModel]="statusChoice()" (ngModelChange)="statusChoice.set($event)"
+                    [clearable]="false" [searchable]="false"
+                    [attr.aria-label]="'order_detail.update_status' | translate">
+                    <ng-template ng-label-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                    <ng-template ng-option-tmp let-item>{{ 'orders.status_' + item.value | translate }}</ng-template>
+                  </ng-select>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    [disabled]="saving()"
+                    (click)="updateStatus(o.id, statusChoice())"
+                  >
+                    {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm w-100"
+                  [disabled]="saving() || o.orderStatus === canceledStatus"
+                  (click)="cancel(o.id)"
+                >
+                  {{ 'order_detail.cancel_order' | translate }}
+                </button>
+              </div>
+            </div>
+          }
         </div>
       </div>
     }

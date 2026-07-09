@@ -129,14 +129,14 @@ export const routes: Routes = [
       {
         path: 'vendors',
         title: 'Vendors · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.vendors)],
         loadComponent: () =>
           import('./features/vendors/vendors').then((m) => m.AdminVendors),
       },
       {
         path: 'vendors/:id',
         title: 'Edit vendor · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.vendors)],
         loadComponent: () =>
           import('./features/vendors/vendor-form').then(
             (m) => m.AdminVendorForm,
@@ -198,14 +198,14 @@ export const routes: Routes = [
       {
         path: 'orders',
         title: 'Orders · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.sales)],
+        canActivate: [roleGuard(...AREA.orders)],
         loadComponent: () =>
           import('./features/orders/order-list').then((m) => m.AdminOrderList),
       },
       {
         path: 'orders/:id',
         title: 'Order · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.sales)],
+        canActivate: [roleGuard(...AREA.orders)],
         loadComponent: () =>
           import('./features/orders/order-detail').then(
             (m) => m.AdminOrderDetail,
@@ -312,14 +312,14 @@ export const routes: Routes = [
       {
         path: 'payments',
         title: 'Payments · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.payments)],
         loadComponent: () =>
           import('./features/payments/payments').then((m) => m.AdminPayments),
       },
       {
         path: 'payments/Stripe',
         title: 'Configure Stripe · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.payments)],
         loadComponent: () =>
           import('./features/payments/payment-stripe-form').then(
             (m) => m.AdminPaymentStripeForm,
@@ -328,7 +328,7 @@ export const routes: Routes = [
       {
         path: 'payments/PaypalExpress',
         title: 'Configure PayPal Express · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.payments)],
         loadComponent: () =>
           import('./features/payments/payment-paypal-express-form').then(
             (m) => m.AdminPaymentPaypalExpressForm,
@@ -337,7 +337,7 @@ export const routes: Routes = [
       {
         path: 'payments/MEPS',
         title: 'Configure MEPS · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.payments)],
         loadComponent: () =>
           import('./features/payments/payment-meps-form').then(
             (m) => m.AdminPaymentMepsForm,
@@ -346,7 +346,7 @@ export const routes: Routes = [
       {
         path: 'payments/:id',
         title: 'Configure provider · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.settings)],
+        canActivate: [roleGuard(...AREA.payments)],
         loadComponent: () =>
           import('./features/payments/payment-provider-form').then(
             (m) => m.AdminPaymentProviderForm,
@@ -445,14 +445,14 @@ export const routes: Routes = [
       {
         path: 'taxes',
         title: 'Taxes · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.marketing)],
+        canActivate: [roleGuard(...AREA.taxes)],
         loadComponent: () =>
           import('./features/tax/taxes').then((m) => m.AdminTaxes),
       },
       {
         path: 'taxes/:id',
         title: 'Edit tax rate · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.marketing)],
+        canActivate: [roleGuard(...AREA.taxes)],
         loadComponent: () =>
           import('./features/tax/tax-rate-form').then((m) => m.AdminTaxRateForm),
       },

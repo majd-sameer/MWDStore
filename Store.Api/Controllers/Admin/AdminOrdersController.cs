@@ -10,7 +10,7 @@ namespace Store.Api.Controllers.Admin;
 
 /// <summary>Admin order management: browse all orders, view detail, change status, and cancel (restocks).</summary>
 [ApiController]
-[Authorize(Policy = AuthPolicies.Sales)]
+[Authorize(Policy = AuthPolicies.OrdersView)]
 [Route("api/admin/orders")]
 public sealed class AdminOrdersController : ControllerBase
 {
@@ -61,6 +61,7 @@ public sealed class AdminOrdersController : ControllerBase
     }
 
     [HttpPut("{id:long}/status")]
+    [Authorize(Policy = AuthPolicies.Sales)]
     public async Task<ActionResult<OrderDetailDto>> UpdateStatus(
         long id, UpdateOrderStatusRequest request, CancellationToken cancellationToken)
     {
@@ -84,6 +85,7 @@ public sealed class AdminOrdersController : ControllerBase
 
     /// <summary>Cancels the order and restocks each stock-tracked line (SimplCommerce's cancel behavior).</summary>
     [HttpPost("{id:long}/cancel")]
+    [Authorize(Policy = AuthPolicies.Sales)]
     public async Task<ActionResult<OrderDetailDto>> Cancel(long id, CancellationToken cancellationToken)
     {
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);

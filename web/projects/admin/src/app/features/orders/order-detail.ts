@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { MoneyPipe } from 'core';
+import { AuthService, MoneyPipe } from 'core';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -22,6 +22,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'ui';
+import { AREA } from '../../core/roles';
 import { PageHeader } from '../../shared/page-header';
 import {
   ORDER_STATUS,
@@ -45,15 +46,36 @@ export class AdminOrderDetail {
   private readonly service = inject(AdminOrdersService);
   private readonly operations = inject(AdminOperationsService);
   private readonly warehousesService = inject(AdminWarehousesService);
+  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+
+  /**
+   * Whether the current user may create shipments (warehouse/fulfilment staff).
+   * Sales roles can view an order and its shipment history but not the
+   * create-shipment form, which needs inventory + fulfilment access.
+   */
+  protected readonly canFulfill = computed(() =>
+    this.auth.hasAnyRole(AREA.fulfillment),
+  );
+
+  /**
+   * Whether the current user may change an order's status or cancel it. Warehouse
+   * staff can view orders and fulfil them but not run these sales actions, which
+   * the API's `Sales` policy also enforces.
+   */
+  protected readonly canManageOrder = computed(() =>
+    this.auth.hasAnyRole(AREA.sales),
+  );
 
   private readonly idParam = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
   protected readonly orderId = computed(() => Number(this.idParam().get('id')));
   protected readonly order = this.service.getResource(this.orderId);
-  protected readonly warehouses = this.warehousesService.listResource();
+  protected readonly warehouses = this.warehousesService.listResource(
+    this.canFulfill,
+  );
 
   protected readonly statusOptions = ORDER_STATUS_OPTIONS;
   protected readonly badge = orderStatusBadge;

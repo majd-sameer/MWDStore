@@ -8,22 +8,22 @@ namespace Store.Api.Infrastructure;
 /// </summary>
 public static class AppRoles
 {
-    /// <summary>Unrestricted back-office access, including user &amp; role management.</summary>
+    /// <summary>Unrestricted back-office access.</summary>
     public const string SuperAdmin = "super-admin";
 
-    /// <summary>Full back-office access except managing other users/roles.</summary>
+    /// <summary>Broad back-office access, including staff user &amp; role management.</summary>
     public const string Admin = "admin";
 
-    /// <summary>Sales oversight: orders, customers plus promotions, tax and the dashboard.</summary>
+    /// <summary>Sales oversight: orders, customers, vendors, promotions and payments.</summary>
     public const string SalesManager = "sales-manager";
 
-    /// <summary>Order processing and the customer directory.</summary>
+    /// <summary>Order processing, the customer directory and vendors.</summary>
     public const string Sales = "sales";
 
-    /// <summary>Stock and fulfilment: inventory, warehouses, shipping.</summary>
+    /// <summary>Stock: catalog, inventory, warehouses and shipping.</summary>
     public const string WarehouseKeeper = "warehouse-keeper";
 
-    /// <summary>Catalog content and CMS: products, categories, brands, pages, news, moderation.</summary>
+    /// <summary>Content: CMS pages, news and comment/review moderation.</summary>
     public const string ContentWriter = "content-writer";
 
     /// <summary>Storefront shoppers; assigned when a customer is created.</summary>

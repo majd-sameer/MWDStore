@@ -61,10 +61,13 @@ export class AdminLayout {
         { path: '/dashboard', key: 'dashboard', icon: 'bi-grid-1x2', roles: AREA.reports },
       ],
     },
-    // Stock management — inventory ∪ fulfillment.
+    // Stock management — inventory ∪ fulfillment. Orders appears here too (roles
+    // AREA.inventory) so warehouse staff can reach an order to fulfil it; it also
+    // lives under Sales, so admins see it in both (like customers).
     {
       key: 'stock',
       items: [
+        { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.inventory },
         { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
         { path: '/stock-out', key: 'stockOut', icon: 'bi-box-arrow-up', roles: AREA.inventory },
         { path: '/stock-out-log', key: 'stockOutLog', icon: 'bi-journal-arrow-up', roles: AREA.inventory },
@@ -97,9 +100,9 @@ export class AdminLayout {
         { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.sales },
         { path: '/customers', key: 'customers', icon: 'bi-people', roles: AREA.sales },
         { path: '/promotions', key: 'promotions', icon: 'bi-ticket-perforated', roles: AREA.marketing },
-        { path: '/taxes', key: 'taxes', icon: 'bi-percent', roles: AREA.marketing },
-        { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.settings },
-        { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.settings },
+        { path: '/taxes', key: 'taxes', icon: 'bi-percent', roles: AREA.taxes },
+        { path: '/payments', key: 'payments', icon: 'bi-credit-card', roles: AREA.payments },
+        { path: '/vendors', key: 'vendors', icon: 'bi-shop', roles: AREA.vendors },
       ],
     },
     // People — users (staff + roles) / customers (same route as Sales, intentionally duplicated).

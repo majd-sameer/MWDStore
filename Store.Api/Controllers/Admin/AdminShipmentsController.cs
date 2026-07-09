@@ -15,7 +15,6 @@ namespace Store.Api.Controllers.Admin;
 /// list shipments globally or per order, and update tracking numbers.
 /// </summary>
 [ApiController]
-[Authorize(Policy = AuthPolicies.Fulfillment)]
 [Route("api/admin/shipments")]
 public sealed class AdminShipmentsController : ControllerBase
 {
@@ -29,6 +28,7 @@ public sealed class AdminShipmentsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = AuthPolicies.ShipmentsView)]
     public async Task<ActionResult<IReadOnlyList<AdminShipmentDto>>> List(
         [FromQuery] long? orderId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
@@ -55,6 +55,7 @@ public sealed class AdminShipmentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthPolicies.Fulfillment)]
     public async Task<ActionResult<AdminShipmentDto>> Create(
         ShipmentCreateRequest request, CancellationToken cancellationToken)
     {
@@ -160,6 +161,7 @@ public sealed class AdminShipmentsController : ControllerBase
     }
 
     [HttpPut("{id:long}/tracking")]
+    [Authorize(Policy = AuthPolicies.Fulfillment)]
     public async Task<IActionResult> UpdateTracking(
         long id, [FromBody] string? trackingNumber, CancellationToken cancellationToken)
     {

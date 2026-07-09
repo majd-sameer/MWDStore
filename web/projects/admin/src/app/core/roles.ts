@@ -25,16 +25,23 @@ export const STAFF_ROLES: readonly string[] = Object.values(Role);
  * `AuthPolicies`; both must agree or the UI would show links that 403.
  */
 export const AREA = {
-  catalog: [Role.superAdmin, Role.admin, Role.contentWriter],
+  catalog: [Role.superAdmin, Role.admin, Role.warehouseKeeper],
   content: [Role.superAdmin, Role.admin, Role.contentWriter],
   moderation: [Role.superAdmin, Role.admin, Role.contentWriter],
   inventory: [Role.superAdmin, Role.admin, Role.warehouseKeeper],
   fulfillment: [Role.superAdmin, Role.admin, Role.warehouseKeeper],
   sales: [Role.superAdmin, Role.admin, Role.sales, Role.salesManager],
+  // Order browsing is shared with warehouse staff so they can fulfil orders;
+  // the API's `OrdersView` policy mirrors this. Status changes / cancel stay
+  // sales-only (guarded server-side and hidden in the UI for warehouse roles).
+  orders: [Role.superAdmin, Role.admin, Role.sales, Role.salesManager, Role.warehouseKeeper],
+  vendors: [Role.superAdmin, Role.admin, Role.sales, Role.salesManager],
   marketing: [Role.superAdmin, Role.admin, Role.salesManager],
-  reports: [Role.superAdmin, Role.admin, Role.salesManager],
+  taxes: [Role.superAdmin, Role.admin],
+  payments: [Role.superAdmin, Role.admin, Role.salesManager],
+  reports: [Role.superAdmin, Role.admin],
   settings: [Role.superAdmin, Role.admin],
-  users: [Role.superAdmin],
+  users: [Role.superAdmin, Role.admin],
 } as const;
 
 /**
