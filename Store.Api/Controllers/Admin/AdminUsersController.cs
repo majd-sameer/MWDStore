@@ -32,7 +32,7 @@ public sealed class AdminUsersController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedResult<AdminUserListItem>>> List(
-        [FromQuery] string? query, [FromQuery] bool includeDeleted = false,
+        [FromQuery] string? query, [FromQuery] string? role, [FromQuery] bool includeDeleted = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
         // Staff only — a user with no staff role is a storefront customer and
@@ -47,6 +47,11 @@ public sealed class AdminUsersController : ControllerBase
         if (!string.IsNullOrWhiteSpace(query))
         {
             users = users.Where(u => u.Email!.Contains(query) || u.FullName.Contains(query));
+        }
+
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            users = users.Where(u => u.Roles.Any(r => r.Role.Name == role));
         }
 
         var result = await users

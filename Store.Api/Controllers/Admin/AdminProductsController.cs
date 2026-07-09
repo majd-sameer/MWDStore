@@ -94,7 +94,16 @@ public sealed class AdminProductsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(query))
         {
-            products = products.Where(p => p.Name.Contains(query));
+            var term = query.Trim();
+            // Match by name or SKU (partial), plus an exact product-id hit when the term is numeric.
+            products = long.TryParse(term, out var idTerm)
+                ? products.Where(p =>
+                    p.Id == idTerm ||
+                    p.Name.Contains(term) ||
+                    (p.Sku != null && p.Sku.Contains(term)))
+                : products.Where(p =>
+                    p.Name.Contains(term) ||
+                    (p.Sku != null && p.Sku.Contains(term)));
         }
 
         var result = await products

@@ -253,17 +253,8 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'inventory',
-        title: 'Inventory · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.inventory)],
-        loadComponent: () =>
-          import('./features/inventory/inventory').then(
-            (m) => m.AdminInventory,
-          ),
-      },
-      {
         path: 'stock-out',
-        title: 'Stock out · MadeWithDetermination Admin',
+        title: 'Stock management · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.inventory)],
         loadComponent: () =>
           import('./features/inventory/stock-out').then((m) => m.AdminStockOut),

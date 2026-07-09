@@ -108,6 +108,12 @@ export interface AdminOrderQuery {
   /** Order-status codes to include (OR-ed); empty/undefined = all statuses. */
   statuses?: number[];
   customerId?: number;
+  /** Exact order number (order id). */
+  orderNumber?: number;
+  /** Placed-on lower bound (ISO date/datetime), inclusive. */
+  from?: string;
+  /** Placed-on upper bound (ISO date), inclusive of the whole day. */
+  to?: string;
   page?: number;
   pageSize?: number;
 }

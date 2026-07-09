@@ -22,6 +22,7 @@ export class AdminUsersService {
   listResource(
     query: () => {
       query?: string;
+      role?: string;
       includeDeleted?: boolean;
       page?: number;
       pageSize?: number;
@@ -34,6 +35,7 @@ export class AdminUsersService {
           url: `${API_ROOT}/admin/users`,
           params: toQueryParams({
             query: q.query,
+            role: q.role,
             includeDeleted: q.includeDeleted,
             page: q.page,
             pageSize: q.pageSize,

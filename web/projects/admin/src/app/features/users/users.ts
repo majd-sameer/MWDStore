@@ -6,17 +6,20 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { AdminUsersService, type AdminUserListItem } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Icon, ToastService } from 'ui';
+import { STAFF_ROLES } from '../../core/roles';
 import { PageHeader } from '../../shared/page-header';
 import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
 
 /**
- * User browser: a searchable list of staff users. Creating and editing a user
- * happen on their own page (`/users/new`, `/users/:id`).
+ * User browser: a searchable list of staff users, filterable by role. Creating
+ * and editing a user happen on their own page (`/users/new`, `/users/:id`).
  */
 @Component({
   selector: 'app-admin-users',
@@ -24,6 +27,8 @@ import { TableFooter } from '../../shared/table-footer';
   imports: [
     RouterLink,
     DatePipe,
+    FormsModule,
+    NgSelectModule,
     Icon,
     TranslatePipe,
     PageHeader,
@@ -37,11 +42,19 @@ export class AdminUsers {
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
+  /** Role options for the filter dropdown, labelled via `roles.<name>`. */
+  protected readonly roleOptions = STAFF_ROLES.map((name) => ({
+    value: name,
+    label: this.translate.instant('roles.' + name),
+  }));
+
   protected readonly search = signal('');
+  protected readonly role = signal<string | null>(null);
   protected readonly page = signal(1);
   protected readonly pageSize = signal(10);
   protected readonly list = this.service.listResource(() => ({
     query: this.search() || undefined,
+    role: this.role() ?? undefined,
     page: this.page(),
     pageSize: this.pageSize(),
   }));
@@ -51,6 +64,11 @@ export class AdminUsers {
 
   protected setSearch(value: string): void {
     this.search.set(value);
+    this.page.set(1);
+  }
+
+  protected setRole(value: string | null): void {
+    this.role.set(value);
     this.page.set(1);
   }
 

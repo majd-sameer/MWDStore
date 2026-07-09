@@ -20,6 +20,9 @@ export class AdminOrdersService {
           params: toQueryParams({
             statuses: q.statuses,
             customerId: q.customerId,
+            orderNumber: q.orderNumber,
+            from: q.from,
+            to: q.to,
             page: q.page,
             pageSize: q.pageSize,
           }),

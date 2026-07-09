@@ -7,14 +7,57 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+            <input
+              type="search"
+              inputmode="numeric"
+              class="form-control"
+              [attr.placeholder]="'orders.search_number_ph' | translate"
+              [value]="orderNumber()"
+              (input)="onOrderNumberInput($event)"
+              [attr.aria-label]="'orders.search_number_ph' | translate"
+            />
+          </div>
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtFrom"
+              [owlDateTimeTrigger]="dtFrom"
+              [ngModel]="from()"
+              (ngModelChange)="setFrom($event)"
+              [placeholder]="'orders.date_from' | translate"
+              [attr.aria-label]="'orders.date_from' | translate"
+              readonly
+            />
+            <owl-date-time #dtFrom pickerType="calendar" />
+          </div>
+          <div class="date-field">
+            <input
+              class="form-control w-auto"
+              [owlDateTime]="dtTo"
+              [owlDateTimeTrigger]="dtTo"
+              [ngModel]="to()"
+              (ngModelChange)="setTo($event)"
+              [placeholder]="'orders.date_to' | translate"
+              [attr.aria-label]="'orders.date_to' | translate"
+              readonly
+            />
+            <owl-date-time #dtTo pickerType="calendar" />
+          </div>
           <app-filter-dropdown
             [label]="'common.status' | translate"
             [options]="statusFilterOptions()"
             [selected]="statuses()"
             (selectedChange)="setStatuses($event)"
           />
-          @if (statuses().length) {
-            <button type="button" class="btn btn-link btn-sm p-0 ms-auto" (click)="setStatuses([])">
+          @if (hasFilters()) {
+            <button
+              type="button"
+              class="btn btn-link btn-sm p-0 ms-auto d-inline-flex align-items-center gap-1"
+              (click)="clearFilters()"
+            >
+              <lib-icon name="x" [size]="14" />
               {{ 'common.clear' | translate }}
             </button>
           }
@@ -52,8 +95,8 @@
                     <td class="tabular-nums">{{ o.itemCount }}</td>
                     <td class="tabular-nums">{{ o.orderTotal | money }}</td>
                     <td class="text-end">
-                      <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">
-                        {{ 'common.view' | translate }}
+                      <a [routerLink]="['/orders', o.id]" class="action-btn" [title]="'common.view' | translate">
+                        <lib-icon name="eye" [size]="15" [label]="'common.view' | translate" />
                       </a>
                     </td>
                   </tr>

@@ -19,6 +19,16 @@
                   [attr.aria-label]="'users.search_label' | translate"
                   (input)="setSearch($any($event.target).value)" />
               </div>
+              <ng-select
+                class="filter-select"
+                [items]="roleOptions"
+                bindLabel="label"
+                bindValue="value"
+                [ngModel]="role()"
+                (ngModelChange)="setRole($event)"
+                [placeholder]="'users.all_roles' | translate"
+                [attr.aria-label]="'users.col_roles' | translate"
+              />
             </div>
 
             @if (list.isLoading()) {

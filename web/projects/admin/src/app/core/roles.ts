@@ -46,12 +46,12 @@ export const AREA = {
 
 /**
  * Picks the landing section for a signed-in user, following the sidebar order:
- * dashboard → orders → stock (inventory) → products → cms → users → settings.
+ * dashboard → orders → stock → products → cms → users → settings.
  */
 export function adminHomePath(auth: AuthService): string {
   if (auth.hasAnyRole(AREA.reports)) return '/dashboard';
   if (auth.hasAnyRole(AREA.sales)) return '/orders';
-  if (auth.hasAnyRole(AREA.inventory)) return '/inventory';
+  if (auth.hasAnyRole(AREA.inventory)) return '/orders';
   if (auth.hasAnyRole(AREA.catalog)) return '/products';
   if (auth.hasAnyRole(AREA.content)) return '/news';
   if (auth.hasAnyRole(AREA.users)) return '/users';

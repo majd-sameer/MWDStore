@@ -68,7 +68,6 @@ export class AdminLayout {
       key: 'stock',
       items: [
         { path: '/orders', key: 'orders', icon: 'bi-receipt', roles: AREA.inventory },
-        { path: '/inventory', key: 'inventory', icon: 'bi-clipboard-data', roles: AREA.inventory },
         { path: '/stock-out', key: 'stockOut', icon: 'bi-box-arrow-up', roles: AREA.inventory },
         { path: '/stock-out-log', key: 'stockOutLog', icon: 'bi-journal-arrow-up', roles: AREA.inventory },
         { path: '/warehouses', key: 'warehouses', icon: 'bi-building', roles: AREA.inventory },

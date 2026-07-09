@@ -28,6 +28,7 @@ public sealed class AdminOrdersController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResult<OrderSummaryDto>>> List(
         [FromQuery] int[]? statuses, [FromQuery] long? customerId,
+        [FromQuery] long? orderNumber, [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
         var orders = _db.Orders.Include(o => o.OrderItems).AsQueryable();
@@ -39,6 +40,23 @@ public sealed class AdminOrdersController : ControllerBase
         if (customerId.HasValue)
         {
             orders = orders.Where(o => o.CustomerId == customerId.Value);
+        }
+
+        if (orderNumber.HasValue)
+        {
+            orders = orders.Where(o => o.Id == orderNumber.Value);
+        }
+
+        if (from.HasValue)
+        {
+            orders = orders.Where(o => o.CreatedOn >= from.Value);
+        }
+
+        if (to.HasValue)
+        {
+            // `to` is an inclusive end-of-day bound: include the whole day selected.
+            var end = to.Value.Date.AddDays(1);
+            orders = orders.Where(o => o.CreatedOn < end);
         }
 
         var result = await orders

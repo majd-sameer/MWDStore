@@ -8,10 +8,16 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
 import { AdminOrdersService, type AdminOrderQuery } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from 'core';
 import { Icon } from 'ui';
+import { dayBoundary } from '../../shared/date-range';
 import {
   ORDER_STATUS_OPTIONS,
   orderStatusTone,
@@ -35,6 +41,9 @@ const DEFAULT_PAGE_SIZE = 10;
     MoneyPipe,
     DatePipe,
     RouterLink,
+    FormsModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     Icon,
     TranslatePipe,
     PageHeader,
@@ -62,22 +71,72 @@ export class AdminOrderList {
   });
 
   protected readonly statuses = signal<FilterValue[]>([]);
+  protected readonly orderNumber = signal<string>('');
+  protected readonly from = signal<Date | null>(null);
+  protected readonly to = signal<Date | null>(null);
   protected readonly page = signal(1);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
 
-  private readonly query = computed<AdminOrderQuery>(() => ({
-    statuses: this.statuses() as number[],
-    page: this.page(),
-    pageSize: this.pageSize(),
-  }));
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private readonly query = computed<AdminOrderQuery>(() => {
+    const num = Number(this.orderNumber());
+    return {
+      statuses: this.statuses() as number[],
+      orderNumber:
+        this.orderNumber() && Number.isFinite(num) && num > 0 ? num : undefined,
+      from: dayBoundary(this.from(), false),
+      to: dayBoundary(this.to(), true),
+      page: this.page(),
+      pageSize: this.pageSize(),
+    };
+  });
 
   protected readonly orders = this.service.listResource(this.query);
 
   protected readonly rows = computed(() => this.orders.value()?.items ?? []);
   protected readonly total = computed(() => this.orders.value()?.total ?? 0);
 
+  protected readonly hasFilters = computed(
+    () =>
+      this.statuses().length > 0 ||
+      Boolean(this.orderNumber()) ||
+      this.from() !== null ||
+      this.to() !== null,
+  );
+
   protected setStatuses(values: FilterValue[]): void {
     this.statuses.set(values);
+    this.page.set(1);
+  }
+
+  /** Debounced so we don't hit the API on every keystroke of the order number. */
+  protected onOrderNumberInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim();
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.orderNumber.set(value);
+      this.page.set(1);
+    }, 300);
+  }
+
+  protected setFrom(value: Date | null): void {
+    this.from.set(value);
+    this.page.set(1);
+  }
+
+  protected setTo(value: Date | null): void {
+    this.to.set(value);
+    this.page.set(1);
+  }
+
+  protected clearFilters(): void {
+    this.statuses.set([]);
+    this.orderNumber.set('');
+    this.from.set(null);
+    this.to.set(null);
     this.page.set(1);
   }
 

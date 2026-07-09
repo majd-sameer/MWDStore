@@ -4,187 +4,274 @@
       [subtitle]="'stockout.subtitle' | translate"
     />
 
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <form class="row g-2 align-items-center mb-3" (submit)="lookup($event)">
-              <div class="col-sm-4">
-                <input
-                  type="number"
-                  min="1"
-                  class="form-control"
-                  [placeholder]="'inventory.product_id' | translate"
-                  [value]="productId() ?? ''"
-                  [attr.aria-label]="'inventory.product_id' | translate"
-                />
-              </div>
-              <div class="col-sm-auto">
-                <button class="btn btn-primary" type="submit">{{ 'inventory.look_up' | translate }}</button>
-              </div>
-            </form>
-
-            @if (productId() === null) {
-              <div class="alert alert-info mb-0">{{ 'inventory.enter_id' | translate }}</div>
-            } @else if (stock.isLoading()) {
-              <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
-                </div>
-              </div>
-            } @else if (stock.error()) {
-              <div class="alert alert-danger mb-0">
-                {{ 'inventory.no_stock' | translate: { id: productId() } }}
-              </div>
-            } @else if (stock.value(); as s) {
-              <h2 class="h5">{{ s.productName }}</h2>
-              <p class="text-body-secondary">
-                {{ 'inventory.total_on_hand' | translate }} <strong>{{ s.productStockQuantity }}</strong>
-              </p>
-              <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col">{{ 'inventory.warehouse' | translate }}</th>
-                      <th scope="col">{{ 'inventory.col_on_hand' | translate }}</th>
-                      <th scope="col" class="text-end">{{ 'inventory.col_available' | translate }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (w of s.warehouses ?? []; track w.warehouseId) {
-                      <tr>
-                        <td>{{ w.warehouseName }} <span class="text-body-secondary">#{{ w.warehouseId }}</span></td>
-                        <td>{{ w.quantity }}</td>
-                        <td class="text-end">{{ w.quantity - w.reservedQuantity }}</td>
-                      </tr>
-                    } @empty {
-                      <tr>
-                        <td colspan="3" class="text-center text-body-secondary py-4">
-                          {{ 'inventory.no_warehouse_rows' | translate }}
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="list-toolbar">
+          <div class="search-box">
+            <span class="search-box-icon"><lib-icon name="search" [size]="17" /></span>
+            <input
+              type="search"
+              class="form-control"
+              [attr.placeholder]="'stockout.search_ph' | translate"
+              [value]="term()"
+              (input)="onSearchInput($event)"
+              [attr.aria-label]="'stockout.search_ph' | translate"
+            />
           </div>
         </div>
-      </div>
 
-      <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header fw-semibold">{{ 'stockout.form_title' | translate }}</div>
-          <div class="card-body">
-            @if (!stock.value()?.warehouses?.length) {
-              <p class="text-body-secondary mb-0">{{ 'inventory.lookup_hint' | translate }}</p>
-            } @else {
-              <div class="mb-3">
-                <label for="so-wh" class="form-label">{{ 'inventory.warehouse' | translate }}</label>
-                <ng-select
-                  id="so-wh"
-                  [items]="stock.value()?.warehouses ?? []"
-                  bindValue="warehouseId"
-                  [ngModel]="selectedWarehouse()"
-                  (ngModelChange)="setWarehouse($event)"
-                  [clearable]="false"
-                >
-                  <ng-template ng-label-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
-                  <ng-template ng-option-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
-                </ng-select>
-                <div class="form-text">{{ 'stockout.on_hand' | translate: { count: onHand() } }}</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="so-qty" class="form-label">{{ 'stockout.quantity' | translate }}</label>
-                <input
-                  id="so-qty"
-                  type="number"
-                  min="1"
-                  [max]="onHand()"
-                  class="form-control"
-                  [value]="quantity()"
-                  (input)="quantity.set(+$any($event.target).value)"
-                />
-              </div>
-
-              <div class="mb-3">
-                <label for="so-reason" class="form-label">{{ 'stockout.reason' | translate }}</label>
-                <ng-select
-                  id="so-reason"
-                  [items]="reasons"
-                  bindValue="value"
-                  [ngModel]="reason()"
-                  (ngModelChange)="setReason($event)"
-                  [clearable]="false"
-                >
-                  <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
-                  <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
-                </ng-select>
-              </div>
-
-              @if (channelVisible()) {
-                <div class="mb-3">
-                  <label for="so-channel" class="form-label">
-                    {{ 'stockout.channel' | translate }}
-                    @if (!channelRequired()) {
-                      <span class="text-body-secondary">({{ 'common.optional' | translate }})</span>
-                    }
-                  </label>
-                  <ng-select
-                    id="so-channel"
-                    [items]="channels"
-                    bindValue="value"
-                    [ngModel]="channel()"
-                    (ngModelChange)="setChannel($event)"
-                    [clearable]="!channelRequired()"
-                    [placeholder]="'stockout.no_channel' | translate"
-                  >
-                    <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
-                    <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
-                  </ng-select>
-                </div>
-              }
-
-              <div class="mb-3">
-                <label for="so-recipient" class="form-label">{{ 'stockout.recipient' | translate }}</label>
-                <input
-                  id="so-recipient"
-                  type="text"
-                  maxlength="256"
-                  class="form-control"
-                  [value]="recipient()"
-                  (input)="recipient.set($any($event.target).value)"
-                />
-                <div class="form-text">{{ 'stockout.recipient_hint' | translate }}</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="so-note" class="form-label">{{ 'common.note' | translate }}</label>
-                <textarea
-                  id="so-note"
-                  rows="2"
-                  maxlength="1000"
-                  class="form-control"
-                  [value]="note()"
-                  (input)="note.set($any($event.target).value)"
-                ></textarea>
-              </div>
-
-              @if (errorKey(); as key) {
-                <div class="alert alert-warning py-2">{{ key | translate: { count: onHand() } }}</div>
-              }
-
-              <button
-                type="button"
-                class="btn btn-primary w-100"
-                [disabled]="saving() || errorKey() !== null"
-                (click)="submit()"
-              >
-                {{ (saving() ? 'stockout.saving' : 'stockout.submit') | translate }}
-              </button>
-            }
+        @if (products.isLoading()) {
+          <app-table-skeleton [rows]="8" [columns]="[3, 1, 1]" />
+        } @else if (products.error()) {
+          <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'products.col_product' | translate }}</th>
+                  <th scope="col">{{ 'products.col_stock' | translate }}</th>
+                  <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of rows(); track p.id) {
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        @if (p.thumbnailUrl && !thumbFailed().has(p.id)) {
+                          <img
+                            class="row-thumb"
+                            [src]="p.thumbnailUrl"
+                            alt=""
+                            loading="lazy"
+                            (error)="onThumbError(p.id)"
+                          />
+                        } @else {
+                          <span class="row-thumb-fallback"><lib-icon name="box" [size]="18" /></span>
+                        }
+                        <div>
+                          <a [routerLink]="['/products', p.id]" class="text-decoration-none fw-medium">
+                            {{ p.name }}
+                          </a>
+                          <div class="small text-body-secondary">#{{ p.id }} · {{ p.slug }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="tabular-nums">
+                      <span
+                        class="stock-dot"
+                        [class.out]="p.stockQuantity <= 0"
+                        [class.low]="p.stockQuantity > 0 && p.stockQuantity < 10"
+                        [class.ok]="p.stockQuantity >= 10"
+                        [attr.title]="p.stockQuantity <= 0 ? ('products.out_of_stock' | translate) : null"
+                      ></span>{{ p.stockQuantity }}
+                    </td>
+                    <td class="text-end">
+                      <span class="d-inline-flex gap-1">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1"
+                          [title]="'stockout.in_action' | translate"
+                          (click)="openStockIn(p)"
+                        >
+                          <lib-icon name="arrowStart" [size]="15" />
+                          {{ 'stockout.in_action' | translate }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                          [disabled]="p.stockQuantity <= 0"
+                          [title]="'stockout.out_action' | translate"
+                          (click)="openStockOut(p)"
+                        >
+                          <lib-icon name="arrowEnd" [size]="15" />
+                          {{ 'stockout.out_action' | translate }}
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3">
+                      <div class="empty-state">
+                        <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
+                        <div class="empty-title">
+                          {{ (term() ? 'stockout.no_matches' : 'stockout.empty') | translate }}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
-        </div>
+
+          @if (total() > 0) {
+            <app-table-footer
+              [total]="total()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              (pageChange)="page.set($event)"
+              (pageSizeChange)="setPageSize($event)"
+            />
+          }
+        }
       </div>
     </div>
+
+    <!-- ===== Stock-out offcanvas (slides in from the end) ===== -->
+    <ng-template #stockOutPanel>
+      <div class="offcanvas-header border-bottom">
+        <div>
+          <h2 class="offcanvas-title h5 mb-0" id="stock-out-panel-title">
+            {{ (mode() === 'in' ? 'stockout.in_title' : 'stockout.form_title') | translate }}
+          </h2>
+          @if (activeProduct(); as p) {
+            <div class="small text-body-secondary">
+              {{ p.name }} <span class="text-body-tertiary">#{{ p.id }}</span>
+            </div>
+          }
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          [attr.aria-label]="'common.close' | translate"
+          (click)="closePanel()"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        @if (stock.isLoading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+            </div>
+          </div>
+        } @else if (stock.error()) {
+          <div class="alert alert-danger mb-0">
+            {{ 'inventory.no_stock' | translate: { id: productId() } }}
+          </div>
+        } @else if (!stock.value()?.warehouses?.length) {
+          <div class="alert alert-info mb-0">{{ 'inventory.no_warehouse_rows' | translate }}</div>
+        } @else {
+          <p class="text-body-secondary">
+            {{ 'inventory.total_on_hand' | translate }}
+            <strong>{{ stock.value()?.productStockQuantity }}</strong>
+          </p>
+
+          <div class="mb-3">
+            <label for="so-wh" class="form-label">{{ 'inventory.warehouse' | translate }}</label>
+            <ng-select
+              id="so-wh"
+              [items]="stock.value()?.warehouses ?? []"
+              bindValue="warehouseId"
+              [ngModel]="selectedWarehouse()"
+              (ngModelChange)="setWarehouse($event)"
+              [clearable]="false"
+            >
+              <ng-template ng-label-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+              <ng-template ng-option-tmp let-item="item">{{ item.warehouseName }} (#{{ item.warehouseId }})</ng-template>
+            </ng-select>
+            <div class="form-text">{{ 'stockout.on_hand' | translate: { count: onHand() } }}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="so-qty" class="form-label">
+              {{ (mode() === 'in' ? 'stockout.quantity_in' : 'stockout.quantity') | translate }}
+            </label>
+            <input
+              id="so-qty"
+              type="number"
+              min="1"
+              [max]="mode() === 'in' ? null : onHand()"
+              class="form-control"
+              [value]="quantity()"
+              (input)="quantity.set(+$any($event.target).value)"
+            />
+          </div>
+
+          @if (mode() === 'out') {
+            <div class="mb-3">
+              <label for="so-reason" class="form-label">{{ 'stockout.reason' | translate }}</label>
+              <ng-select
+                id="so-reason"
+                [items]="reasons"
+                bindValue="value"
+                [ngModel]="reason()"
+                (ngModelChange)="setReason($event)"
+                [clearable]="false"
+              >
+                <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+                <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.reason.' + item.key | translate) : '' }}</ng-template>
+              </ng-select>
+            </div>
+
+            @if (channelVisible()) {
+              <div class="mb-3">
+                <label for="so-channel" class="form-label">
+                  {{ 'stockout.channel' | translate }}
+                  @if (!channelRequired()) {
+                    <span class="text-body-secondary">({{ 'common.optional' | translate }})</span>
+                  }
+                </label>
+                <ng-select
+                  id="so-channel"
+                  [items]="channels"
+                  bindValue="value"
+                  [ngModel]="channel()"
+                  (ngModelChange)="setChannel($event)"
+                  [clearable]="!channelRequired()"
+                  [placeholder]="'stockout.no_channel' | translate"
+                >
+                  <ng-template ng-label-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+                  <ng-template ng-option-tmp let-item="item">{{ item ? ('stock.channel.' + item.key | translate) : '' }}</ng-template>
+                </ng-select>
+              </div>
+            }
+
+            <div class="mb-3">
+              <label for="so-recipient" class="form-label">{{ 'stockout.recipient' | translate }}</label>
+              <input
+                id="so-recipient"
+                type="text"
+                maxlength="256"
+                class="form-control"
+                [value]="recipient()"
+                (input)="recipient.set($any($event.target).value)"
+              />
+              <div class="form-text">{{ 'stockout.recipient_hint' | translate }}</div>
+            </div>
+          }
+
+          <div class="mb-3">
+            <label for="so-note" class="form-label">{{ 'common.note' | translate }}</label>
+            <textarea
+              id="so-note"
+              rows="2"
+              maxlength="1000"
+              class="form-control"
+              [value]="note()"
+              (input)="note.set($any($event.target).value)"
+            ></textarea>
+          </div>
+
+          @if (errorKey(); as key) {
+            <div class="alert alert-warning py-2">{{ key | translate: { count: onHand() } }}</div>
+          }
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="closePanel()">
+              {{ 'common.cancel' | translate }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary flex-grow-1"
+              [disabled]="saving() || errorKey() !== null"
+              (click)="submit()"
+            >
+              {{ (saving() ? 'stockout.saving' : (mode() === 'in' ? 'stockout.submit_in' : 'stockout.submit')) | translate }}
+            </button>
+          </div>
+        }
+      </div>
+    </ng-template>
