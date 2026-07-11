@@ -5,7 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import {
   AdminCategoriesService,
   type AdminCategoryDto,
@@ -15,6 +15,7 @@ import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { TableSkeleton } from '../../shared/table-skeleton';
 import { TableFooter } from '../../shared/table-footer';
+import { AdminCategoryForm } from './category-form';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -23,8 +24,8 @@ type StatusFilter = 'all' | 'published' | 'hidden';
 
 /**
  * Category browser: a full-width list with publish status and display order.
- * Creating and editing happen on their own page (`/categories/new`,
- * `/categories/:id`), mirroring the product list/form split.
+ * Creating and editing happen in an offcanvas panel that slides in from the end
+ * ({@link AdminCategoryForm}), seeded straight from the selected row.
  *
  * The endpoint returns the full list, so the name search and status filter
  * below run client-side over the loaded rows.
@@ -32,11 +33,12 @@ type StatusFilter = 'all' | 'published' | 'hidden';
 @Component({
   selector: 'app-admin-categories',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableSkeleton, TableFooter],
+  imports: [Icon, TranslatePipe, PageHeader, TableSkeleton, TableFooter],
   templateUrl: './categories.html',
 })
 export class AdminCategories {
   private readonly service = inject(AdminCategoriesService);
+  private readonly offcanvas = inject(NgbOffcanvas);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -104,6 +106,38 @@ export class AdminCategories {
   protected setPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  /** Open the create panel. */
+  protected openNew(): void {
+    this.openForm(null);
+  }
+
+  /** Open the edit panel seeded from an existing row. */
+  protected openEdit(c: AdminCategoryDto): void {
+    this.openForm(c);
+  }
+
+  /**
+   * Slide the category form in from the end. The panel only closes through its
+   * own Save/Cancel actions (static backdrop + no Esc), and a successful save
+   * reloads the list.
+   */
+  private openForm(category: AdminCategoryDto | null): void {
+    const ref = this.offcanvas.open(AdminCategoryForm, {
+      position: 'end',
+      panelClass: 'category-panel',
+      ariaLabelledBy: 'category-panel-title',
+      backdrop: 'static',
+      keyboard: false,
+    });
+    const panel = ref.componentInstance as AdminCategoryForm;
+    panel.init(category);
+    panel.saved.subscribe(() => {
+      ref.close();
+      this.list.reload();
+    });
+    panel.cancelled.subscribe(() => ref.dismiss());
   }
 
   protected remove(c: AdminCategoryDto): void {

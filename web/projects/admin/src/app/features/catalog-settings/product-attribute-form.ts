@@ -2,25 +2,25 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
+  output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import {
   form,
   FormField as Control,
   required,
   submit,
 } from '@angular/forms/signals';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { AdminProductAttributesService } from 'data-access';
+import {
+  AdminProductAttributesService,
+  type AdminProductAttributeDto,
+} from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
-import { PageHeader } from '../../shared/page-header';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface AttributeModel {
@@ -29,30 +29,27 @@ interface AttributeModel {
 }
 
 /**
- * Create / edit a product attribute on its own page. The attributes API has no
- * single-fetch endpoint, so edit mode seeds from the list resource. Attribute
- * groups are managed back on the list page.
+ * Create / edit a product attribute inside an offcanvas panel. Opened by the
+ * attribute list via `NgbOffcanvas.open(AdminProductAttributeForm)`, which calls
+ * {@link init} with the row being edited (or `null` to create). Reports back
+ * through {@link saved} / {@link cancelled} so the list can close + refresh.
  */
 @Component({
   selector: 'app-admin-product-attribute-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgSelectModule, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [Control, NgSelectModule, FormField, Button, TranslatePipe, MultiLangInput],
   templateUrl: './product-attribute-form.html',
 })
 export class AdminProductAttributeForm {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly service = inject(AdminProductAttributesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  private readonly idParam = toSignal(this.route.paramMap, {
-    initialValue: this.route.snapshot.paramMap,
-  });
-  protected readonly isNew = computed(() => this.idParam().get('id') === 'new');
-  private readonly attributeId = computed(() => Number(this.idParam().get('id')));
+  /** Emitted after a successful create/update — the host closes + reloads. */
+  readonly saved = output<void>();
+  /** Emitted when the user cancels or closes the panel without saving. */
+  readonly cancelled = output<void>();
 
-  protected readonly list = this.service.listResource();
   protected readonly groups = this.service.groupsResource();
   /**
    * Group options with string ids so ng-select's strict `compareWith` matches
@@ -61,9 +58,10 @@ export class AdminProductAttributeForm {
   protected readonly groupItems = computed(() =>
     (this.groups.value() ?? []).map((g) => ({ id: String(g.id), name: g.name })),
   );
-  private readonly existing = computed(
-    () => this.list.value()?.find((a) => a.id === this.attributeId()) ?? null,
-  );
+
+  /** The attribute being edited, or `null` while creating. */
+  private readonly editing = signal<AdminProductAttributeDto | null>(null);
+  protected readonly isNew = computed(() => this.editing() === null);
 
   protected readonly model = signal<AttributeModel>({ name: { ar: '', en: '' }, groupId: '' });
   protected readonly f = form(this.model, (path) => {
@@ -73,20 +71,19 @@ export class AdminProductAttributeForm {
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
 
-  private seeded = false;
+  /** Seed the panel for creating (`null`) or editing the given attribute. */
+  init(attribute: AdminProductAttributeDto | null): void {
+    this.editing.set(attribute);
+    this.serverError.set(null);
+    this.model.set(
+      attribute
+        ? { name: { ar: attribute.name ?? '', en: attribute.nameEn ?? '' }, groupId: String(attribute.groupId) }
+        : { name: { ar: '', en: '' }, groupId: '' },
+    );
+  }
 
-  constructor() {
-    effect(() => {
-      if (this.isNew() || this.seeded) {
-        return;
-      }
-      const a = this.existing();
-      if (!a) {
-        return;
-      }
-      this.seeded = true;
-      this.model.set({ name: { ar: a.name ?? '', en: a.nameEn ?? '' }, groupId: String(a.groupId) });
-    });
+  protected onCancel(): void {
+    this.cancelled.emit();
   }
 
   protected onSubmit(event: Event): void {
@@ -96,14 +93,15 @@ export class AdminProductAttributeForm {
       const m = this.model();
       const body = { name: m.name.ar, nameEn: m.name.en || null, groupId: Number(m.groupId) };
       try {
-        if (this.isNew()) {
+        const current = this.editing();
+        if (current) {
+          await firstValueFrom(this.service.update(current.id, body));
+          this.toast.success(this.translate.instant('attributes.updated_ok'));
+        } else {
           await firstValueFrom(this.service.create(body));
           this.toast.success(this.translate.instant('attributes.created_ok'));
-        } else {
-          await firstValueFrom(this.service.update(this.attributeId(), body));
-          this.toast.success(this.translate.instant('attributes.updated_ok'));
         }
-        await this.router.navigate(['/product-attributes']);
+        this.saved.emit();
       } catch {
         this.serverError.set(this.translate.instant('attributes.save_failed'));
       }

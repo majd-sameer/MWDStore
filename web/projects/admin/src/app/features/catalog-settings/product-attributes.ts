@@ -4,7 +4,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import {
   AdminProductAttributesService,
   type AdminProductAttributeDto,
@@ -15,21 +15,23 @@ import { Button, Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 import { TableSkeleton } from '../../shared/table-skeleton';
+import { AdminProductAttributeForm } from './product-attribute-form';
 
 /**
  * Product attribute browser: the attribute list with a small group manager
- * alongside. Creating and editing an attribute happen on their own page
- * (`/product-attributes/new`, `/product-attributes/:id`); groups stay here
- * since they are a lightweight secondary entity.
+ * alongside. Creating and editing an attribute happen in an offcanvas panel
+ * ({@link AdminProductAttributeForm}), seeded straight from the selected row;
+ * groups stay here since they are a lightweight secondary entity.
  */
 @Component({
   selector: 'app-admin-product-attributes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, MultiLangInput, TableSkeleton],
+  imports: [Button, Icon, TranslatePipe, PageHeader, MultiLangInput, TableSkeleton],
   templateUrl: './product-attributes.html',
 })
 export class AdminProductAttributes {
   private readonly service = inject(AdminProductAttributesService);
+  private readonly offcanvas = inject(NgbOffcanvas);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -38,6 +40,38 @@ export class AdminProductAttributes {
   protected readonly deletingId = signal<number | null>(null);
   /** Bilingual name for the "add group" box. */
   protected readonly newGroupName = signal<MultiLangValue>({ ar: '', en: '' });
+
+  /** Open the create panel. */
+  protected openNew(): void {
+    this.openForm(null);
+  }
+
+  /** Open the edit panel seeded from an existing row. */
+  protected openEdit(a: AdminProductAttributeDto): void {
+    this.openForm(a);
+  }
+
+  /**
+   * Slide the attribute form in from the end. The panel only closes through its
+   * own Save/Cancel actions (static backdrop + no Esc), and a successful save
+   * reloads the list.
+   */
+  private openForm(attribute: AdminProductAttributeDto | null): void {
+    const ref = this.offcanvas.open(AdminProductAttributeForm, {
+      position: 'end',
+      panelClass: 'attribute-panel',
+      ariaLabelledBy: 'attribute-panel-title',
+      backdrop: 'static',
+      keyboard: false,
+    });
+    const panel = ref.componentInstance as AdminProductAttributeForm;
+    panel.init(attribute);
+    panel.saved.subscribe(() => {
+      ref.close();
+      this.list.reload();
+    });
+    panel.cancelled.subscribe(() => ref.dismiss());
+  }
 
   protected remove(a: AdminProductAttributeDto): void {
     if (!confirm(this.translate.instant('attributes.confirm_delete', { name: a.name ?? '#' + a.id }))) {

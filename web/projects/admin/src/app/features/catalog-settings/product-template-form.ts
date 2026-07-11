@@ -2,76 +2,67 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
+  output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminOperationsService,
   AdminProductAttributesService,
+  type AdminProductTemplateDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, ToastService } from 'ui';
-import { PageHeader } from '../../shared/page-header';
 
 /**
- * Create / edit a product template (a named attribute set) on its own page. The
- * templates API has no single-fetch endpoint, so edit mode seeds from the list
- * resource (the list DTO carries the assigned attributes). Saving returns to the list.
+ * Create / edit a product template (a named attribute set) inside an offcanvas
+ * panel. Opened by the template list via `NgbOffcanvas.open(...)`, which calls
+ * {@link init} with the row being edited (or `null` to create) — the list DTO
+ * carries the assigned attributes, so the panel seeds itself with no extra
+ * fetch. Reports back through {@link saved} / {@link cancelled}.
  */
 @Component({
   selector: 'app-admin-product-template-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Button, TranslatePipe],
   templateUrl: './product-template-form.html',
 })
 export class AdminProductTemplateForm {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly service = inject(AdminOperationsService);
   private readonly attributesService = inject(AdminProductAttributesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  private readonly idParam = toSignal(this.route.paramMap, {
-    initialValue: this.route.snapshot.paramMap,
-  });
-  protected readonly isNew = computed(() => this.idParam().get('id') === 'new');
-  private readonly templateId = computed(() => Number(this.idParam().get('id')));
+  /** Emitted after a successful create/update — the host closes + reloads. */
+  readonly saved = output<void>();
+  /** Emitted when the user cancels or closes the panel without saving. */
+  readonly cancelled = output<void>();
 
-  protected readonly list = this.service.templatesResource();
   protected readonly attributes = this.attributesService.listResource();
-  private readonly existing = computed(
-    () => this.list.value()?.find((t) => t.id === this.templateId()) ?? null,
-  );
+
+  /** The template being edited, or `null` while creating. */
+  private readonly editing = signal<AdminProductTemplateDto | null>(null);
+  protected readonly isNew = computed(() => this.editing() === null);
 
   protected readonly name = signal('');
   protected readonly selectedIds = signal<number[]>([]);
   protected readonly saving = signal(false);
 
-  private seeded = false;
-
-  constructor() {
-    effect(() => {
-      if (this.isNew() || this.seeded) {
-        return;
-      }
-      const t = this.existing();
-      if (!t) {
-        return;
-      }
-      this.seeded = true;
-      this.name.set(t.name ?? '');
-      this.selectedIds.set(t.attributes.map((a) => a.id));
-    });
+  /** Seed the panel for creating (`null`) or editing the given template. */
+  init(template: AdminProductTemplateDto | null): void {
+    this.editing.set(template);
+    this.name.set(template?.name ?? '');
+    this.selectedIds.set(template?.attributes.map((a) => a.id) ?? []);
   }
 
   protected toggle(id: number): void {
     this.selectedIds.update((ids) =>
       ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
     );
+  }
+
+  protected onCancel(): void {
+    this.cancelled.emit();
   }
 
   protected save(): void {
@@ -82,16 +73,17 @@ export class AdminProductTemplateForm {
     }
     this.saving.set(true);
     const body = { name, attributeIds: this.selectedIds() };
-    const request = this.isNew()
-      ? this.service.createTemplate(body)
-      : this.service.updateTemplate(this.templateId(), body);
+    const current = this.editing();
+    const request = current
+      ? this.service.updateTemplate(current.id, body)
+      : this.service.createTemplate(body);
     request.subscribe({
       next: () => {
         this.toast.success(
           this.translate.instant(this.isNew() ? 'templates.created_ok' : 'templates.updated_ok'),
         );
         this.saving.set(false);
-        void this.router.navigate(['/product-templates']);
+        this.saved.emit();
       },
       error: () => {
         this.toast.error(this.translate.instant('templates.save_failed'));

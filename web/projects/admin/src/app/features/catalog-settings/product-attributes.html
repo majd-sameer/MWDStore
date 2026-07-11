@@ -3,9 +3,9 @@
       [title]="'attributes.title' | translate"
       [subtitle]="'attributes.subtitle' | translate"
     >
-      <a routerLink="/product-attributes/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" (click)="openNew()">
         <lib-icon name="plus" [size]="18" /> {{ 'attributes.new' | translate }}
-      </a>
+      </button>
     </app-page-header>
 
     <div class="row g-4">
@@ -30,14 +30,14 @@
                     @for (a of rows; track a.id) {
                       <tr>
                         <td>
-                          <a [routerLink]="['/product-attributes', a.id]" class="text-decoration-none fw-medium">{{ a.name }}</a>
+                          <button type="button" class="btn btn-link p-0 text-decoration-none fw-medium text-start align-baseline" (click)="openEdit(a)">{{ a.name }}</button>
                         </td>
                         <td class="text-body-secondary">{{ a.groupName }}</td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
-                            <a [routerLink]="['/product-attributes', a.id]" class="action-btn" [title]="'common.edit' | translate">
+                            <button type="button" class="action-btn" [title]="'common.edit' | translate" (click)="openEdit(a)">
                               <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
-                            </a>
+                            </button>
                             <button
                               type="button"
                               class="action-btn action-btn-danger"
@@ -56,9 +56,9 @@
                           <div class="empty-state">
                             <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                             <div class="empty-title">{{ 'attributes.empty' | translate }}</div>
-                            <a routerLink="/product-attributes/new" class="btn btn-primary btn-sm mt-2">
+                            <button type="button" class="btn btn-primary btn-sm mt-2" (click)="openNew()">
                               {{ 'attributes.create_first' | translate }}
-                            </a>
+                            </button>
                           </div>
                         </td>
                       </tr>

@@ -3,10 +3,10 @@
       [title]="'categories.title' | translate"
       [subtitle]="'categories.subtitle' | translate"
     >
-      <a routerLink="/categories/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" (click)="openNew()">
         <lib-icon name="plus" [size]="18" />
         {{ 'categories.new' | translate }}
-      </a>
+      </button>
     </app-page-header>
 
     <div class="card border-0 shadow-sm">
@@ -62,9 +62,13 @@
                 @for (c of rows(); track c.id) {
                   <tr>
                     <td>
-                      <a [routerLink]="['/categories', c.id]" class="text-decoration-none fw-medium">
+                      <button
+                        type="button"
+                        class="btn btn-link p-0 text-decoration-none fw-medium text-start align-baseline"
+                        (click)="openEdit(c)"
+                      >
                         {{ c.name }}
-                      </a>
+                      </button>
                       <div class="small text-body-secondary">{{ c.slug }}</div>
                     </td>
                     <td >{{ c.displayOrder }}</td>
@@ -77,13 +81,14 @@
                     </td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
-                        <a
-                          [routerLink]="['/categories', c.id]"
+                        <button
+                          type="button"
                           class="action-btn"
                           [title]="'common.edit' | translate"
+                          (click)="openEdit(c)"
                         >
                           <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
-                        </a>
+                        </button>
                         <button
                           type="button"
                           class="action-btn action-btn-danger"
@@ -107,9 +112,9 @@
                         <div class="empty-state">
                           <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                           <div class="empty-title">{{ 'categories.empty' | translate }}</div>
-                          <a routerLink="/categories/new" class="btn btn-primary btn-sm mt-2">
+                          <button type="button" class="btn btn-primary btn-sm mt-2" (click)="openNew()">
                             {{ 'categories.create_first' | translate }}
-                          </a>
+                          </button>
                         </div>
                       }
                     </td>

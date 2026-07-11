@@ -1,50 +1,42 @@
 
-    <nav class="mb-3" aria-label="breadcrumb">
-      <a routerLink="/brands" class="text-decoration-none">← {{ 'brands.title' | translate }}</a>
-    </nav>
-    <app-page-header [title]="(isNew() ? 'brands.new_title' : 'brands.edit_title') | translate" />
+    <div class="offcanvas-header border-bottom">
+      <h2 class="offcanvas-title h5 mb-0" id="brand-panel-title">
+        {{ (isNew() ? 'brands.new_title' : 'brands.edit_title') | translate }}
+      </h2>
+      <button
+        type="button"
+        class="btn-close"
+        [attr.aria-label]="'common.close' | translate"
+        (click)="onCancel()"
+      ></button>
+    </div>
 
-    @if (!isNew() && existing.isLoading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+    <div class="offcanvas-body">
+      @if (serverError(); as message) {
+        <div class="alert alert-danger" role="alert">{{ message }}</div>
+      }
+      <form (submit)="onSubmit($event)" novalidate>
+        <lib-form-field [label]="'common.name' | translate" controlId="brand-name" [required]="true" [error]="err(f.name.ar())">
+          <multi-lang-input controlId="brand-name" [formField]="f.name" />
+        </lib-form-field>
+        <lib-form-field [label]="'common.slug' | translate" controlId="brand-slug" [hint]="'common.slug_hint' | translate">
+          <input id="brand-slug" type="text" class="form-control" [formField]="f.slug" />
+        </lib-form-field>
+        <lib-form-field [label]="'common.description' | translate" controlId="brand-desc">
+          <multi-lang-input type="textarea" [rows]="3" controlId="brand-desc" [formField]="f.description" />
+        </lib-form-field>
+        <div class="form-check form-switch mb-3">
+          <input id="brand-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
+          <label for="brand-pub" class="form-check-label">{{ 'common.published' | translate }}</label>
         </div>
-      </div>
-    } @else if (!isNew() && existing.error()) {
-      <div class="alert alert-danger">{{ 'brands.load_one_failed' | translate }}</div>
-    } @else {
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              @if (serverError(); as message) {
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
-              }
-              <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="brand-name" [required]="true" [error]="err(f.name.ar())">
-                  <multi-lang-input controlId="brand-name" [formField]="f.name" />
-                </lib-form-field>
-                <lib-form-field [label]="'common.slug' | translate" controlId="brand-slug" [hint]="'common.slug_hint' | translate">
-                  <input id="brand-slug" type="text" class="form-control" [formField]="f.slug" />
-                </lib-form-field>
-                <lib-form-field [label]="'common.description' | translate" controlId="brand-desc">
-                  <multi-lang-input type="textarea" [rows]="3" controlId="brand-desc" [formField]="f.description" />
-                </lib-form-field>
-                <div class="form-check form-switch mb-3">
-                  <input id="brand-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
-                  <label for="brand-pub" class="form-check-label">{{ 'common.published' | translate }}</label>
-                </div>
 
-                <div class="form-actions">
-                  <button libButton variant="primary" [disabled]="f().submitting()">
-                    {{ (f().submitting() ? 'common.saving' : isNew() ? 'brands.create' : 'common.save_changes') | translate }}
-                  </button>
-                  <a routerLink="/brands" class="btn btn-outline-secondary">{{ 'common.cancel' | translate }}</a>
-                </div>
-              </form>
-            </div>
-          </div>
+        <div class="form-actions">
+          <button libButton variant="primary" [disabled]="f().submitting()">
+            {{ (f().submitting() ? 'common.saving' : isNew() ? 'brands.create' : 'common.save_changes') | translate }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">
+            {{ 'common.cancel' | translate }}
+          </button>
         </div>
-      </div>
-    }
-  
+      </form>
+    </div>

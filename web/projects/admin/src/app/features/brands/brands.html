@@ -3,9 +3,9 @@
       [title]="'brands.title' | translate"
       [subtitle]="'brands.subtitle' | translate"
     >
-      <a routerLink="/brands/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" (click)="openNew()">
         <lib-icon name="plus" [size]="18" /> {{ 'brands.new' | translate }}
-      </a>
+      </button>
     </app-page-header>
 
     <div class="card border-0 shadow-sm">
@@ -28,7 +28,7 @@
                 @for (b of rows; track b.id) {
                   <tr>
                     <td>
-                      <a [routerLink]="['/brands', b.id]" class="text-decoration-none fw-medium">{{ b.name }}</a>
+                      <button type="button" class="btn btn-link p-0 text-decoration-none fw-medium text-start align-baseline" (click)="openEdit(b)">{{ b.name }}</button>
                       <div class="small text-body-secondary">{{ b.slug }}</div>
                     </td>
                     <td>
@@ -40,9 +40,9 @@
                     </td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
-                        <a [routerLink]="['/brands', b.id]" class="action-btn" [title]="'common.edit' | translate">
+                        <button type="button" class="action-btn" [title]="'common.edit' | translate" (click)="openEdit(b)">
                           <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
-                        </a>
+                        </button>
                         <button
                           type="button"
                           class="action-btn action-btn-danger"
@@ -61,9 +61,9 @@
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">{{ 'brands.empty' | translate }}</div>
-                        <a routerLink="/brands/new" class="btn btn-primary btn-sm mt-2">
+                        <button type="button" class="btn btn-primary btn-sm mt-2" (click)="openNew()">
                           {{ 'brands.create_first' | translate }}
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -82,15 +82,6 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'product-options/:id',
-        title: 'Edit option · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.catalog)],
-        loadComponent: () =>
-          import('./features/catalog-settings/product-option-form').then(
-            (m) => m.AdminProductOptionForm,
-          ),
-      },
-      {
         path: 'product-attributes',
         title: 'Product attributes · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.catalog)],
@@ -100,30 +91,12 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'product-attributes/:id',
-        title: 'Edit attribute · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.catalog)],
-        loadComponent: () =>
-          import('./features/catalog-settings/product-attribute-form').then(
-            (m) => m.AdminProductAttributeForm,
-          ),
-      },
-      {
         path: 'product-templates',
         title: 'Product templates · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.catalog)],
         loadComponent: () =>
           import('./features/catalog-settings/product-templates').then(
             (m) => m.AdminProductTemplates,
-          ),
-      },
-      {
-        path: 'product-templates/:id',
-        title: 'Edit template · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.catalog)],
-        loadComponent: () =>
-          import('./features/catalog-settings/product-template-form').then(
-            (m) => m.AdminProductTemplateForm,
           ),
       },
       {
@@ -173,27 +146,11 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'categories/:id',
-        title: 'Edit category · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.catalog)],
-        loadComponent: () =>
-          import('./features/categories/category-form').then(
-            (m) => m.AdminCategoryForm,
-          ),
-      },
-      {
         path: 'brands',
         title: 'Brands · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.catalog)],
         loadComponent: () =>
           import('./features/brands/brands').then((m) => m.AdminBrands),
-      },
-      {
-        path: 'brands/:id',
-        title: 'Edit brand · MadeWithDetermination Admin',
-        canActivate: [roleGuard(...AREA.catalog)],
-        loadComponent: () =>
-          import('./features/brands/brand-form').then((m) => m.AdminBrandForm),
       },
       {
         path: 'orders',

@@ -3,9 +3,9 @@
       [title]="'options.title' | translate"
       [subtitle]="'options.subtitle' | translate"
     >
-      <a routerLink="/product-options/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" (click)="openNew()">
         <lib-icon name="plus" [size]="18" /> {{ 'options.new' | translate }}
-      </a>
+      </button>
     </app-page-header>
 
     <div class="card border-0 shadow-sm">
@@ -27,13 +27,20 @@
                 @for (o of rows; track o.id) {
                   <tr>
                     <td>
-                      <a [routerLink]="['/product-options', o.id]" class="text-decoration-none fw-medium">{{ o.name }}</a>
+                      <button type="button" class="btn btn-link p-0 text-decoration-none fw-medium" (click)="openEdit(o)">
+                        {{ o.name }}
+                      </button>
                     </td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
-                        <a [routerLink]="['/product-options', o.id]" class="action-btn" [title]="'common.edit' | translate">
+                        <button
+                          type="button"
+                          class="action-btn"
+                          [title]="'common.edit' | translate"
+                          (click)="openEdit(o)"
+                        >
                           <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
-                        </a>
+                        </button>
                         <button
                           type="button"
                           class="action-btn action-btn-danger"
@@ -53,9 +60,9 @@
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">{{ 'options.empty' | translate }}</div>
                         <div class="small">{{ 'options.empty_hint' | translate }}</div>
-                        <a routerLink="/product-options/new" class="btn btn-primary btn-sm mt-2">
+                        <button type="button" class="btn btn-primary btn-sm mt-2" (click)="openNew()">
                           {{ 'options.create_first' | translate }}
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -66,4 +73,37 @@
         }
       </div>
     </div>
-  
+
+    <!-- ===== Create / edit offcanvas (slides in from the end) ===== -->
+    <ng-template #optionPanel>
+      <div class="offcanvas-header border-bottom">
+        <h2 class="offcanvas-title h5 mb-0" id="option-panel-title">
+          {{ (isNew() ? 'options.new_title' : 'options.edit_title') | translate }}
+        </h2>
+        <button
+          type="button"
+          class="btn-close"
+          [attr.aria-label]="'common.cancel' | translate"
+          (click)="closePanel()"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        @if (serverError(); as message) {
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        }
+        <form (submit)="onSubmit($event)" novalidate>
+          <lib-form-field [label]="'common.name' | translate" controlId="opt-name" [required]="true" [error]="err(f.name.ar())">
+            <multi-lang-input controlId="opt-name" [formField]="f.name" />
+          </lib-form-field>
+
+          <div class="d-flex gap-2 mt-3">
+            <button type="button" class="btn btn-outline-secondary" (click)="closePanel()">
+              {{ 'common.cancel' | translate }}
+            </button>
+            <button libButton variant="primary" class="flex-grow-1" [disabled]="f().submitting()">
+              {{ (f().submitting() ? 'common.saving' : isNew() ? 'options.create' : 'common.save_changes') | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </ng-template>

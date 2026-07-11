@@ -2,27 +2,25 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
+  output,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import {
   form,
   FormField as Control,
   required,
   submit,
 } from '@angular/forms/signals';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminCategoriesService,
+  type AdminCategoryDto,
   type CategoryUpsertRequest,
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
-import { PageHeader } from '../../shared/page-header';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
 interface CategoryModel {
@@ -46,30 +44,31 @@ function emptyModel(): CategoryModel {
 }
 
 /**
- * Create / edit a category on its own page (mirrors the product form). The `:id`
- * route param is either `new` (create) or a numeric id (edit, seeded from
- * `GET /api/admin/categories/{id}`). Saving returns to the category list.
+ * Create / edit a category inside an offcanvas panel. Opened by the category
+ * list via `NgbOffcanvas.open(AdminCategoryForm)`, which calls {@link init} with
+ * the row being edited (or `null` to create). The panel seeds itself from that
+ * row — no extra fetch — and reports back through {@link saved} / {@link cancelled}
+ * so the list can close the panel and refresh.
  */
 @Component({
   selector: 'app-admin-category-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [Control, FormField, Button, TranslatePipe, MultiLangInput],
   templateUrl: './category-form.html',
 })
 export class AdminCategoryForm {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly service = inject(AdminCategoriesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  private readonly idParam = toSignal(this.route.paramMap, {
-    initialValue: this.route.snapshot.paramMap,
-  });
-  protected readonly isNew = computed(() => this.idParam().get('id') === 'new');
-  private readonly categoryId = computed(() => Number(this.idParam().get('id')));
+  /** Emitted after a successful create/update — the host closes + reloads. */
+  readonly saved = output<void>();
+  /** Emitted when the user cancels or closes the panel without saving. */
+  readonly cancelled = output<void>();
 
-  protected readonly existing = this.service.getResource(this.categoryId);
+  /** The category being edited, or `null` while creating. */
+  private readonly editing = signal<AdminCategoryDto | null>(null);
+  protected readonly isNew = computed(() => this.editing() === null);
 
   protected readonly model = signal<CategoryModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
@@ -78,28 +77,29 @@ export class AdminCategoryForm {
   protected readonly err = firstError;
   protected readonly serverError = signal<string | null>(null);
 
-  private seeded = false;
+  /** Seed the panel for creating (`null`) or editing the given category. */
+  init(category: AdminCategoryDto | null): void {
+    this.editing.set(category);
+    this.serverError.set(null);
+    this.model.set(
+      category
+        ? {
+            name: { ar: category.name ?? '', en: category.nameEn ?? '' },
+            slug: category.slug ?? '',
+            description: {
+              ar: category.description ?? '',
+              en: category.descriptionEn ?? '',
+            },
+            displayOrder: category.displayOrder,
+            isPublished: category.isPublished,
+            includeInMenu: category.includeInMenu,
+          }
+        : emptyModel(),
+    );
+  }
 
-  constructor() {
-    // Seed the form once the category arrives (edit mode only).
-    effect(() => {
-      if (this.isNew() || this.seeded) {
-        return;
-      }
-      const c = this.existing.value();
-      if (!c) {
-        return;
-      }
-      this.seeded = true;
-      this.model.set({
-        name: { ar: c.name ?? '', en: c.nameEn ?? '' },
-        slug: c.slug ?? '',
-        description: { ar: c.description ?? '', en: c.descriptionEn ?? '' },
-        displayOrder: c.displayOrder,
-        isPublished: c.isPublished,
-        includeInMenu: c.includeInMenu,
-      });
-    });
+  protected onCancel(): void {
+    this.cancelled.emit();
   }
 
   protected onSubmit(event: Event): void {
@@ -118,14 +118,15 @@ export class AdminCategoryForm {
         includeInMenu: m.includeInMenu,
       };
       try {
-        if (this.isNew()) {
+        const current = this.editing();
+        if (current) {
+          await firstValueFrom(this.service.update(current.id, body));
+          this.toast.success(this.translate.instant('categories.updated_ok'));
+        } else {
           await firstValueFrom(this.service.create(body));
           this.toast.success(this.translate.instant('categories.created_ok'));
-        } else {
-          await firstValueFrom(this.service.update(this.categoryId(), body));
-          this.toast.success(this.translate.instant('categories.updated_ok'));
         }
-        await this.router.navigate(['/categories']);
+        this.saved.emit();
       } catch {
         this.serverError.set(this.translate.instant('categories.save_failed'));
       }
