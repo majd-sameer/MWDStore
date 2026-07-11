@@ -55,8 +55,15 @@ public static class ContentBlockSeeder
         new("about", "about-video", "eyebrow", "text", "شاهد قصتنا", "Watch our story", Sort: 0),
         new("about", "about-video", "title", "text",
             "من داخل المراكز… حكاية إرادة", "From inside the centers… a story of will", Sort: 1),
+        new("about", "about-video", "body", "text",
+            "يأخذكم هذا الفيلم القصير إلى داخل مراكز الإصلاح والتأهيل في الأردن، حيث يتعلّم النزلاء حرفةً يتقنونها ويحوّلونها إلى قطع يدوية تُباع عبر هذا المتجر الرسمي. خلف كل منتج إنسانٌ اختار أن يبدأ من جديد — وكل عملية شراء تدعم تأهيله ورحلته للعودة إلى المجتمع بكرامة وأمل.",
+            "This short film takes you inside Jordan's Reform & Rehabilitation Centers, where residents "
+            + "learn a craft, master it, and turn it into handmade pieces sold through this official "
+            + "store. Behind every product is a person choosing to start over — and every purchase "
+            + "supports their rehabilitation and their journey back into society with dignity and hope.",
+            Sort: 2),
         new("about", "about-video", "youtube", "link", null, null,
-            LinkUrl: "https://www.youtube.com/watch?v=DLS0Ic3wrj0&t=31s", Sort: 2),
+            LinkUrl: "https://www.youtube.com/watch?v=DLS0Ic3wrj0&t=31s", Sort: 3),
 
         new("about", "about-how", "eyebrow", "text", "كيف نعمل", "How we work", Sort: 0),
         new("about", "about-how", "title", "text",

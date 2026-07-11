@@ -28,6 +28,7 @@
         <div class="sec-head">
           <span class="eyebrow">{{ content.block('about-video', 'eyebrow')?.value || ('about.video_eyebrow' | translate) }}</span>
           <h2 class="sec-title">{{ content.block('about-video', 'title')?.value || ('about.video_title' | translate) }}</h2>
+          <p class="video-desc">{{ content.block('about-video', 'body')?.value || ('about.video_body' | translate) }}</p>
         </div>
         <div class="video-frame">
           <iframe

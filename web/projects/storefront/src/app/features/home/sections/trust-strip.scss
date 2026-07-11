@@ -9,7 +9,7 @@
     }
     .trust-inner {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
       padding-block: 26px;
     }
@@ -51,4 +51,3 @@
       font-size: 0.88rem;
       color: var(--ink-3);
     }
-  
