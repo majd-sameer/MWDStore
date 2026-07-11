@@ -34,8 +34,12 @@
         <div class="footer-col">
           <h2 class="footer-h">{{ content.block('footer-company', 'heading')?.value || ('footer.brand' | translate) }}</h2>
           <ul>
-            @for (item of brandLinks; track item.key) {
-              <li><a [routerLink]="item.link">{{ content.block('footer-company', item.key)?.value || ('footer.' + item.key | translate) }}</a></li>
+            @for (item of navLinks; track item.key) {
+              <li>
+                <a [routerLink]="item.link" [queryParams]="item.queryParams ?? null">
+                  {{ 'nav.' + item.key | translate }}
+                </a>
+              </li>
             }
           </ul>
         </div>

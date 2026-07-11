@@ -38,6 +38,8 @@ export type IconName =
   | 'lock'
   | 'return'
   | 'phone'
+  | 'mail'
+  | 'clock'
   | 'facebook'
   | 'instagram'
   | 'twitter'
@@ -94,6 +96,8 @@ const ICONS: Record<IconName, IconDef> = {
   lock: { d: 'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4 M12 15v3' },
   return: { d: 'M9 14L4 9l5-5 M4 9h10a6 6 0 0 1 0 12h-4', directional: true },
   phone: { d: 'M7 3H4a1 1 0 0 0-1 1c0 8.3 6.7 15 15 15a1 1 0 0 0 1-1v-3a1 1 0 0 0-.8-1l-3.5-.7a1 1 0 0 0-1 .4l-1 1.3a12 12 0 0 1-5.4-5.4l1.3-1a1 1 0 0 0 .4-1L8 3.8A1 1 0 0 0 7 3z' },
+  mail: { d: 'M3 6h18v12H3z M3 7l9 6 9-6' },
+  clock: { d: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7.5V12l3 2' },
   facebook: { d: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' },
   instagram: {
     d: 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z M16 11.4A4 4 0 1 1 12.6 8 4 4 0 0 1 16 11.4z M17.5 6.5h.01',

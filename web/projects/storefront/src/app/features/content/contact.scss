@@ -1,11 +1,234 @@
 
-    .contact {
-      max-inline-size: 44rem;
+    :host {
+      display: block;
     }
-    .page-title {
-      font-size: 1.8rem;
+
+    /* ---- Page header band — full-bleed breakout from the .wrap container ---- */
+    .pagehead {
+      margin-inline: calc(50% - 50vw);
+      margin-block-start: -2.5rem; /* cancel .app-main's top padding so the band hugs the header */
+      background: var(--surface-2);
+      border-block-end: 1px solid var(--line);
+    }
+    .ph-inner {
+      max-inline-size: var(--maxw);
+      margin-inline: auto;
+      padding-inline: 32px;
+      padding-block: 1.6rem 2.1rem;
+    }
+    .ph-eyebrow {
+      display: inline-block;
+      margin-block-start: 1rem;
+      color: var(--accent);
+      font-size: 0.78rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-block-end: 0.25rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
     }
-  
+    .ph-title {
+      font-weight: 700;
+      font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+      letter-spacing: -0.02em;
+      margin-block: 0.35rem 0;
+    }
+    .ph-sub {
+      color: var(--ink-2);
+      max-inline-size: 48ch;
+      margin-block: 0.4rem 0;
+    }
+
+    /* ---- Two-column body: info aside + form card ---- */
+    .contact-wrap {
+      padding-block: 44px 64px;
+    }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
+
+    /* ---- Info column ---- */
+    .info-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-block: 0 0.5rem;
+    }
+    .info-body {
+      color: var(--ink-2);
+      margin-block: 0 1.75rem;
+    }
+    .channels {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .channel {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 6px;
+      border-block-end: 1px solid var(--line-2);
+    }
+    .channel:last-child {
+      border-block-end: 0;
+    }
+    .channel-ic {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 42px;
+      block-size: 42px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      color: var(--accent);
+    }
+    .channel-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-block-start: 2px;
+    }
+    .channel-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .channel-value {
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+    a.channel-value:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    /* Keep tel:/wa.me numbers rendered LTR even in an RTL layout. */
+    .channel-value[dir='ltr'] {
+      display: inline-block;
+      unicode-bidi: isolate;
+    }
+    /* ---- Social links (from the admin social-links section) ---- */
+    .follow {
+      margin-block-start: 1.5rem;
+    }
+    .follow .channel-label {
+      display: block;
+      margin-block-end: 0.6rem;
+    }
+    .socials {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 42px;
+      block-size: 42px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink-2);
+      transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+    }
+    .social-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    /* ---- Embedded Google map ---- */
+    .map {
+      margin-block-start: 1.75rem;
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+    .map iframe {
+      display: block;
+      inline-size: 100%;
+      block-size: 260px;
+      border: 0;
+    }
+
+    /* ---- Form card ---- */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 30px 30px 34px;
+    }
+    @media (max-width: 480px) {
+      .form-card {
+        padding: 22px 18px 26px;
+      }
+    }
+    .form-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-block: 0 1.25rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 18px;
+    }
+    @media (max-width: 560px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-card button[libButton] {
+      margin-block-start: 0.5rem;
+    }
+
+    /* ---- Success state ---- */
+    .sent {
+      text-align: center;
+      padding-block: 2rem 1rem;
+    }
+    .sent-ic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 64px;
+      block-size: 64px;
+      margin-block-end: 1rem;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green-strong);
+    }
+    .sent-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-block: 0 0.4rem;
+    }
+    .sent-body {
+      color: var(--ink-2);
+      margin-block: 0 1.5rem;
+    }

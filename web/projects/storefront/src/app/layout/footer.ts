@@ -16,6 +16,13 @@ interface FooterLink {
   readonly link: string;
 }
 
+interface NavLink {
+  /** Translation key under `nav.*` — same labels as the header nav bar. */
+  readonly key: string;
+  readonly link: string;
+  readonly queryParams?: Record<string, string>;
+}
+
 interface ShopLink {
   readonly name: string;
   readonly category: string;
@@ -30,8 +37,8 @@ interface SocialLink {
 
 /**
  * Site footer on the charcoal titanium surface: brand + mission + newsletter
- * capture and the Public Security Directorate endorsement crest, then three
- * link columns (Shop / MadeWithDetermination / Care) and a social row. Editable
+ * capture and the Public Security Directorate endorsement crest, then the link
+ * columns (MadeWithDetermination site nav / Care) and a social row. Editable
  * copy reads the `footer` content blocks (CMS) and falls back to ngx-translate;
  * social icons render only for platforms an admin has given a URL. Layout uses
  * logical Bootstrap utilities so it mirrors in RTL.
@@ -75,15 +82,18 @@ export class Footer {
       .map((c) => ({ name: c.name as string, category: c.slug as string })),
   );
 
-  protected readonly brandLinks: readonly FooterLink[] = [
-    { key: 'about', link: '/' },
-    { key: 'makers', link: '/' },
-    { key: 'stores', link: '/' },
+  /** Site navigation for the brand column — mirrors the header nav bar. */
+  protected readonly navLinks: readonly NavLink[] = [
+    { key: 'home', link: '/' },
+    { key: 'sections', link: '/categories' },
+    { key: 'news', link: '/news' },
+    { key: 'about_us', link: '/pages/about-us' },
+    { key: 'new_arrivals', link: '/shop', queryParams: { sort: 'newest' } },
   ];
 
   protected readonly careLinks: readonly FooterLink[] = [
     { key: 'delivery_returns', link: '/' },
-    { key: 'track', link: '/account/orders' },
+    { key: 'track', link: '/track-order' },
     { key: 'contact', link: '/contact' },
     { key: 'faq', link: '/pages/faq' },
   ];
