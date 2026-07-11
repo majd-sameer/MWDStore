@@ -6,6 +6,14 @@ namespace Store.Api.Models;
 
 public sealed record MediaDto(long Id, string? FileName, string Url, string? Caption, int MediaType);
 
+/// <summary>One row of the admin media-library listing, with usage count across products/categories.</summary>
+public sealed record MediaListItemDto(
+    long Id, string? FileName, string Url, string? Caption, int MediaType, int FileSize, int ReferenceCount);
+
+/// <summary>Paged admin media-library response.</summary>
+public sealed record MediaListResponse(
+    IReadOnlyList<MediaListItemDto> Items, int TotalCount, int Page, int PageSize);
+
 // ----- Products -----------------------------------------------------------------------------------
 
 public sealed record AdminProductListItem(
@@ -71,59 +79,6 @@ public sealed class ProductAttributeValueRequest
     public string? Value { get; set; }
 }
 
-public sealed class ProductUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>Optional; generated from <see cref="Name"/> when omitted.</summary>
-    public string? Slug { get; set; }
-
-    public string? ShortDescription { get; set; }
-    public string? Description { get; set; }
-    public string? Specification { get; set; }
-
-    public string? MetaTitle { get; set; }
-    public string? MetaKeywords { get; set; }
-    public string? MetaDescription { get; set; }
-
-    [Range(0, double.MaxValue)]
-    public decimal Price { get; set; }
-
-    public decimal? OldPrice { get; set; }
-    public decimal? SpecialPrice { get; set; }
-    public DateTimeOffset? SpecialPriceStart { get; set; }
-    public DateTimeOffset? SpecialPriceEnd { get; set; }
-
-    public string? Sku { get; set; }
-    public string? Gtin { get; set; }
-
-    public bool IsPublished { get; set; } = true;
-    public bool IsFeatured { get; set; }
-    public bool IsAllowToOrder { get; set; } = true;
-    public bool IsCallForPricing { get; set; }
-    public bool StockTrackingIsEnabled { get; set; }
-    public int StockQuantity { get; set; }
-    public int DisplayOrder { get; set; }
-
-    public long? BrandId { get; set; }
-    public long? TaxClassId { get; set; }
-
-    /// <summary>Category ids the product belongs to (replaces the existing set on update).</summary>
-    public IList<long> CategoryIds { get; set; } = new List<long>();
-
-    /// <summary>Id of an uploaded <c>Medium</c> used as the thumbnail; null clears it.</summary>
-    public long? ThumbnailImageId { get; set; }
-
-    /// <summary>Gallery media ids in display order (replaces the existing set on update).</summary>
-    public IList<long> MediaIds { get; set; } = new List<long>();
-
-    public IList<ProductAttributeValueRequest> Attributes { get; set; } = new List<ProductAttributeValueRequest>();
-    public IList<ProductOptionRequest> Options { get; set; } = new List<ProductOptionRequest>();
-    public IList<ProductVariationRequest> Variations { get; set; } = new List<ProductVariationRequest>();
-    public IList<long> RelatedProductIds { get; set; } = new List<long>();
-    public IList<long> CrossSellProductIds { get; set; } = new List<long>();
-}
 
 public sealed record AdminProductMediaDto(long MediaId, string Url, string? Caption, int MediaType);
 
@@ -141,93 +96,12 @@ public sealed record AdminProductLinkDto(long Id, string Name, bool IsPublished)
 
 public sealed record AdminProductAttributeValueDto(long AttributeId, string Name, string? GroupName, string? Value);
 
-public sealed record AdminProductDetail(
-    long Id, string Name, string Slug, string? ShortDescription, string? Description, string? Specification,
-    string? MetaTitle, string? MetaKeywords, string? MetaDescription,
-    decimal Price, decimal? OldPrice, decimal? SpecialPrice, DateTimeOffset? SpecialPriceStart, DateTimeOffset? SpecialPriceEnd,
-    string? Sku, string? Gtin, bool IsPublished, bool IsFeatured, bool IsAllowToOrder, bool IsCallForPricing,
-    bool StockTrackingIsEnabled, int StockQuantity, int DisplayOrder, long? BrandId, long? TaxClassId,
-    bool IsDeleted, IReadOnlyList<long> CategoryIds,
-    long? ThumbnailImageId, string? ThumbnailUrl,
-    IReadOnlyList<AdminProductMediaDto> Media,
-    IReadOnlyList<AdminProductAttributeValueDto> Attributes,
-    IReadOnlyList<AdminProductOptionDto> Options,
-    IReadOnlyList<AdminProductVariationDto> Variations,
-    IReadOnlyList<AdminProductLinkDto> RelatedProducts,
-    IReadOnlyList<AdminProductLinkDto> CrossSellProducts);
-
 /// <summary>Lightweight result for the related/cross-sell product picker.</summary>
 public sealed record ProductQuickSearchItem(long Id, string Name, string? Sku, bool IsPublished);
 
 // ----- Product options (admin CRUD) ----------------------------------------------------------------
 
-public sealed record AdminProductOptionListItem(long Id, string Name);
 
-public sealed class ProductOptionUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-}
-
-// ----- Product attributes (admin CRUD) --------------------------------------------------------------
-
-public sealed record AdminProductAttributeDto(long Id, string Name, long GroupId, string GroupName);
-
-public sealed class ProductAttributeUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    [Required]
-    public long GroupId { get; set; }
-}
-
-public sealed record AdminProductAttributeGroupDto(long Id, string Name);
-
-public sealed class ProductAttributeGroupUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-}
-
-// ----- Categories ---------------------------------------------------------------------------------
-
-public sealed class CategoryUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    public string? Slug { get; set; }
-    public string? Description { get; set; }
-    public string? MetaTitle { get; set; }
-    public string? MetaKeywords { get; set; }
-    public string? MetaDescription { get; set; }
-    public int DisplayOrder { get; set; }
-    public bool IsPublished { get; set; } = true;
-    public bool IncludeInMenu { get; set; }
-    public long? ParentId { get; set; }
-}
-
-public sealed record AdminCategoryDto(
-    long Id, string Name, string Slug, string? Description, int DisplayOrder,
-    bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted);
-
-// ----- Brands -------------------------------------------------------------------------------------
-
-public sealed class BrandUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    public string? Slug { get; set; }
-    public string? Description { get; set; }
-    public bool IsPublished { get; set; } = true;
-}
-
-public sealed record AdminBrandDto(
-    long Id, string Name, string Slug, string? Description, bool IsPublished, bool IsDeleted);
-
-// ----- Order management ---------------------------------------------------------------------------
 
 public sealed class UpdateOrderStatusRequest
 {
@@ -523,22 +397,6 @@ public sealed class ModerationStatusRequest
 
 // ----- CMS: pages & menus --------------------------------------------------------------------------
 
-public sealed record AdminPageDto(
-    long Id, string Name, string Slug, string? Body, string? MetaTitle, string? MetaKeywords,
-    string? MetaDescription, bool IsPublished, DateTimeOffset? PublishedOn, DateTimeOffset CreatedOn);
-
-public sealed class PageUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    public string? Slug { get; set; }
-    public string? Body { get; set; }
-    public string? MetaTitle { get; set; }
-    public string? MetaKeywords { get; set; }
-    public string? MetaDescription { get; set; }
-    public bool IsPublished { get; set; } = true;
-}
 
 public sealed record AdminMenuItemDto(
     long Id, long MenuId, long? ParentId, string? Name, string? CustomLink, int DisplayOrder);
@@ -580,31 +438,6 @@ public sealed class NewsCategoryUpsertRequest
     public bool IsPublished { get; set; } = true;
 }
 
-public sealed record AdminNewsItemListItem(
-    long Id, string Name, string Slug, bool IsPublished, DateTimeOffset CreatedOn, string? ThumbnailUrl);
-
-public sealed record AdminNewsItemDetail(
-    long Id, string Name, string Slug, string? ShortContent, string? FullContent,
-    string? MetaTitle, string? MetaKeywords, string? MetaDescription,
-    bool IsPublished, long? ThumbnailImageId, string? ThumbnailUrl, IReadOnlyList<long> CategoryIds);
-
-public sealed class NewsItemUpsertRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    public string? Slug { get; set; }
-    public string? ShortContent { get; set; }
-    public string? FullContent { get; set; }
-    public string? MetaTitle { get; set; }
-    public string? MetaKeywords { get; set; }
-    public string? MetaDescription { get; set; }
-    public bool IsPublished { get; set; } = true;
-    public long? ThumbnailImageId { get; set; }
-    public IList<long> CategoryIds { get; set; } = new List<long>();
-}
-
-// ----- Payments --------------------------------------------------------------------------------------
 
 public sealed record AdminPaymentProviderDto(string Id, string Name, bool IsEnabled, string? AdditionalSettings);
 

@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin category management (CRUD). Deletes are soft.</summary>
+/// <summary>Admin category management (CRUD). Deletes are soft. Category names/descriptions/SEO
+/// fields are bilingual <see cref="LocalizedString"/> values (Arabic in the base column, English in
+/// the sibling "...En" column).</summary>
 [ApiController]
 [RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/categories")]
@@ -15,7 +17,10 @@ public sealed class AdminCategoriesController : ControllerBase
 {
     private readonly StoreDbContext _db;
 
-    public AdminCategoriesController(StoreDbContext db) => _db = db;
+    public AdminCategoriesController(StoreDbContext db)
+    {
+        _db = db;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AdminCategoryDto>>> List(
@@ -27,20 +32,24 @@ public sealed class AdminCategoriesController : ControllerBase
             categories = categories.Where(c => !c.IsDeleted);
         }
 
-        var items = await categories
-            .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
-            .Select(c => new AdminCategoryDto(
-                c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted))
-            .ToListAsync(cancellationToken);
+        var rows = await categories.ToListAsync(cancellationToken);
 
-        return Ok(items);
+        return Ok(rows
+            .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name.Ar)
+            .Select(ToDto)
+            .ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminCategoryDto>> Get(long id, CancellationToken cancellationToken)
     {
         var category = await _db.Categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-        return category == null ? NotFound() : Ok(ToDto(category));
+        if (category == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToDto(category));
     }
 
     [HttpPost]
@@ -84,6 +93,7 @@ public sealed class AdminCategoriesController : ControllerBase
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+
         return Ok(ToDto(category));
     }
 
@@ -108,12 +118,12 @@ public sealed class AdminCategoriesController : ControllerBase
 
     private static void Apply(Category category, CategoryUpsertRequest request)
     {
-        category.Name = request.Name;
+        category.Name = new LocalizedString(request.Name, request.NameEn);
         category.Slug = string.IsNullOrWhiteSpace(request.Slug) ? Slug.Generate(request.Name) : request.Slug;
-        category.Description = request.Description;
-        category.MetaTitle = request.MetaTitle;
-        category.MetaKeywords = request.MetaKeywords;
-        category.MetaDescription = request.MetaDescription;
+        category.Description = LocalizedString.From(request.Description, request.DescriptionEn);
+        category.MetaTitle = LocalizedString.From(request.MetaTitle, request.MetaTitleEn);
+        category.MetaKeywords = LocalizedString.From(request.MetaKeywords, request.MetaKeywordsEn);
+        category.MetaDescription = LocalizedString.From(request.MetaDescription, request.MetaDescriptionEn);
         category.DisplayOrder = request.DisplayOrder;
         category.IsPublished = request.IsPublished;
         category.IncludeInMenu = request.IncludeInMenu;
@@ -121,5 +131,8 @@ public sealed class AdminCategoriesController : ControllerBase
     }
 
     private static AdminCategoryDto ToDto(Category c) => new(
-        c.Id, c.Name, c.Slug, c.Description, c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted);
+        c.Id, c.Name.Ar!, c.Slug, c.Description?.Ar, c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted,
+        c.Name.En, c.Description?.En, c.MetaTitle?.En, c.MetaKeywords?.En, c.MetaDescription?.En,
+        HasEnglish: c.Name.En != null || c.Description?.En != null || c.MetaTitle?.En != null
+            || c.MetaKeywords?.En != null || c.MetaDescription?.En != null);
 }

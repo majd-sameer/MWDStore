@@ -345,3 +345,78 @@ h1.h3 {
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------------------
+   Responsive table cards (companion to the ui lib's `libTableCards` directive)
+   Below 768px, tables carrying .table-cards render each row as a stacked card:
+   the column header (stamped as data-label) on the start side, the value on
+   the end side. Cells without a data-label (actions, empty states) span the
+   full width. Uses logical properties so RTL mirrors correctly.
+--------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+  .table-responsive:has(> .table-cards) {
+    overflow-x: visible;
+  }
+  table.table-cards {
+    display: block;
+    width: 100%;
+
+    thead {
+      display: none;
+    }
+    tbody {
+      display: block;
+    }
+    tbody tr {
+      display: block;
+      background: var(--bs-body-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.6rem;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+      margin-block-end: 0.75rem;
+      padding: 0.35rem 0.9rem;
+    }
+    tbody td,
+    tbody th {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border: 0;
+      padding: 0.45rem 0;
+      text-align: end;
+      white-space: normal;
+    }
+    tbody td + td,
+    tbody td + th,
+    tbody th + td {
+      border-block-start: 1px dashed var(--bs-border-color-translucent);
+    }
+    tbody td[data-label]::before {
+      content: attr(data-label);
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--bs-secondary-color);
+      text-align: start;
+    }
+    tbody td:not([data-label]) {
+      justify-content: flex-end;
+    }
+    tbody td[colspan] {
+      display: block;
+      text-align: center;
+    }
+  }
+}
+
+/* Long unbreakable values (monospace keys, refs, slugs) must wrap inside
+   table cards instead of pushing the card wider than the viewport. */
+@media (max-width: 767.98px) {
+  table.table-cards tbody td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

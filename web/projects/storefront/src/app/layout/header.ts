@@ -110,7 +110,7 @@ interface CategoryLink {
     </header>
 
     @if (categoryLinks().length) {
-      <nav class="sub-nav d-none d-md-block" [attr.aria-label]="'nav.categories' | translate">
+      <nav class="sub-nav" [attr.aria-label]="'nav.categories' | translate">
         <div class="wrap sub-nav-row">
           @for (link of categoryLinks(); track link.category) {
             <a
@@ -239,6 +239,10 @@ interface CategoryLink {
     .primary-nav .nav-link.active {
       color: #fff;
     }
+    /* Category strip: hidden below md (the drawer's Categories section covers
+       phones), and from md up it keeps the original plain text-link look — the
+       only change from the original is flex-wrap, so a tight viewport wraps to
+       a second centered row instead of horizontally scrolling. */
     .sub-nav {
       background: var(--surface);
       border-block-end: 1px solid var(--line);
@@ -246,24 +250,31 @@ interface CategoryLink {
       inset-block-start: 68px;
       z-index: 1019;
     }
+    @media (max-width: 767.98px) {
+      .sub-nav {
+        display: none;
+      }
+    }
     .sub-nav-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 1.5rem;
-      block-size: 46px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .sub-nav-row::-webkit-scrollbar {
-      display: none;
+      /* Fluid gap + font: compress before wrapping, so the strip stays a single
+         line down to ~1050px (EN; lower in AR) and only then breaks into a
+         second centered row. */
+      column-gap: clamp(0.5rem, 1.05vw, 1.4rem);
+      row-gap: 0.15rem;
+      min-block-size: 46px;
+      padding-block: 0.3rem;
     }
     .sub-nav .sub-link {
       color: var(--ink-2);
       font-weight: 500;
-      font-size: 0.9rem;
+      font-size: clamp(0.78rem, 0.5vw + 0.48rem, 0.9rem);
       text-decoration: none;
       white-space: nowrap;
+      padding-block: 0.15rem;
     }
     .sub-nav .sub-link:hover,
     .sub-nav .sub-link.active {

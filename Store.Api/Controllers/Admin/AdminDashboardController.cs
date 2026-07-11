@@ -108,7 +108,7 @@ public sealed class AdminDashboardController : ControllerBase
             .OrderBy(s => s.Quantity)
             .Take(12)
             .Select(s => new AdminLowStockDto(
-                s.ProductId, s.Product.Name, s.Product.Sku, s.Quantity, s.ReservedQuantity))
+                s.ProductId, s.Product.Name.Ar!, s.Product.Sku, s.Quantity, s.ReservedQuantity))
             .ToListAsync(cancellationToken);
 
         // ----- Best sellers in the window -----
@@ -130,12 +130,12 @@ public sealed class AdminDashboardController : ControllerBase
         var topIds = topRaw.Select(x => x.ProductId).ToList();
         var namesById = await _db.Products
             .Where(p => topIds.Contains(p.Id))
-            .Select(p => new { p.Id, p.Name })
+            .Select(p => new { p.Id, Name = p.Name.Ar })
             .ToDictionaryAsync(p => p.Id, p => p.Name, cancellationToken);
 
         var topProducts = topRaw
             .Select(x => new AdminTopProductDto(
-                x.ProductId, namesById.GetValueOrDefault(x.ProductId, string.Empty), x.Units, x.Revenue))
+                x.ProductId, namesById.GetValueOrDefault(x.ProductId) ?? string.Empty, x.Units, x.Revenue))
             .ToList();
 
         // ----- Work queue: open orders needing action (current, not windowed) -----

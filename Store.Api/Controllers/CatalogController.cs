@@ -19,41 +19,18 @@ public sealed class CatalogController : ControllerBase
     private readonly ICatalogService _catalog;
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
-    private readonly ILocalizationService _localization;
+    private readonly IRequestCulture _culture;
 
     public CatalogController(
         ICatalogService catalog,
         StoreDbContext db,
         TimeProvider timeProvider,
-        ILocalizationService localization)
+        IRequestCulture culture)
     {
         _catalog = catalog;
         _db = db;
         _timeProvider = timeProvider;
-        _localization = localization;
-    }
-
-    /// <summary>Overlays English product fields onto a listing when the request asks for English.</summary>
-    private async Task LocalizeAsync(ProductListResult result, CancellationToken cancellationToken)
-    {
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        if (cultureId is null || result.Products.Count == 0)
-        {
-            return;
-        }
-
-        var ids = result.Products.Select(p => p.Id).ToList();
-        var overlay = await _localization.GetOverlayAsync(LocalizedEntity.Product, ids, cultureId, cancellationToken);
-        if (overlay.IsEmpty)
-        {
-            return;
-        }
-
-        foreach (var product in result.Products)
-        {
-            product.Name = overlay.Apply(product.Id, LocalizedProperty.Name, product.Name) ?? product.Name;
-            product.ShortDescription = overlay.Apply(product.Id, LocalizedProperty.ShortDescription, product.ShortDescription);
-        }
+        _culture = culture;
     }
 
     /// <summary>Search/browse products with optional query, brand/category facets, price range, sort and paging.</summary>
@@ -75,7 +52,6 @@ public sealed class CatalogController : ControllerBase
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        await LocalizeAsync(result, cancellationToken);
         return Ok(result);
     }
 
@@ -85,11 +61,11 @@ public sealed class CatalogController : ControllerBase
         long categoryId, [FromQuery] ProductListOptions options, CancellationToken cancellationToken)
     {
         var result = await _catalog.GetProductsByCategoryAsync(categoryId, options, cancellationToken);
-        await LocalizeAsync(result, cancellationToken);
         return Ok(result);
     }
 
-    /// <summary>Full product detail (attributes, categories, variations, related products).</summary>
+    /// <summary>Full product detail (attributes, categories, variations, related products).
+    /// All localized text is resolved to the request language inside <see cref="ICatalogService"/>.</summary>
     [HttpGet("products/{id:long}")]
     public async Task<ActionResult<ProductDetailModel>> ProductDetail(long id, CancellationToken cancellationToken)
     {
@@ -99,54 +75,41 @@ public sealed class CatalogController : ControllerBase
             return NotFound();
         }
 
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        if (cultureId is not null)
-        {
-            var ids = new List<long>(product.RelatedProducts.Count + 1) { product.Id };
-            ids.AddRange(product.RelatedProducts.Select(r => r.Id));
-            var overlay = await _localization.GetOverlayAsync(LocalizedEntity.Product, ids, cultureId, cancellationToken);
-
-            if (!overlay.IsEmpty)
-            {
-                product.Name = overlay.Apply(product.Id, LocalizedProperty.Name, product.Name) ?? product.Name;
-                product.ShortDescription = overlay.Apply(product.Id, LocalizedProperty.ShortDescription, product.ShortDescription);
-                product.Description = overlay.Apply(product.Id, LocalizedProperty.Description, product.Description);
-
-                foreach (var related in product.RelatedProducts)
-                {
-                    related.Name = overlay.Apply(related.Id, LocalizedProperty.Name, related.Name) ?? related.Name;
-                    related.ShortDescription = overlay.Apply(related.Id, LocalizedProperty.ShortDescription, related.ShortDescription);
-                }
-            }
-        }
-
         return Ok(product);
     }
 
-    /// <summary>Published categories (flattened tree).</summary>
+    /// <summary>Published categories (flattened tree). Names resolve per request culture.</summary>
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<CategoryDto>>> Categories(CancellationToken cancellationToken)
     {
-        var categories = await _db.Categories
+        var rows = await _db.Categories
+            .AsNoTracking()
             .Where(c => c.IsPublished && !c.IsDeleted)
-            .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
-            .Select(c => new CategoryDto(c.Id, c.Name, c.Slug, c.ParentId, c.DisplayOrder, c.IncludeInMenu))
+            .Select(c => new { c.Id, c.Name, c.Slug, c.ParentId, c.DisplayOrder, c.IncludeInMenu })
             .ToListAsync(cancellationToken);
 
-        return Ok(categories);
+        var lang = _culture.Language;
+        return Ok(rows
+            .OrderBy(r => r.DisplayOrder).ThenBy(r => r.Name.Ar)
+            .Select(r => new CategoryDto(r.Id, r.Name.Resolve(lang)!, r.Slug, r.ParentId, r.DisplayOrder, r.IncludeInMenu))
+            .ToList());
     }
 
-    /// <summary>Published brands.</summary>
+    /// <summary>Published brands. Names resolve per request culture.</summary>
     [HttpGet("brands")]
     public async Task<ActionResult<IReadOnlyList<BrandDto>>> Brands(CancellationToken cancellationToken)
     {
-        var brands = await _db.Brands
+        var rows = await _db.Brands
+            .AsNoTracking()
             .Where(b => b.IsPublished && !b.IsDeleted)
-            .OrderBy(b => b.Name)
-            .Select(b => new BrandDto(b.Id, b.Name, b.Slug))
+            .Select(b => new { b.Id, b.Name, b.Slug })
             .ToListAsync(cancellationToken);
 
-        return Ok(brands);
+        var lang = _culture.Language;
+        return Ok(rows
+            .OrderBy(r => r.Name.Ar)
+            .Select(r => new BrandDto(r.Id, r.Name.Resolve(lang)!, r.Slug))
+            .ToList());
     }
 
     /// <summary>Count of active vendors (reform &amp; rehabilitation centers), for the home hero stat.</summary>

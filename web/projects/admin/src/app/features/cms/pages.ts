@@ -7,8 +7,14 @@ import {
 import { RouterLink } from '@angular/router';
 import { AdminCmsService, type AdminPageDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** `AdminPageDto` doesn't yet declare `hasEnglish` in the shared `data-access` models — see
+ * `page-form.ts` for the matching extended request/response shape. */
+interface AdminPageDtoEn extends AdminPageDto {
+  hasEnglish: boolean;
+}
 
 /**
  * CMS page browser: a full-width list. Creating and editing happen on their own
@@ -17,7 +23,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-pages',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'pages.title' | translate"
@@ -40,16 +46,17 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'pages.col_page' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
+                  <th scope="col">{{ 'pages.col_language' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
-                @for (p of rows; track p.id) {
+                @for (p of asEn(rows); track p.id) {
                   <tr>
                     <td>
                       <a [routerLink]="['/pages', p.id]" class="text-decoration-none fw-medium">{{ p.name }}</a>
@@ -60,6 +67,13 @@ import { PageHeader } from '../../shared/page-header';
                         <span class="badge text-bg-success">{{ 'common.published' | translate }}</span>
                       } @else {
                         <span class="badge text-bg-secondary">{{ 'common.draft' | translate }}</span>
+                      }
+                    </td>
+                    <td>
+                      @if (p.hasEnglish) {
+                        <span class="badge text-bg-info-subtle text-info-emphasis">{{ 'pages.lang_ar_en' | translate }}</span>
+                      } @else {
+                        <span class="badge text-bg-light text-body-secondary">{{ 'pages.lang_ar_only' | translate }}</span>
                       }
                     </td>
                     <td class="text-end">
@@ -81,7 +95,7 @@ import { PageHeader } from '../../shared/page-header';
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="3">
+                    <td colspan="4">
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">{{ 'pages.empty' | translate }}</div>
@@ -104,12 +118,25 @@ export class AdminPages {
   private readonly service = inject(AdminCmsService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.pagesResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(p: AdminPageDto): void {
-    if (!confirm(this.translate.instant('pages.confirm_delete', { name: p.name ?? '#' + p.id }))) {
+  /** Narrows the list rows to the extended DTO shape that carries `hasEnglish`. */
+  protected asEn(rows: AdminPageDto[]): AdminPageDtoEn[] {
+    return rows as AdminPageDtoEn[];
+  }
+
+  protected async remove(p: AdminPageDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('pages.confirm_delete', { name: p.name ?? '#' + p.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(p.id);

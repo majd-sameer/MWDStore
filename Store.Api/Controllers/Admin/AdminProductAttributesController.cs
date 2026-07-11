@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for product attributes and their groups (spec sheet building blocks).</summary>
+/// <summary>Admin CRUD for product attributes and their groups (spec sheet building blocks). The
+/// bilingual attribute name lives on the entity as a <see cref="LocalizedString"/> (Arabic in the
+/// base column, English in the sibling "NameEn" column). Groups are not localized.</summary>
 [ApiController]
 [RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/product-attributes")]
@@ -23,23 +25,34 @@ public sealed class AdminProductAttributesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AdminProductAttributeDto>>> List(CancellationToken cancellationToken)
     {
+        // Ordered in memory (not via ThenBy(a => a.Name.Ar) in the query): the InMemory test provider
+        // cannot translate a ThenBy on an owned-type member chained after an OrderBy on a related
+        // entity's property.
         var attributes = await _db.ProductAttributes
-            .OrderBy(a => a.Group.Name).ThenBy(a => a.Name)
-            .Select(a => new AdminProductAttributeDto(a.Id, a.Name, a.GroupId, a.Group.Name))
+            .AsNoTracking()
+            .Select(a => new { a.Id, a.Name, a.GroupId, GroupName = a.Group.Name })
             .ToListAsync(cancellationToken);
 
-        return Ok(attributes);
+        return Ok(attributes
+            .OrderBy(a => a.GroupName).ThenBy(a => a.Name.Ar)
+            .Select(a => ToDto(a.Id, a.Name, a.GroupId, a.GroupName))
+            .ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminProductAttributeDto>> Get(long id, CancellationToken cancellationToken)
     {
         var attribute = await _db.ProductAttributes
+            .AsNoTracking()
             .Where(a => a.Id == id)
-            .Select(a => new AdminProductAttributeDto(a.Id, a.Name, a.GroupId, a.Group.Name))
+            .Select(a => new { a.Id, a.Name, a.GroupId, GroupName = a.Group.Name })
             .FirstOrDefaultAsync(cancellationToken);
+        if (attribute == null)
+        {
+            return NotFound();
+        }
 
-        return attribute == null ? NotFound() : Ok(attribute);
+        return Ok(ToDto(attribute.Id, attribute.Name, attribute.GroupId, attribute.GroupName));
     }
 
     [HttpPost]
@@ -52,12 +65,16 @@ public sealed class AdminProductAttributesController : ControllerBase
             return BadRequest(new { error = "The attribute group does not exist." });
         }
 
-        var attribute = new ProductAttribute { Name = request.Name, GroupId = request.GroupId };
+        var attribute = new ProductAttribute
+        {
+            Name = new LocalizedString(request.Name, request.NameEn),
+            GroupId = request.GroupId
+        };
         _db.ProductAttributes.Add(attribute);
         await _db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = attribute.Id },
-            new AdminProductAttributeDto(attribute.Id, attribute.Name, group.Id, group.Name));
+            ToDto(attribute.Id, attribute.Name, group.Id, group.Name));
     }
 
     [HttpPut("{id:long}")]
@@ -76,12 +93,17 @@ public sealed class AdminProductAttributesController : ControllerBase
             return BadRequest(new { error = "The attribute group does not exist." });
         }
 
-        attribute.Name = request.Name;
+        attribute.Name.Ar = request.Name;
+        attribute.Name.En = string.IsNullOrEmpty(request.NameEn) ? null : request.NameEn;
         attribute.GroupId = request.GroupId;
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminProductAttributeDto(attribute.Id, attribute.Name, group.Id, group.Name));
+        return Ok(ToDto(attribute.Id, attribute.Name, group.Id, group.Name));
     }
+
+    private static AdminProductAttributeDto ToDto(
+        long id, LocalizedString name, long groupId, string groupName) =>
+        new(id, name.Ar!, groupId, groupName, name.En, HasEnglish: name.En != null);
 
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)

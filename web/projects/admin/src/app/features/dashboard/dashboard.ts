@@ -12,8 +12,8 @@ import { LanguageService, MoneyPipe } from 'core';
 import { AdminDashboardService } from 'data-access';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { Icon } from 'ui';
-import { orderStatusBadge } from '../../shared/order-status';
+import { Icon, TableCards } from 'ui';
+import { orderStatusBadge, orderStatusLabel } from '../../shared/order-status';
 import { PageHeader } from '../../shared/page-header';
 
 /** Chart palette (kept in sync with the admin brand tokens). */
@@ -46,6 +46,7 @@ const C = {
     TranslatePipe,
     PageHeader,
     BaseChartDirective,
+    TableCards,
   ],
   template: `
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
@@ -218,7 +219,7 @@ const C = {
               <p class="text-body-secondary text-center py-4 mb-0">{{ 'dashboard.low_stock_all_good' | translate }}</p>
             } @else {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'dashboard.col_product' | translate }}</th>
@@ -259,7 +260,7 @@ const C = {
               <p class="text-body-secondary text-center py-4 mb-0">{{ 'dashboard.action_all_clear' | translate }}</p>
             } @else {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'dashboard.col_order' | translate }}</th>
@@ -269,13 +270,13 @@ const C = {
                     </tr>
                   </thead>
                   <tbody>
-                    @for (o of stats.value()?.actionQueue ?? []; track o.id) {
+                    @for (o of actionQueueRows(); track o.id) {
                       <tr>
                         <td>
                           <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">#{{ o.id }}</a>
                         </td>
                         <td class="small">{{ o.createdOn | date: 'mediumDate' }}</td>
-                        <td><span class="badge" [class]="badge(o.orderStatus)">{{ o.orderStatusName }}</span></td>
+                        <td><span class="badge" [class]="badge(o.orderStatus)">{{ o.statusLabel }}</span></td>
                         <td class="text-end">{{ o.orderTotal | money }}</td>
                       </tr>
                     }
@@ -321,6 +322,15 @@ export class Dashboard {
     this.language.lang();
     return this.translate.instant(key);
   }
+
+  /** "Orders needing action" rows with a translated, humanized status label. */
+  protected readonly actionQueueRows = computed(() => {
+    this.language.lang();
+    return (this.stats.value()?.actionQueue ?? []).map((o) => ({
+      ...o,
+      statusLabel: orderStatusLabel(o.orderStatus, this.translate, o.orderStatusName),
+    }));
+  });
 
   // ----- Revenue & orders trend (combo: revenue line + orders bars) -----
   protected readonly trendData = computed<ChartData<'bar'>>(() => {
@@ -372,9 +382,10 @@ export class Dashboard {
 
   // ----- Order-status funnel (horizontal bars) -----
   protected readonly statusData = computed<ChartData<'bar'>>(() => {
+    this.language.lang();
     const slices = this.stats.value()?.statusFunnel ?? [];
     return {
-      labels: slices.map((s) => s.statusName),
+      labels: slices.map((s) => orderStatusLabel(s.status, this.translate, s.statusName)),
       datasets: [
         {
           label: this.t('dashboard.series_orders'),

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   RouterLink,
   RouterLinkActive,
@@ -147,7 +147,8 @@ interface NavSection {
         font-size: 0.85rem;
         font-weight: 700;
       }
-      @media (max-width: 991.98px) {
+      /* Tablet: compact icon rail with tooltips. */
+      @media (min-width: 768px) and (max-width: 991.98px) {
         .admin-sidebar {
           inline-size: 64px;
         }
@@ -167,13 +168,58 @@ interface NavSection {
           margin-inline-end: 0;
         }
       }
+
+      /* Phone: full-width labelled drawer, hidden until the hamburger opens it. */
+      .menu-toggle {
+        display: none;
+      }
+      @media (max-width: 767.98px) {
+        .admin-sidebar {
+          inline-size: min(280px, 84vw);
+          inset-inline-start: calc(-1 * min(280px, 84vw) - 12px);
+          transition: inset-inline-start 0.2s ease;
+          z-index: 1045;
+          box-shadow: none;
+        }
+        .admin-sidebar.open {
+          inset-inline-start: 0;
+          box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+        }
+        .admin-main {
+          margin-inline-start: 0;
+        }
+        .menu-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          inline-size: 40px;
+          block-size: 40px;
+          border: 1px solid var(--line-strong);
+          border-radius: 0.5rem;
+          background: var(--surface);
+          color: var(--ink);
+          font-size: 1.15rem;
+        }
+        .user-chip .user-name {
+          display: none;
+        }
+      }
+      .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(9, 20, 34, 0.5);
+        z-index: 1040;
+        border: 0;
+        padding: 0;
+      }
     `,
   ],
   template: `
-    <aside class="admin-sidebar d-flex flex-column p-3">
+    <aside class="admin-sidebar d-flex flex-column p-3" [class.open]="menuOpen()">
       <a
         routerLink="/"
         class="navbar-brand text-white d-flex align-items-center gap-2 mb-2 text-decoration-none"
+        (click)="closeMenu()"
       >
         <img class="brand-logo" src="logo-gold.png" alt="" />
         <span class="brand-text d-flex flex-column">
@@ -194,6 +240,7 @@ interface NavSection {
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
               [title]="'nav.' + item.key | translate"
+              (click)="closeMenu()"
             >
               <i class="bi {{ item.icon }}" aria-hidden="true"></i>
               <span class="label">{{ 'nav.' + item.key | translate }}</span>
@@ -203,9 +250,28 @@ interface NavSection {
       </nav>
     </aside>
 
+    @if (menuOpen()) {
+      <button
+        type="button"
+        class="drawer-backdrop d-md-none"
+        [attr.aria-label]="'common.close' | translate"
+        (click)="closeMenu()"
+      ></button>
+    }
+
     <div class="admin-main d-flex flex-column min-vh-100">
-      <header class="topbar navbar px-4 py-2 sticky-top">
-        <div class="container-fluid justify-content-end gap-3">
+      <header class="topbar navbar px-3 px-md-4 py-2 sticky-top">
+        <div class="container-fluid justify-content-between gap-3">
+          <button
+            type="button"
+            class="menu-toggle d-md-none"
+            [attr.aria-label]="'nav.menu' | translate"
+            [attr.aria-expanded]="menuOpen()"
+            (click)="toggleMenu()"
+          >
+            <i class="bi bi-list" aria-hidden="true"></i>
+          </button>
+          <div class="d-flex align-items-center gap-3 ms-auto">
           <button
             type="button"
             class="lang-switch"
@@ -228,6 +294,7 @@ interface NavSection {
           >
             {{ 'topbar.signout' | translate }}
           </button>
+          </div>
         </div>
       </header>
 
@@ -284,30 +351,40 @@ export class AdminLayout {
         { path: '/customers', key: 'customers', icon: 'bi-people' },
         { path: '/users', key: 'users', icon: 'bi-person-badge' },
         { path: '/vendors', key: 'vendors', icon: 'bi-shop' },
-        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check' }
-        /*,
-        { path: '/contacts', key: 'contacts', icon: 'bi-envelope' },*/
+        { path: '/moderation', key: 'moderation', icon: 'bi-shield-check' },
+        { path: '/contacts', key: 'contacts', icon: 'bi-envelope' },
       ],
     },
     {
       key: 'content',
       items: [
-      /*  { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text' },
-        { path: '/menus', key: 'menus', icon: 'bi-list-ul' },*/
+        { path: '/pages', key: 'pages', icon: 'bi-file-earmark-text' },
+        { path: '/menus', key: 'menus', icon: 'bi-list-ul' },
         { path: '/news', key: 'news', icon: 'bi-newspaper' },
         { path: '/content-blocks', key: 'content_blocks', icon: 'bi-layout-text-window' },
+        { path: '/media', key: 'media', icon: 'bi-images' },
       ],
     },
     {
       key: 'system',
       items: [
         { path: '/locations', key: 'countries', icon: 'bi-globe2' },
-       /* { path: '/localization', key: 'localization', icon: 'bi-translate' },*/
         { path: '/settings', key: 'settings', icon: 'bi-gear' },
-      /*  { path: '/logs', key: 'logs', icon: 'bi-journal-text' },*/
+        { path: '/security', key: 'security', icon: 'bi-shield-lock' },
+        { path: '/logs', key: 'logs', icon: 'bi-journal-text' },
       ],
     },
   ];
+
+  protected readonly menuOpen = signal(false);
+
+  protected toggleMenu(): void {
+    this.menuOpen.update((open) => !open);
+  }
+
+  protected closeMenu(): void {
+    this.menuOpen.set(false);
+  }
 
   protected logout(): void {
     this.auth.logout();

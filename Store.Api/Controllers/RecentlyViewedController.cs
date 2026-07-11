@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Common;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -18,12 +19,15 @@ public sealed class RecentlyViewedController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IRequestCulture _culture;
 
-    public RecentlyViewedController(StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl)
+    public RecentlyViewedController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl, IRequestCulture culture)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
+        _culture = culture;
     }
 
     [HttpGet]
@@ -42,9 +46,10 @@ public sealed class RecentlyViewedController : ControllerBase
                 (r, p) => new { r, p })
             .ToListAsync(cancellationToken);
 
+        var lang = _culture.Language;
         var items = rows
             .Select(x => new RecentlyViewedDto(
-                x.p.Id, x.p.Name, x.p.Slug, x.p.Price,
+                x.p.Id, x.p.Name.Resolve(lang)!, x.p.Slug, x.p.Price,
                 _mediaUrl.GetUrl(x.p.ThumbnailImage != null ? x.p.ThumbnailImage.FileName : null),
                 x.r.LatestViewedOn))
             .ToList();

@@ -11,6 +11,11 @@ namespace Store.Api.Infrastructure;
 /// categories and products are looked up by slug and only created when missing — existing rows
 /// (including admin edits) are never modified or deleted. A missing seed file is a logged no-op,
 /// so the app keeps working without it.
+///
+/// Deliberately does not wire product images: <c>images</c> (the seed file's external PSD URLs) is
+/// consumed by <see cref="MediaSeeder"/>, which runs afterwards and turns them into real local
+/// <see cref="Medium"/>/<see cref="ProductMedium"/> rows (or substitutes a local photo dump) for any
+/// product that still has none — see that seeder's doc comment for the two-source import path.
 /// </summary>
 public static class CatalogSeeder
 {
@@ -73,7 +78,7 @@ public static class CatalogSeeder
 
                 category = new Category
                 {
-                    Name = seedCategory.Name,
+                    Name = new LocalizedString(seedCategory.Name, seedCategory.NameEn),
                     Slug = seedCategory.Slug,
                     DisplayOrder = seedCategory.DisplayOrder,
                     ParentId = parentId,
@@ -110,12 +115,12 @@ public static class CatalogSeeder
 
             var product = new Product
             {
-                Name = seedProduct.Name,
+                Name = new LocalizedString(seedProduct.Name, seedProduct.NameEn),
                 Slug = seedProduct.Slug,
                 NormalizedName = seedProduct.Name.ToUpperInvariant(),
                 Sku = seedProduct.Sku,
-                ShortDescription = seedProduct.ShortDescription,
-                Description = seedProduct.Description,
+                ShortDescription = LocalizedString.From(seedProduct.ShortDescription, seedProduct.ShortDescriptionEn),
+                Description = LocalizedString.From(seedProduct.Description, seedProduct.DescriptionEn),
                 Specification = seedProduct.Specification,
                 Price = seedProduct.Price,
                 OldPrice = seedProduct.OldPrice,
@@ -143,13 +148,9 @@ public static class CatalogSeeder
                 product.ProductCategories.Add(new ProductCategory { Category = category });
             }
 
-            var displayOrder = 0;
-            foreach (var image in seedProduct.Images)
-            {
-                var medium = new Medium { FileName = image, MediaType = MediaTypes.Image, FileSize = 0 };
-                product.ProductMedia.Add(new ProductMedium { Media = medium, DisplayOrder = displayOrder++ });
-                product.ThumbnailImage ??= medium;
-            }
+            // Images are intentionally not wired here — see MediaSeeder, which runs after this
+            // seeder and downloads/attaches seedProduct.Images (or a local photo dump) for any
+            // product left with zero ProductMedia rows.
 
             if (warehouse != null)
             {
@@ -187,6 +188,9 @@ public static class CatalogSeeder
     {
         public required string Slug { get; init; }
         public required string Name { get; init; }
+        /// <summary>Optional English translation; absent (as in the current seed file) means no
+        /// English name yet — <see cref="LocalizedString"/> treats that as null, not blank.</summary>
+        public string? NameEn { get; init; }
         public string? Parent { get; init; }
         public int DisplayOrder { get; init; }
     }
@@ -195,14 +199,22 @@ public static class CatalogSeeder
     {
         public required string Slug { get; init; }
         public required string Name { get; init; }
+        /// <summary>Optional English translations; absent (as in the current seed file) means no
+        /// English text yet — <see cref="LocalizedString.From"/> normalizes that to null.</summary>
+        public string? NameEn { get; init; }
         public string? Sku { get; init; }
         public decimal Price { get; init; }
         public decimal? OldPrice { get; init; }
         public string? ShortDescription { get; init; }
+        public string? ShortDescriptionEn { get; init; }
         public string? Description { get; init; }
+        public string? DescriptionEn { get; init; }
         public string? Specification { get; init; }
         public int Stock { get; init; }
         public List<string> Categories { get; init; } = [];
+        /// <summary>Not read by this seeder (see the class doc comment) — kept here only so the
+        /// record still matches the full catalog.seed.json product schema; MediaSeeder re-reads the
+        /// file itself for these URLs.</summary>
         public List<string> Images { get; init; } = [];
         public bool IsFeatured { get; init; }
     }

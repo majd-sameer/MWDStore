@@ -35,10 +35,10 @@ public sealed class ProductListItem
 
     public CalculatedProductPrice? CalculatedProductPrice { get; set; }
 
-    public static ProductListItem FromProduct(Product product) => new()
+    public static ProductListItem FromProduct(Product product, ContentLanguage lang) => new()
     {
         Id = product.Id,
-        Name = product.Name,
+        Name = product.Name.Resolve(lang)!,
         Slug = product.Slug,
         Price = product.Price,
         OldPrice = product.OldPrice,
@@ -50,8 +50,8 @@ public sealed class ProductListItem
         IsCallForPricing = product.IsCallForPricing,
         ReviewsCount = product.ReviewsCount,
         RatingAverage = product.RatingAverage,
-        ShortDescription = product.ShortDescription,
-        CategoryName = product.ProductCategories?.FirstOrDefault()?.Category?.Name,
+        ShortDescription = product.ShortDescription?.Resolve(lang),
+        CategoryName = product.ProductCategories?.FirstOrDefault()?.Category?.Name.Resolve(lang),
         CategorySlug = product.ProductCategories?.FirstOrDefault()?.Category?.Slug
     };
 }

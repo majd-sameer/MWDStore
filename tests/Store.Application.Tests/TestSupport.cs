@@ -1,9 +1,18 @@
 using Microsoft.EntityFrameworkCore;
+using Store.Application.Localization;
 using Store.Application.Orders;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Application.Tests;
+
+/// <summary>Fixed-language fakes for <see cref="IRequestCulture"/>, replacing the old
+/// Accept-Language-header-on-DefaultHttpContext / cultureId: "en-US" plumbing in tests.</summary>
+public static class TestCulture
+{
+    public static readonly IRequestCulture Arabic = new RequestCultureContext { Language = ContentLanguage.Arabic };
+    public static readonly IRequestCulture English = new RequestCultureContext { Language = ContentLanguage.English };
+}
 
 /// <summary>A <see cref="TimeProvider"/> whose "now" is frozen, so the time-boxed special-price
 /// window in the pricing service is deterministic.</summary>

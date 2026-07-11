@@ -21,13 +21,15 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(e => e.ThumbnailImageId, "IX_Catalog_Product_ThumbnailImageId");
 
         builder.Property(e => e.Gtin).HasMaxLength(450);
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
+        builder.OwnsLocalized(e => e.Name, "Name", 450, required: true);
+        builder.OwnsLocalized(e => e.ShortDescription, "ShortDescription", 450);
+        builder.OwnsLocalized(e => e.Description, "Description");
+        builder.OwnsLocalized(e => e.MetaTitle, "MetaTitle", 450);
+        builder.OwnsLocalized(e => e.MetaKeywords, "MetaKeywords", 450);
+        builder.OwnsLocalized(e => e.MetaDescription, "MetaDescription");
         builder.Property(e => e.NormalizedName).HasMaxLength(450);
         builder.Property(e => e.OldPrice).HasColumnType("decimal(18, 2)");
         builder.Property(e => e.Price).HasColumnType("decimal(18, 2)");
-        builder.Property(e => e.ShortDescription).HasMaxLength(450);
         builder.Property(e => e.Sku).HasMaxLength(450);
         builder.Property(e => e.Slug).HasMaxLength(450);
         builder.Property(e => e.SpecialPrice).HasColumnType("decimal(18, 2)");

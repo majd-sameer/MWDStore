@@ -1,3 +1,5 @@
+import type { TranslateService } from '@ngx-translate/core';
+
 /**
  * SimplCommerce order-status codes (the API stores status as an int). Mirrors
  * `Store.Application.Orders.OrderStatus`. Used for the status dropdown on the
@@ -61,4 +63,29 @@ export function orderStatusBadge(status: number): string {
     default:
       return 'text-bg-light';
   }
+}
+
+/** "PaymentReceived" -> "Payment Received" for statuses without a translation key. */
+function humanize(apiName: string): string {
+  return apiName.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+}
+
+/**
+ * Translated, humanized label for a status code. Used wherever the API only
+ * hands back the raw enum name (e.g. dashboard charts/tables) — looks up the
+ * same `orders.status_*` keys used by the status dropdown/badges, falling
+ * back to a humanized version of the API's PascalCase name for any code that
+ * isn't in that list.
+ */
+export function orderStatusLabel(
+  status: number,
+  translate: TranslateService,
+  apiName?: string | null,
+): string {
+  const key = 'orders.status_' + status;
+  const label = translate.instant(key);
+  if (label !== key) {
+    return label;
+  }
+  return apiName ? humanize(apiName) : String(status);
 }

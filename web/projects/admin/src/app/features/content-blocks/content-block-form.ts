@@ -97,17 +97,17 @@ function emptyModel(): ContentBlockModel {
                       [required]="true"
                       [error]="err(f.title())"
                     >
-                      <input id="cb-title" type="text" class="form-control"
+                      <input id="cb-title" type="text" class="form-control" dir="rtl"
                         [class.is-invalid]="!!err(f.title())" [formField]="f.title" />
                     </lib-form-field>
                     <lib-form-field [label]="'content_blocks.field_text' | translate" controlId="cb-text">
-                      <textarea id="cb-text" rows="4" class="form-control" [formField]="f.text"></textarea>
+                      <textarea id="cb-text" rows="4" class="form-control" dir="rtl" [formField]="f.text"></textarea>
                     </lib-form-field>
                     <lib-form-field
                       [label]="'content_blocks.field_link_text' | translate"
                       controlId="cb-link-text"
                     >
-                      <input id="cb-link-text" type="text" class="form-control" [formField]="f.linkText" />
+                      <input id="cb-link-text" type="text" class="form-control" dir="rtl" [formField]="f.linkText" />
                     </lib-form-field>
                   </div>
 
@@ -116,16 +116,16 @@ function emptyModel(): ContentBlockModel {
                       {{ 'content_blocks.english' | translate }}
                     </h2>
                     <lib-form-field [label]="'content_blocks.field_title' | translate" controlId="cb-title-en">
-                      <input id="cb-title-en" type="text" class="form-control" [formField]="f.titleEn" />
+                      <input id="cb-title-en" type="text" class="form-control" dir="ltr" [formField]="f.titleEn" />
                     </lib-form-field>
                     <lib-form-field [label]="'content_blocks.field_text' | translate" controlId="cb-text-en">
-                      <textarea id="cb-text-en" rows="4" class="form-control" [formField]="f.textEn"></textarea>
+                      <textarea id="cb-text-en" rows="4" class="form-control" dir="ltr" [formField]="f.textEn"></textarea>
                     </lib-form-field>
                     <lib-form-field
                       [label]="'content_blocks.field_link_text' | translate"
                       controlId="cb-link-text-en"
                     >
-                      <input id="cb-link-text-en" type="text" class="form-control" [formField]="f.linkTextEn" />
+                      <input id="cb-link-text-en" type="text" class="form-control" dir="ltr" [formField]="f.linkTextEn" />
                     </lib-form-field>
                   </div>
                 </div>

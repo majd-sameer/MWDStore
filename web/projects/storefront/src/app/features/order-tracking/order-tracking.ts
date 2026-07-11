@@ -75,7 +75,7 @@ import {
               <div class="hero-left">
                 <span class="hero-ic"><lib-icon [name]="heroIcon()" [size]="26" /></span>
                 <div>
-                  <span class="hero-order tabular-nums">{{ 'tracking.order' | translate }} #{{ o.trackingNumber ?? o.id }}</span>
+                  <span class="hero-order tabular-nums">{{ 'tracking.order' | translate }} #{{ o.detail.id }}</span>
                   <b class="hero-status">{{ statusLabel(o.orderStatus, o.orderStatusName) | translate }}</b>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -11,8 +12,15 @@ import {
   type AdminNewsItemListItem,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, Icon, ToastService } from 'ui';
+import { Button, ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** `AdminNewsItemListItem` extended with the EN-availability flag the backend now returns (see
+ * `AdminNewsItemListItem.HasEnglish` on the API side) — declared locally since
+ * `data-access/models.ts` is out of scope for this feature. */
+export interface AdminNewsItemListItemEn extends AdminNewsItemListItem {
+  hasEnglish: boolean;
+}
 
 /**
  * News browser: the article list with a news-category manager alongside.
@@ -22,7 +30,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-news',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'news.title' | translate"
@@ -45,9 +53,9 @@ import { PageHeader } from '../../shared/page-header';
               </div>
             } @else if (items.error()) {
               <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-            } @else if (items.value(); as rows) {
+            } @else if (itemRows(); as rows) {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'news.col_article' | translate }}</th>
@@ -67,6 +75,12 @@ import { PageHeader } from '../../shared/page-header';
                             }
                             <div>
                               <a [routerLink]="['/news', n.id]" class="text-decoration-none fw-medium">{{ n.name }}</a>
+                              @if (!n.hasEnglish) {
+                                <span
+                                  class="badge text-bg-light border text-body-secondary ms-1"
+                                  [title]="'common.en_missing' | translate"
+                                >{{ 'common.en_missing' | translate }}</span>
+                              }
                               <div class="small text-body-secondary">/{{ n.slug }}</div>
                             </div>
                           </div>
@@ -149,13 +163,27 @@ export class AdminNews {
   private readonly service = inject(AdminCmsService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly items = this.service.newsItemsResource();
   protected readonly categories = this.service.newsCategoriesResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(n: AdminNewsItemListItem): void {
-    if (!confirm(this.translate.instant('news.confirm_delete', { name: n.name ?? '#' + n.id }))) {
+  /** Rows cast to include `hasEnglish` — the API returns it; `AdminNewsItemListItem` in
+   * `data-access/models.ts` doesn't declare it (see `AdminNewsItemListItemEn`). */
+  protected readonly itemRows = computed(
+    () => (this.items.value() ?? []) as AdminNewsItemListItemEn[],
+  );
+
+  protected async remove(n: AdminNewsItemListItem): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('news.confirm_delete', { name: n.name ?? '#' + n.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(n.id);
@@ -199,8 +227,15 @@ export class AdminNews {
     });
   }
 
-  protected removeCategory(id: number, name: string | null): void {
-    if (!confirm(this.translate.instant('news.confirm_delete_category', { name: name ?? '' }))) {
+  protected async removeCategory(id: number, name: string | null): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('news.confirm_delete_category', { name: name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteNewsCategory(id).subscribe({

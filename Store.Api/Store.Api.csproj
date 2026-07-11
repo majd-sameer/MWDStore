@@ -18,8 +18,6 @@
 
   <ItemGroup>
     <Content Update="catalog.seed.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Update="translations.en.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Update="translations.ar.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Dev-only secrets (connection string, JWT key, admin password): keep for local
          runs but never ship to a published/deployed build. Production config lives in
          appsettings.Production.json supplied on the server (see DEPLOYMENT-RUNBOOK §2.7). -->

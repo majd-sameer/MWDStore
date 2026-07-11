@@ -7,7 +7,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { AdminModerationService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ToastService } from 'ui';
+import { ConfirmService, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 const STATUS_KEYS: Record<number, string> = {
@@ -23,7 +23,7 @@ const STATUS_KEYS: Record<number, string> = {
 @Component({
   selector: 'app-admin-moderation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, TranslatePipe, PageHeader],
+  imports: [DatePipe, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'moderation.title' | translate"
@@ -65,7 +65,8 @@ const STATUS_KEYS: Record<number, string> = {
               </div>
             </div>
           } @else {
-            <table class="table table-hover align-middle mb-0">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th>{{ 'moderation.col_review' | translate }}</th>
@@ -111,6 +112,7 @@ const STATUS_KEYS: Record<number, string> = {
                 }
               </tbody>
             </table>
+            </div>
           }
         </div>
       </div>
@@ -124,7 +126,8 @@ const STATUS_KEYS: Record<number, string> = {
               </div>
             </div>
           } @else {
-            <table class="table table-hover align-middle mb-0">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th>{{ 'moderation.col_comment' | translate }}</th>
@@ -168,6 +171,7 @@ const STATUS_KEYS: Record<number, string> = {
                 }
               </tbody>
             </table>
+            </div>
           }
         </div>
       </div>
@@ -178,6 +182,7 @@ export class AdminModeration {
   private readonly service = inject(AdminModerationService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly tab = signal<'reviews' | 'comments'>('reviews');
   protected readonly statusFilter = signal<number | null>(null);
@@ -207,8 +212,15 @@ export class AdminModeration {
     });
   }
 
-  protected deleteReview(id: number): void {
-    if (!confirm(this.translate.instant('moderation.confirm_delete_review'))) {
+  protected async deleteReview(id: number): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('moderation.confirm_delete_review'),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteReview(id).subscribe({
@@ -224,8 +236,15 @@ export class AdminModeration {
     });
   }
 
-  protected deleteComment(id: number): void {
-    if (!confirm(this.translate.instant('moderation.confirm_delete_comment'))) {
+  protected async deleteComment(id: number): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('moderation.confirm_delete_comment'),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteComment(id).subscribe({

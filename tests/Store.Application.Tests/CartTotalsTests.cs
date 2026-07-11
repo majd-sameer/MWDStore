@@ -1,4 +1,5 @@
 using Store.Application.Catalog.Pricing;
+using Store.Application.Localization;
 using Store.Application.Pricing.Coupons;
 using Store.Application.ShoppingCart;
 using Store.Data;
@@ -18,11 +19,11 @@ public class CartTotalsTests
     private static readonly DateTimeOffset ActiveStart = new(2025, 6, 1, 0, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset ActiveEnd = new(2025, 7, 1, 0, 0, 0, TimeSpan.Zero);
 
-    private static CartService NewService(StoreDbContext db)
+    private static CartService NewService(StoreDbContext db, IRequestCulture? culture = null)
     {
         var time = new FixedTimeProvider(Now);
         return new CartService(db, new ProductPricingService(time), new CouponService(db, time), time,
-            new Store.Application.Common.LocalMediaUrlBuilder());
+            new Store.Application.Common.LocalMediaUrlBuilder(), culture ?? TestCulture.Arabic);
     }
 
     // ---- add / update / remove -------------------------------------------
@@ -159,6 +160,25 @@ public class CartTotalsTests
 
         Assert.NotNull(cart!.CouponValidationErrorMessage);
         Assert.Equal(50m, cart.Discount); // only the catalog saving
+    }
+
+    [Fact]
+    public async Task GetCartDetails_ResolvesProductName_PerRequestCulture()
+    {
+        using var db = TestDb.New();
+        // Arabic base name with an English overlay.
+        db.Products.Add(NewProduct(1, "قميص", 10m, nameEn: "Shirt"));
+        db.SaveChanges();
+
+        await NewService(db).AddToCartAsync(CustomerId, 1, 1);
+
+        // Under English culture the cart line shows the English name (closes the old cart-localization gap)...
+        var english = await NewService(db, TestCulture.English).GetCartDetailsAsync(CustomerId);
+        Assert.Equal("Shirt", english!.Items.Single().ProductName);
+
+        // ...and Arabic (the default) shows the base name.
+        var arabic = await NewService(db, TestCulture.Arabic).GetCartDetailsAsync(CustomerId);
+        Assert.Equal("قميص", arabic!.Items.Single().ProductName);
     }
 
     private static void SeedCartFixedCoupon(StoreDbContext db, string code, decimal amount)

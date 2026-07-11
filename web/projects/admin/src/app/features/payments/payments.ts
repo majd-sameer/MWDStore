@@ -11,7 +11,7 @@ import {
   type AdminPaymentProviderDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -22,7 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-payments',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [MoneyPipe, DatePipe, RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'payments.title' | translate"
@@ -40,7 +40,7 @@ import { PageHeader } from '../../shared/page-header';
           </div>
         } @else if (providers.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th>{{ 'payments.col_provider' | translate }}</th>
@@ -83,7 +83,8 @@ import { PageHeader } from '../../shared/page-header';
     <div class="card border-0 shadow-sm">
       <div class="card-header bg-body fw-semibold">{{ 'payments.transactions_title' | translate }}</div>
       <div class="card-body">
-        <table class="table table-sm table-hover align-middle mb-0">
+        <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0" libTableCards>
           <thead>
             <tr>
               <th>#</th>
@@ -115,6 +116,7 @@ import { PageHeader } from '../../shared/page-header';
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   `,

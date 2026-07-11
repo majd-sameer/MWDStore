@@ -5,6 +5,7 @@ using Store.Api.Models;
 using Store.Application.Orders;
 using Store.Application.Payments;
 using Store.Data;
+using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
@@ -65,9 +66,31 @@ public sealed class AdminOrdersController : ControllerBase
             .Include(o => o.OrderItems).ThenInclude(i => i.Product)
             .Include(o => o.ShippingAddress)
             .Include(o => o.BillingAddress)
+            .Include(o => o.Payments).ThenInclude(p => p.Refunds)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
-        return order == null ? NotFound() : Ok(order.ToDetail());
+        return order == null ? NotFound() : Ok(order.ToDetail() with { PaymentSummary = BuildPaymentSummary(order) });
+    }
+
+    /// <summary>
+    /// Computes the admin payment rollup the exact way <c>RefundService</c> validates a refund: the settled
+    /// captured payment (Succeeded / PartiallyRefunded, latest first), its already-refunded total, and the
+    /// remaining refundable balance. Returns null when the order has no captured payment.
+    /// </summary>
+    private static PaymentSummaryDto? BuildPaymentSummary(Order order)
+    {
+        var payment = order.Payments
+            .Where(p => p.Status is PaymentStatus.Succeeded or PaymentStatus.PartiallyRefunded)
+            .OrderByDescending(p => p.Id)
+            .FirstOrDefault();
+
+        if (payment == null)
+        {
+            return null;
+        }
+
+        var refunded = payment.Refunds.Sum(r => r.Amount);
+        return new PaymentSummaryDto(payment.Amount, refunded, payment.Amount - refunded);
     }
 
     [HttpPut("{id:long}/status")]

@@ -330,6 +330,18 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'media',
+        title: 'Media library · MadeWithDetermination Admin',
+        loadComponent: () =>
+          import('./features/media/media-library').then((m) => m.AdminMediaLibrary),
+      },
+      {
+        path: 'security',
+        title: 'Security · MadeWithDetermination Admin',
+        loadComponent: () =>
+          import('./features/security/security').then((m) => m.AdminSecurity),
+      },
+      {
         path: 'promotions',
         title: 'Promotions · MadeWithDetermination Admin',
         loadComponent: () =>

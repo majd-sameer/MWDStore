@@ -67,6 +67,11 @@ export class AdminProductsService {
     return this.http.delete<void>(`${API_ROOT}/admin/products/${id}`);
   }
 
+  /** POST /api/admin/products/{id}/restore — un-deletes the product and its variation children. */
+  restore(id: number): Observable<void> {
+    return this.http.post<void>(`${API_ROOT}/admin/products/${id}/restore`, null);
+  }
+
   /** GET /api/admin/products/quick-search — picker for related/cross-sell products. */
   quickSearch(query: string): Observable<ProductQuickSearchItem[]> {
     return this.http.get<ProductQuickSearchItem[]>(

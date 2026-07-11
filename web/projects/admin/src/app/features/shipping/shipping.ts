@@ -10,7 +10,7 @@ import {
   type AdminShippingProviderDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -21,7 +21,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-shipping',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'shipping.title' | translate"
@@ -42,7 +42,8 @@ import { PageHeader } from '../../shared/page-header';
             </div>
           </div>
         } @else {
-          <table class="table align-middle mb-0">
+          <div class="table-responsive">
+          <table class="table align-middle mb-0" libTableCards>
             <thead>
               <tr>
                 <th>{{ 'shipping.col_provider' | translate }}</th>
@@ -77,6 +78,7 @@ import { PageHeader } from '../../shared/page-header';
               }
             </tbody>
           </table>
+          </div>
         }
       </div>
     </div>
@@ -94,7 +96,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (tableRates.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th>{{ 'shipping.col_provider' | translate }}</th>
@@ -160,6 +162,7 @@ import { PageHeader } from '../../shared/page-header';
 })
 export class AdminShipping {
   private readonly service = inject(AdminShippingService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -204,8 +207,15 @@ export class AdminShipping {
       });
   }
 
-  protected removeRate(id: number): void {
-    if (!confirm(this.translate.instant('shipping.confirm_delete_rate'))) {
+  protected async removeRate(id: number): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('shipping.confirm_delete_rate'),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(id);

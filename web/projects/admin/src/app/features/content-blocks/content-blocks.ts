@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { inject } from '@angular/core';
 import { AdminContentBlocksService, type AdminContentBlockDto } from 'data-access';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Icon } from 'ui';
+import { Icon, TableCards } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 interface ContentBlockGroup {
@@ -24,7 +24,7 @@ function prefixOf(key: string): string {
 @Component({
   selector: 'app-admin-content-blocks',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'content_blocks.title' | translate"
@@ -47,7 +47,7 @@ function prefixOf(key: string): string {
           </div>
           <div class="card-body pt-0">
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover align-middle mb-0" libTableCards>
                 <thead>
                   <tr>
                     <th scope="col">{{ 'content_blocks.col_key' | translate }}</th>

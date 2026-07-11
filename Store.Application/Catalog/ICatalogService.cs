@@ -17,7 +17,10 @@ public interface ICatalogService
     Task<ProductListResult> SearchAsync(
         ProductListOptions options, CancellationToken cancellationToken = default);
 
-    /// <summary>Product detail with attributes and variations — port of <c>ProductController.ProductDetail</c>.</summary>
+    /// <summary>Product detail with attributes and variations — port of <c>ProductController.ProductDetail</c>.
+    /// All localized text (product Name/ShortDescription/Description/Meta*, option/attribute/brand/category
+    /// names, variation names, related products) is resolved to the current request language via the
+    /// injected <c>IRequestCulture</c>, falling back to Arabic when no English overlay exists.</summary>
     Task<ProductDetailModel?> GetProductDetailAsync(
         long id, CancellationToken cancellationToken = default);
 }

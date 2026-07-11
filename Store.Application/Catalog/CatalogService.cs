@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Application.Catalog.Models;
 using Store.Application.Catalog.Pricing;
 using Store.Application.Common;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -10,8 +11,11 @@ namespace Store.Application.Catalog;
 /// <summary>
 /// Faithful port of SimplCommerce's storefront catalog read paths:
 /// <c>CategoryController.CategoryDetail</c>, <c>SearchController.Index</c> and
-/// <c>ProductController.ProductDetail</c>. Media, localization, currency formatting and the
-/// search-query persistence / brand-redirect concerns are intentionally out of scope.
+/// <c>ProductController.ProductDetail</c>. Media, product-level localization, currency formatting
+/// and the search-query persistence / brand-redirect concerns are intentionally out of scope (the
+/// caller overlays the product's own Name/Description fields) — this service resolves the
+/// option/attribute/brand/category names baked into the listing and product-detail payloads via
+/// their own <see cref="LocalizedString"/> (<see cref="IRequestCulture"/>).
 /// </summary>
 public sealed class CatalogService : ICatalogService
 {
@@ -19,14 +23,17 @@ public sealed class CatalogService : ICatalogService
     private readonly IProductPricingService _pricing;
     private readonly CatalogOptions _options;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IRequestCulture _culture;
 
     public CatalogService(
-        StoreDbContext db, IProductPricingService pricing, CatalogOptions options, IMediaUrlBuilder mediaUrl)
+        StoreDbContext db, IProductPricingService pricing, CatalogOptions options, IMediaUrlBuilder mediaUrl,
+        IRequestCulture culture)
     {
         _db = db;
         _pricing = pricing;
         _options = options;
         _mediaUrl = mediaUrl;
+        _culture = culture;
     }
 
     public async Task<ProductListResult> GetProductsByCategoryAsync(
@@ -59,10 +66,15 @@ public sealed class CatalogService : ICatalogService
 
             // Note: the null-guards reproduce SQL NULL semantics (LOWER(NULL) LIKE '%q%' is NULL/false) and
             // are required for client-side (LINQ-to-objects) evaluation; the matched set is identical.
+            // Match both the Arabic (base) and English overlay of each localized field so English-mode
+            // shoppers can search by the English name/description (user-approved improvement).
             baseQuery = baseQuery.Where(x =>
-                (x.Name != null && x.Name.ToLower().Contains(q))
-                || (x.ShortDescription != null && x.ShortDescription.ToLower().Contains(q))
-                || (x.Description != null && x.Description.ToLower().Contains(q))
+                (x.Name.Ar != null && x.Name.Ar.ToLower().Contains(q))
+                || (x.Name.En != null && x.Name.En.ToLower().Contains(q))
+                || (x.ShortDescription!.Ar != null && x.ShortDescription.Ar.ToLower().Contains(q))
+                || (x.ShortDescription!.En != null && x.ShortDescription.En.ToLower().Contains(q))
+                || (x.Description!.Ar != null && x.Description.Ar.ToLower().Contains(q))
+                || (x.Description!.En != null && x.Description.En.ToLower().Contains(q))
                 || (x.Specification != null && x.Specification.ToLower().Contains(q)));
         }
 
@@ -85,7 +97,7 @@ public sealed class CatalogService : ICatalogService
             return result;
         }
 
-        await AppendFilterOptionsAsync(result.FilterOption, baseQuery, cancellationToken);
+        await AppendFilterOptionsAsync(result.FilterOption, baseQuery, _culture.Language, cancellationToken);
 
         var query = baseQuery;
 
@@ -175,23 +187,34 @@ public sealed class CatalogService : ICatalogService
     }
 
     private static async Task AppendFilterOptionsAsync(
-        FilterOption filter, IQueryable<Product> baseQuery, CancellationToken cancellationToken)
+        FilterOption filter, IQueryable<Product> baseQuery, ContentLanguage lang, CancellationToken cancellationToken)
     {
+        filter.Total = await baseQuery.CountAsync(cancellationToken);
         filter.Price.MaxPrice = await baseQuery.MaxAsync(x => x.Price, cancellationToken);
         filter.Price.MinPrice = await baseQuery.MinAsync(x => x.Price, cancellationToken);
 
-        filter.Categories = await baseQuery
+        // Project the owned Name members (not the owned instance itself) so the GroupBy/aggregate
+        // translates to SQL, then resolve the display language in memory (facet labels localize).
+        var categoryGroups = await baseQuery
             .SelectMany(x => x.ProductCategories)
-            .GroupBy(x => new { x.Category.Id, x.Category.Name, x.Category.Slug, x.Category.ParentId })
+            .GroupBy(x => new
+            {
+                x.Category.Id, x.Category.Slug, x.Category.ParentId,
+                NameAr = x.Category.Name.Ar, NameEn = x.Category.Name.En
+            })
+            .Select(g => new { g.Key.Id, g.Key.Slug, g.Key.ParentId, g.Key.NameAr, g.Key.NameEn, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        filter.Categories = categoryGroups
             .Select(g => new FilterCategory
             {
-                Id = g.Key.Id,
-                Name = g.Key.Name,
-                Slug = g.Key.Slug,
-                ParentId = g.Key.ParentId,
-                Count = g.Count()
+                Id = g.Id,
+                Name = new LocalizedString(g.NameAr, g.NameEn).Resolve(lang)!,
+                Slug = g.Slug,
+                ParentId = g.ParentId,
+                Count = g.Count
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var brandProducts = await baseQuery
             .Where(x => x.BrandId != null)
@@ -203,7 +226,7 @@ public sealed class CatalogService : ICatalogService
             .Select(g => new FilterBrand
             {
                 Id = g.Key.Id,
-                Name = g.Key.Name,
+                Name = g.Key.Name.Resolve(lang)!,
                 Slug = g.Key.Slug,
                 Count = g.Count()
             })
@@ -229,24 +252,31 @@ public sealed class CatalogService : ICatalogService
             return null;
         }
 
+        var lang = _culture.Language;
+
         var model = new ProductDetailModel
         {
             Id = product.Id,
-            Name = product.Name,
+            Name = product.Name.Resolve(lang)!,
             Brand = product.Brand is null
                 ? null
-                : new BrandInfo { Id = product.Brand.Id, Name = product.Brand.Name, Slug = product.Brand.Slug },
+                : new BrandInfo
+                {
+                    Id = product.Brand.Id,
+                    Name = product.Brand.Name.Resolve(lang)!,
+                    Slug = product.Brand.Slug
+                },
             CalculatedProductPrice = _pricing.CalculateProductPrice(product),
             IsCallForPricing = product.IsCallForPricing,
             IsAllowToOrder = product.IsAllowToOrder,
             StockTrackingIsEnabled = product.StockTrackingIsEnabled,
             StockQuantity = product.StockQuantity,
-            ShortDescription = product.ShortDescription,
-            Description = product.Description,
+            ShortDescription = product.ShortDescription?.Resolve(lang),
+            Description = product.Description?.Resolve(lang),
             Specification = product.Specification,
-            MetaTitle = product.MetaTitle,
-            MetaKeywords = product.MetaKeywords,
-            MetaDescription = product.MetaDescription,
+            MetaTitle = product.MetaTitle?.Resolve(lang),
+            MetaKeywords = product.MetaKeywords?.Resolve(lang),
+            MetaDescription = product.MetaDescription?.Resolve(lang),
             ReviewsCount = product.ReviewsCount,
             RatingAverage = product.RatingAverage,
             ThumbnailImageUrl = _mediaUrl.GetUrl(product.ThumbnailImage?.FileName),
@@ -257,10 +287,19 @@ public sealed class CatalogService : ICatalogService
                 .Select(url => url!)
                 .ToList(),
             Attributes = product.ProductAttributeValues
-                .Select(x => new ProductDetailAttribute { Name = x.Attribute.Name, Value = x.Value })
+                .Select(x => new ProductDetailAttribute
+                {
+                    Name = x.Attribute.Name.Resolve(lang)!,
+                    Value = x.Value,
+                })
                 .ToList(),
             Categories = product.ProductCategories
-                .Select(x => new ProductDetailCategory { Id = x.CategoryId, Name = x.Category.Name, Slug = x.Category.Slug })
+                .Select(x => new ProductDetailCategory
+                {
+                    Id = x.CategoryId,
+                    Name = x.Category.Name.Resolve(lang)!,
+                    Slug = x.Category.Slug
+                })
                 .ToList()
         };
 
@@ -289,12 +328,14 @@ public sealed class CatalogService : ICatalogService
             .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
+        var lang = _culture.Language;
+
         foreach (var variation in variations)
         {
             var variationVm = new ProductDetailVariation
             {
                 Id = variation.Id,
-                Name = variation.Name,
+                Name = variation.Name.Resolve(lang)!,
                 NormalizedName = variation.NormalizedName,
                 IsAllowToOrder = variation.IsAllowToOrder,
                 IsCallForPricing = variation.IsCallForPricing,
@@ -315,7 +356,7 @@ public sealed class CatalogService : ICatalogService
                 variationVm.Options.Add(new ProductDetailVariationOption
                 {
                     OptionId = combination.OptionId,
-                    OptionName = combination.Option.Name,
+                    OptionName = combination.Option.Name.Resolve(lang)!,
                     Value = combination.Value
                 });
             }
@@ -326,7 +367,7 @@ public sealed class CatalogService : ICatalogService
 
     private ProductListItem ToListItem(Product product)
     {
-        var item = ProductListItem.FromProduct(product);
+        var item = ProductListItem.FromProduct(product, _culture.Language);
         item.ThumbnailImageUrl = _mediaUrl.GetUrl(product.ThumbnailImage?.FileName);
         return item;
     }

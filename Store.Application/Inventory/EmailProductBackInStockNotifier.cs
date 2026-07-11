@@ -38,9 +38,10 @@ public sealed class EmailProductBackInStockNotifier : IProductBackInStockNotifie
             return;
         }
 
+        // Emails render outside a request scope, so use the Arabic (canonical) product name.
         var productName = await _db.Products
             .Where(p => p.Id == productId)
-            .Select(p => p.Name)
+            .Select(p => p.Name.Ar)
             .FirstOrDefaultAsync(cancellationToken) ?? "Item";
 
         var tokens = new Dictionary<string, string?>

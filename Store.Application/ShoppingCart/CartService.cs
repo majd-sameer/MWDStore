@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Store.Application.Catalog.Pricing;
 using Store.Application.Common;
+using Store.Application.Localization;
 using Store.Application.Pricing.Coupons;
 using Store.Data;
 using Store.Domain;
@@ -20,16 +21,18 @@ public sealed class CartService : ICartService
     private readonly ICouponService _couponService;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IRequestCulture _culture;
 
     public CartService(
         StoreDbContext db, IProductPricingService pricing, ICouponService couponService,
-        TimeProvider timeProvider, IMediaUrlBuilder mediaUrl)
+        TimeProvider timeProvider, IMediaUrlBuilder mediaUrl, IRequestCulture culture)
     {
         _db = db;
         _pricing = pricing;
         _couponService = couponService;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
+        _culture = culture;
     }
 
     public async Task<AddToCartResult> AddToCartAsync(
@@ -135,7 +138,7 @@ public sealed class CartService : ICartService
             {
                 Id = x.Id,
                 ProductId = x.ProductId,
-                ProductName = x.Product.Name,
+                ProductName = x.Product.Name.Resolve(_culture.Language) ?? string.Empty,
                 ProductImageUrl = _mediaUrl.GetUrl(x.Product.ThumbnailImage?.FileName),
                 ProductPrice = x.Product.Price,
                 CalculatedProductPrice = _pricing.CalculateProductPrice(x.Product),

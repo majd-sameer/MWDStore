@@ -23,20 +23,20 @@ public sealed class ContentController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
-    private readonly ILocalizationService _localization;
+    private readonly IRequestCulture _culture;
     private readonly IContentBlockService _contentBlocks;
 
     public ContentController(
         StoreDbContext db,
         TimeProvider timeProvider,
         IMediaUrlBuilder mediaUrl,
-        ILocalizationService localization,
+        IRequestCulture culture,
         IContentBlockService contentBlocks)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
-        _localization = localization;
+        _culture = culture;
         _contentBlocks = contentBlocks;
     }
 
@@ -49,8 +49,7 @@ public sealed class ContentController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<ContentBlockDto>>> Blocks(
         [FromQuery] string? prefix, CancellationToken cancellationToken)
     {
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        var blocks = await _contentBlocks.GetPublishedAsync(prefix, cultureId, cancellationToken);
+        var blocks = await _contentBlocks.GetPublishedAsync(prefix, cancellationToken);
         return Ok(blocks);
     }
 
@@ -60,11 +59,24 @@ public sealed class ContentController : ControllerBase
     public async Task<ActionResult<PublicPageDto>> Page(string slug, CancellationToken cancellationToken)
     {
         var page = await _db.Pages
+            .AsNoTracking()
             .Where(p => p.Slug == slug && p.IsPublished && !p.IsDeleted)
-            .Select(p => new PublicPageDto(p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription))
+            .Select(p => new { p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return page == null ? NotFound() : Ok(page);
+        if (page == null)
+        {
+            return NotFound();
+        }
+
+        var lang = _culture.Language;
+        return Ok(new PublicPageDto(
+            page.Name.Resolve(lang)!,
+            page.Slug,
+            page.Body?.Resolve(lang),
+            page.MetaTitle?.Resolve(lang),
+            page.MetaKeywords?.Resolve(lang),
+            page.MetaDescription?.Resolve(lang)));
     }
 
     // ----- News ----------------------------------------------------------------------------------
@@ -76,25 +88,23 @@ public sealed class ContentController : ControllerBase
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 50);
 
-        var items = await _db.NewsItems
+        var rows = await _db.NewsItems
+            .AsNoTracking()
             .Where(n => n.IsPublished && !n.IsDeleted)
             .OrderByDescending(n => n.PublishedOn)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(n => new NewsListItemDto(
+            .Select(n => new
+            {
                 n.Id, n.Name, n.Slug, n.ShortContent,
-                n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null, n.PublishedOn))
+                ThumbnailFileName = n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null,
+                n.PublishedOn
+            })
             .ToListAsync(cancellationToken);
 
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsItem, items.Select(i => i.Id).ToList(), cultureId, cancellationToken);
-
-        return Ok(items.Select(i => i with
-        {
-            Name = overlay.Apply(i.Id, LocalizedProperty.Name, i.Name) ?? i.Name,
-            ShortContent = overlay.Apply(i.Id, LocalizedProperty.ShortContent, i.ShortContent),
-            ThumbnailUrl = _mediaUrl.GetUrl(i.ThumbnailUrl),
-        }).ToList());
+        var lang = _culture.Language;
+        return Ok(rows.Select(r => new NewsListItemDto(
+            r.Id, r.Name.Resolve(lang)!, r.Slug, r.ShortContent?.Resolve(lang),
+            _mediaUrl.GetUrl(r.ThumbnailFileName), r.PublishedOn)).ToList());
     }
 
     [HttpGet("news/{slug}")]
@@ -108,16 +118,13 @@ public sealed class ContentController : ControllerBase
             return NotFound();
         }
 
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsItem, new[] { item.Id }, cultureId, cancellationToken);
-
+        var lang = _culture.Language;
         return Ok(new NewsDetailDto(
             item.Id,
-            overlay.Apply(item.Id, LocalizedProperty.Name, item.Name) ?? item.Name,
+            item.Name.Resolve(lang)!,
             item.Slug,
-            overlay.Apply(item.Id, LocalizedProperty.ShortContent, item.ShortContent),
-            overlay.Apply(item.Id, LocalizedProperty.FullContent, item.FullContent),
+            item.ShortContent?.Resolve(lang),
+            item.FullContent?.Resolve(lang),
             _mediaUrl.GetUrl(item.ThumbnailImage?.FileName),
             item.MetaTitle, item.MetaKeywords, item.MetaDescription, item.PublishedOn));
     }

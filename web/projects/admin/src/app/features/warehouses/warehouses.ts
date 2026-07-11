@@ -10,7 +10,7 @@ import {
   type AdminWarehouseDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -20,7 +20,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-warehouses',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'warehouses.title' | translate"
@@ -43,7 +43,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'common.name' | translate }}</th>
@@ -103,14 +103,20 @@ export class AdminWarehouses {
   private readonly service = inject(AdminWarehousesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.listResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(w: AdminWarehouseDto): void {
-    if (!confirm(this.translate.instant('warehouses.confirm_delete', { name: w.name ?? '#' + w.id }))) {
-      return;
-    }
+  protected async remove(w: AdminWarehouseDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('warehouses.confirm_delete', { name: w.name ?? '#' + w.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(w.id);
     this.service.delete(w.id).subscribe({
       next: () => {

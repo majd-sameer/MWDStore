@@ -4,8 +4,8 @@ using Store.Data;
 
 namespace Store.Application.Tests;
 
-/// <summary>Covers <see cref="ContentSeeder"/>: inserts the fixed homepage block set (with an
-/// English overlay) on a fresh database, and is a strict no-op — including leaving admin edits
+/// <summary>Covers <see cref="ContentSeeder"/>: inserts the fixed homepage block set (with English
+/// translations) on a fresh database, and is a strict no-op — including leaving admin edits
 /// untouched — the second time it runs.</summary>
 public class ContentSeederTests
 {
@@ -36,14 +36,10 @@ public class ContentSeederTests
             keys);
 
         var hero = db.ContentBlocks.Single(b => b.Key == "home.hero");
-        Assert.False(string.IsNullOrEmpty(hero.Title));
+        Assert.False(string.IsNullOrEmpty(hero.Title!.Ar));
         Assert.True(hero.IsPublished);
 
-        var heroTitleEn = db.LocalizedContentProperties.SingleOrDefault(
-            p => p.EntityType == "ContentBlock" && p.EntityId == hero.Id
-                && p.CultureId == "en-US" && p.ProperyName == "Title");
-        Assert.NotNull(heroTitleEn);
-        Assert.False(string.IsNullOrEmpty(heroTitleEn!.Value));
+        Assert.False(string.IsNullOrEmpty(hero.Title.En));
     }
 
     [Fact]
@@ -57,12 +53,12 @@ public class ContentSeederTests
 
         // Simulate an admin edit before the next boot.
         var hero = db.ContentBlocks.Single(b => b.Key == "home.hero");
-        hero.Title = "عنوان معدّل من الإدارة";
+        hero.Title!.Ar = "عنوان معدّل من الإدارة";
         db.SaveChanges();
 
         await ContentSeeder.SeedAsync(provider);
 
         Assert.Equal(countAfterFirstRun, db.ContentBlocks.Count());
-        Assert.Equal("عنوان معدّل من الإدارة", db.ContentBlocks.Single(b => b.Key == "home.hero").Title);
+        Assert.Equal("عنوان معدّل من الإدارة", db.ContentBlocks.Single(b => b.Key == "home.hero").Title!.Ar);
     }
 }

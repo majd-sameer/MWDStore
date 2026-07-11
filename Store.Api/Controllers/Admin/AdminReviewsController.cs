@@ -44,7 +44,7 @@ public sealed class AdminReviewsController : ControllerBase
             .Select(r => new AdminReviewDto(
                 r.Id, r.Title, r.Comment, r.Rating, r.ReviewerName, r.User.Email,
                 r.Status, r.CreatedOn, r.EntityId, r.EntityTypeId,
-                _db.Products.Where(p => p.Id == r.EntityId).Select(p => p.Name).FirstOrDefault()))
+                _db.Products.Where(p => p.Id == r.EntityId).Select(p => p.Name.Ar).FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
         return Ok(items);

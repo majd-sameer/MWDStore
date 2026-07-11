@@ -10,6 +10,6 @@ public sealed class ProductOptionConfiguration : IEntityTypeConfiguration<Produc
     {
         builder.ToTable("ProductOption");
 
-        builder.Property(e => e.Name).HasMaxLength(450);
+        builder.OwnsLocalized(e => e.Name, "Name", 450, required: true);
     }
 }

@@ -10,7 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { AdminOrdersService, type AdminOrderQuery } from 'data-access';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Icon } from 'ui';
+import { Icon, TableCards } from 'ui';
 import {
   ORDER_STATUS_OPTIONS,
   orderStatusBadge,
@@ -23,7 +23,7 @@ const PAGE_SIZE = 25;
 @Component({
   selector: 'app-admin-order-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [MoneyPipe, DatePipe, RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'orders.title' | translate"
@@ -63,7 +63,7 @@ const PAGE_SIZE = 25;
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (orders.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'dashboard.col_order' | translate }}</th>

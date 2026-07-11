@@ -7,7 +7,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { AdminOperationsService, type AdminVendorDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -17,7 +17,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-vendors',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'vendors.title' | translate"
@@ -40,7 +40,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'vendors.col_vendor' | translate }}</th>
@@ -104,14 +104,22 @@ import { PageHeader } from '../../shared/page-header';
 })
 export class AdminVendors {
   private readonly service = inject(AdminOperationsService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
   protected readonly list = this.service.vendorsResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(v: AdminVendorDto): void {
-    if (!confirm(this.translate.instant('vendors.confirm_delete', { name: v.name ?? '#' + v.id }))) {
+  protected async remove(v: AdminVendorDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('vendors.confirm_delete', { name: v.name ?? '#' + v.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(v.id);

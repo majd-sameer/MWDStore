@@ -11,7 +11,7 @@ import {
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ToastService } from 'ui';
+import { TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -22,7 +22,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-inventory',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, PageHeader],
+  imports: [TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'inventory.title' | translate"
@@ -68,7 +68,7 @@ import { PageHeader } from '../../shared/page-header';
                 {{ 'inventory.total_on_hand' | translate }} <strong>{{ s.productStockQuantity }}</strong>
               </p>
               <div class="table-responsive">
-                <table class="table align-middle mb-0">
+                <table class="table align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'inventory.warehouse' | translate }}</th>
@@ -163,7 +163,7 @@ export class AdminInventory {
 
   protected readonly productId = signal<number | null>(null);
   protected readonly stock = this.service.productStockResource(() =>
-    this.productId() ?? 0,
+    this.productId(),
   );
 
   protected readonly warehouseId = signal<number | null>(null);

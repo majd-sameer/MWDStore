@@ -109,12 +109,12 @@ public sealed class OrderService : IOrderService
 
             if (!product.IsAllowToOrder || !product.IsPublished || product.IsDeleted)
             {
-                return Result.Fail<Order>($"The product {product.Name} is not available any more");
+                return Result.Fail<Order>($"The product {product.Name.Ar} is not available any more");
             }
 
             if (product.StockTrackingIsEnabled && product.StockQuantity < checkoutItem.Quantity)
             {
-                return Result.Fail<Order>($"There are only {product.StockQuantity} items available for {product.Name}");
+                return Result.Fail<Order>($"There are only {product.StockQuantity} items available for {product.Name.Ar}");
             }
 
             var taxPercent = await _taxService.GetTaxPercentAsync(

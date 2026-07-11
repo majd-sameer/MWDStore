@@ -12,13 +12,13 @@ import {
   StorefrontFeaturesService,
   type ComparisonProductDto,
 } from 'data-access';
-import { Button, Tile, ToastService } from 'ui';
+import { Button, TableCards, Tile, ToastService } from 'ui';
 
 /** Side-by-side product comparison (max 4), with the union of all spec attributes as rows. */
 @Component({
   selector: 'app-compare',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, TranslatePipe, RouterLink, Button, Tile],
+  imports: [MoneyPipe, TranslatePipe, RouterLink, Button, Tile, TableCards],
   template: `
     <div class="container py-4">
       <h1 class="page-title">{{ 'compare.title' | translate }}</h1>
@@ -36,7 +36,7 @@ import { Button, Tile, ToastService } from 'ui';
         </div>
       } @else {
         <div class="table-responsive">
-          <table class="table align-middle">
+          <table class="table align-middle" libTableCards>
             <thead>
               <tr>
                 <th scope="col" class="cmp-attr">{{ 'compare.attribute' | translate }}</th>

@@ -7,7 +7,7 @@ public class ProductOption
 {
     public long Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public ICollection<ProductOptionCombination> ProductOptionCombinations { get; set; } = [];
 

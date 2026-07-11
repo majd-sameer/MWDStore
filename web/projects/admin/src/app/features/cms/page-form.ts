@@ -14,12 +14,34 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AdminCmsService, type PageUpsertRequest } from 'data-access';
+import { AdminCmsService, type AdminPageDto, type PageUpsertRequest } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
+
+/**
+ * `AdminPageDto`/`PageUpsertRequest` don't yet declare the English overlay fields in the shared
+ * `data-access` models — extend them locally (structural typing lets `AdminCmsService`'s existing
+ * methods accept the wider request/response shape without changes there).
+ */
+interface AdminPageDtoEn extends AdminPageDto {
+  nameEn: string | null;
+  bodyEn: string | null;
+  metaTitleEn: string | null;
+  metaKeywordsEn: string | null;
+  metaDescriptionEn: string | null;
+  hasEnglish: boolean;
+}
+
+interface PageUpsertRequestEn extends PageUpsertRequest {
+  nameEn?: string | null;
+  bodyEn?: string | null;
+  metaTitleEn?: string | null;
+  metaKeywordsEn?: string | null;
+  metaDescriptionEn?: string | null;
+}
 
 interface PageModel {
   name: string;
@@ -29,6 +51,11 @@ interface PageModel {
   metaKeywords: string;
   metaDescription: string;
   isPublished: boolean;
+  nameEn: string;
+  bodyEn: string;
+  metaTitleEn: string;
+  metaKeywordsEn: string;
+  metaDescriptionEn: string;
 }
 
 function emptyModel(): PageModel {
@@ -40,6 +67,11 @@ function emptyModel(): PageModel {
     metaKeywords: '',
     metaDescription: '',
     isPublished: true,
+    nameEn: '',
+    bodyEn: '',
+    metaTitleEn: '',
+    metaKeywordsEn: '',
+    metaDescriptionEn: '',
   };
 }
 
@@ -47,6 +79,8 @@ function emptyModel(): PageModel {
  * Create / edit a CMS page on its own page (mirrors the product form). The pages
  * API has no single-fetch endpoint, but the list DTO carries the full body +
  * meta, so edit mode seeds from the list resource. Saving returns to the list.
+ * The Arabic fields are the base entity columns; the English fields are the
+ * `LocalizedContentProperty` overlay, written in the same create/update call.
  */
 @Component({
   selector: 'app-admin-page-form',
@@ -77,36 +111,59 @@ function emptyModel(): PageModel {
               <form (submit)="onSubmit($event)" novalidate>
                 <div class="row">
                   <div class="col-md-6">
-                    <lib-form-field [label]="'common.name' | translate" controlId="pg-name" [required]="true" [error]="err(f.name())">
-                      <input id="pg-name" type="text" class="form-control"
-                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                    </lib-form-field>
-                  </div>
-                  <div class="col-md-6">
                     <lib-form-field [label]="'common.slug' | translate" controlId="pg-slug" [hint]="'common.slug_hint' | translate">
                       <input id="pg-slug" type="text" class="form-control" [formField]="f.slug" />
                     </lib-form-field>
                   </div>
                 </div>
-                <lib-form-field [label]="'pages.body_html' | translate" controlId="pg-body">
-                  <textarea id="pg-body" rows="12" class="form-control font-monospace"
-                    [formField]="f.body"></textarea>
-                </lib-form-field>
+
                 <div class="row">
                   <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'pages.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="pg-name" [required]="true" [error]="err(f.name())">
+                      <input id="pg-name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.body_html' | translate" controlId="pg-body">
+                      <textarea id="pg-body" rows="10" class="form-control font-monospace" dir="rtl"
+                        [formField]="f.body"></textarea>
+                    </lib-form-field>
                     <lib-form-field [label]="'pages.meta_title' | translate" controlId="pg-mtitle">
-                      <input id="pg-mtitle" type="text" class="form-control" [formField]="f.metaTitle" />
+                      <input id="pg-mtitle" type="text" class="form-control" dir="rtl" [formField]="f.metaTitle" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="pg-mkey">
+                      <input id="pg-mkey" type="text" class="form-control" dir="rtl" [formField]="f.metaKeywords" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_description' | translate" controlId="pg-mdesc">
+                      <textarea id="pg-mdesc" rows="2" class="form-control" dir="rtl" [formField]="f.metaDescription"></textarea>
                     </lib-form-field>
                   </div>
+
                   <div class="col-md-6">
-                    <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="pg-mkey">
-                      <input id="pg-mkey" type="text" class="form-control" [formField]="f.metaKeywords" />
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'pages.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="pg-name-en">
+                      <input id="pg-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.body_html' | translate" controlId="pg-body-en">
+                      <textarea id="pg-body-en" rows="10" class="form-control font-monospace" dir="ltr"
+                        [formField]="f.bodyEn"></textarea>
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_title' | translate" controlId="pg-mtitle-en">
+                      <input id="pg-mtitle-en" type="text" class="form-control" dir="ltr" [formField]="f.metaTitleEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="pg-mkey-en">
+                      <input id="pg-mkey-en" type="text" class="form-control" dir="ltr" [formField]="f.metaKeywordsEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_description' | translate" controlId="pg-mdesc-en">
+                      <textarea id="pg-mdesc-en" rows="2" class="form-control" dir="ltr" [formField]="f.metaDescriptionEn"></textarea>
                     </lib-form-field>
                   </div>
                 </div>
-                <lib-form-field [label]="'pages.meta_description' | translate" controlId="pg-mdesc">
-                  <textarea id="pg-mdesc" rows="2" class="form-control" [formField]="f.metaDescription"></textarea>
-                </lib-form-field>
+
                 <div class="form-check form-switch mb-3">
                   <input id="pg-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
                   <label for="pg-pub" class="form-check-label">{{ 'common.published' | translate }}</label>
@@ -141,7 +198,7 @@ export class AdminPageForm {
 
   protected readonly list = this.service.pagesResource();
   private readonly existing = computed(
-    () => this.list.value()?.find((p) => p.id === this.pageId()) ?? null,
+    () => (this.list.value() as AdminPageDtoEn[] | undefined)?.find((p) => p.id === this.pageId()) ?? null,
   );
 
   protected readonly model = signal<PageModel>(emptyModel());
@@ -171,6 +228,11 @@ export class AdminPageForm {
         metaKeywords: p.metaKeywords ?? '',
         metaDescription: p.metaDescription ?? '',
         isPublished: p.isPublished,
+        nameEn: p.nameEn ?? '',
+        bodyEn: p.bodyEn ?? '',
+        metaTitleEn: p.metaTitleEn ?? '',
+        metaKeywordsEn: p.metaKeywordsEn ?? '',
+        metaDescriptionEn: p.metaDescriptionEn ?? '',
       });
     });
   }
@@ -180,7 +242,7 @@ export class AdminPageForm {
     void submit(this.f, async () => {
       this.serverError.set(null);
       const m = this.model();
-      const body: PageUpsertRequest = {
+      const body: PageUpsertRequestEn = {
         name: m.name,
         slug: m.slug || null,
         body: m.body || null,
@@ -188,6 +250,11 @@ export class AdminPageForm {
         metaKeywords: m.metaKeywords || null,
         metaDescription: m.metaDescription || null,
         isPublished: m.isPublished,
+        nameEn: m.nameEn || null,
+        bodyEn: m.bodyEn || null,
+        metaTitleEn: m.metaTitleEn || null,
+        metaKeywordsEn: m.metaKeywordsEn || null,
+        metaDescriptionEn: m.metaDescriptionEn || null,
       };
       try {
         if (this.isNew()) {

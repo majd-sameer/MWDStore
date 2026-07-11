@@ -14,16 +14,39 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AdminProductOptionsService } from 'data-access';
+import {
+  AdminProductOptionsService,
+  type AdminProductOptionListItem,
+  type ProductOptionUpsertRequest,
+} from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 
+/** `AdminProductOptionListItem` doesn't yet declare the English overlay field in the shared
+ * `data-access` models — extend it locally (structural typing lets the existing service methods
+ * accept the wider request/response shape without changes there). */
+interface AdminProductOptionListItemEn extends AdminProductOptionListItem {
+  nameEn: string | null;
+  hasEnglish: boolean;
+}
+
+interface ProductOptionUpsertRequestEn extends ProductOptionUpsertRequest {
+  nameEn?: string | null;
+}
+
+interface OptionModel {
+  name: string;
+  nameEn: string;
+}
+
 /**
  * Create / edit a product option (Color, Size, …) on its own page. The options
  * API has no single-fetch endpoint, so edit mode seeds from the list resource.
+ * The Arabic name is the base entity column; the English name is the
+ * `LocalizedContentProperty` overlay, written in the same create/update call.
  */
 @Component({
   selector: 'app-admin-product-option-form',
@@ -45,17 +68,32 @@ import { PageHeader } from '../../shared/page-header';
       <div class="alert alert-danger">{{ 'options.load_one_failed' | translate }}</div>
     } @else {
       <div class="row g-4">
-        <div class="col-lg-7">
+        <div class="col-lg-9">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
               @if (serverError(); as message) {
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="opt-name" [required]="true" [error]="err(f.name())">
-                  <input id="opt-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'options.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="opt-name" [required]="true" [error]="err(f.name())">
+                      <input id="opt-name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'options.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="opt-name-en">
+                      <input id="opt-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                  </div>
+                </div>
 
                 <div class="form-actions">
                   <button libButton variant="primary" [disabled]="f().submitting()">
@@ -86,10 +124,13 @@ export class AdminProductOptionForm {
 
   protected readonly list = this.service.listResource();
   private readonly existing = computed(
-    () => this.list.value()?.find((o) => o.id === this.optionId()) ?? null,
+    () =>
+      (this.list.value() as AdminProductOptionListItemEn[] | undefined)?.find(
+        (o) => o.id === this.optionId(),
+      ) ?? null,
   );
 
-  protected readonly model = signal<{ name: string }>({ name: '' });
+  protected readonly model = signal<OptionModel>({ name: '', nameEn: '' });
   protected readonly f = form(this.model, (path) => {
     required(path.name, { message: 'Name is required' });
   });
@@ -108,7 +149,7 @@ export class AdminProductOptionForm {
         return;
       }
       this.seeded = true;
-      this.model.set({ name: o.name ?? '' });
+      this.model.set({ name: o.name ?? '', nameEn: o.nameEn ?? '' });
     });
   }
 
@@ -116,14 +157,16 @@ export class AdminProductOptionForm {
     event.preventDefault();
     void submit(this.f, async () => {
       this.serverError.set(null);
+      const body: ProductOptionUpsertRequestEn = {
+        name: this.model().name,
+        nameEn: this.model().nameEn || null,
+      };
       try {
         if (this.isNew()) {
-          await firstValueFrom(this.service.create({ name: this.model().name }));
+          await firstValueFrom(this.service.create(body));
           this.toast.success(this.translate.instant('options.created_ok'));
         } else {
-          await firstValueFrom(
-            this.service.update(this.optionId(), { name: this.model().name }),
-          );
+          await firstValueFrom(this.service.update(this.optionId(), body));
           this.toast.success(this.translate.instant('options.updated_ok'));
         }
         await this.router.navigate(['/product-options']);

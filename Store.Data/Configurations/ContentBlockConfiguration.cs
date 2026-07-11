@@ -13,9 +13,10 @@ public sealed class ContentBlockConfiguration : IEntityTypeConfiguration<Content
         builder.HasIndex(e => e.Key).IsUnique();
 
         builder.Property(e => e.Key).HasMaxLength(200).IsRequired();
-        builder.Property(e => e.Title).HasMaxLength(500);
+        builder.OwnsLocalized(e => e.Title, "Title", 500);
+        builder.OwnsLocalized(e => e.Text, "Text");
+        builder.OwnsLocalized(e => e.LinkText, "LinkText", 200);
         builder.Property(e => e.ImageUrl).HasMaxLength(1000);
         builder.Property(e => e.LinkUrl).HasMaxLength(1000);
-        builder.Property(e => e.LinkText).HasMaxLength(200);
     }
 }

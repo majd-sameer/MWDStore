@@ -12,7 +12,7 @@ import {
   type CustomerGroupUpsertRequest,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, Icon, ToastService } from 'ui';
+import { Button, ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -23,7 +23,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-users',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, DatePipe, Button, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'users.title' | translate"
@@ -55,7 +55,7 @@ import { PageHeader } from '../../shared/page-header';
               <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
             } @else if (list.value(); as rows) {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'users.col_user' | translate }}</th>
@@ -155,6 +155,7 @@ export class AdminUsers {
   private readonly service = inject(AdminUsersService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly search = signal('');
   protected readonly list = this.service.listResource(() => ({
@@ -163,8 +164,15 @@ export class AdminUsers {
   protected readonly groups = this.service.groupsResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(u: AdminUserListItem): void {
-    if (!confirm(this.translate.instant('users.confirm_delete', { name: u.email ?? '#' + u.id }))) {
+  protected async remove(u: AdminUserListItem): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('users.confirm_delete', { name: u.email ?? '#' + u.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(u.id);
@@ -212,8 +220,15 @@ export class AdminUsers {
     });
   }
 
-  protected removeGroup(id: number, name: string | null): void {
-    if (!confirm(this.translate.instant('users.confirm_delete_group', { name: name ?? '' }))) {
+  protected async removeGroup(id: number, name: string | null): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('users.confirm_delete_group', { name: name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteGroup(id).subscribe({

@@ -10,12 +10,13 @@ export class AdminInventoryService {
   private readonly http = inject(HttpClient);
   private readonly injector = inject(Injector);
 
-  /** GET /api/admin/inventory/products/{productId} */
-  productStockResource(productId: () => number) {
+  /** GET /api/admin/inventory/products/{productId} — skipped while no product is selected. */
+  productStockResource(productId: () => number | null) {
     return runInInjectionContext(this.injector, () =>
-      httpResource<ProductStockDto>(
-        () => `${API_ROOT}/admin/inventory/products/${productId()}`,
-      ),
+      httpResource<ProductStockDto>(() => {
+        const id = productId();
+        return id ? `${API_ROOT}/admin/inventory/products/${id}` : undefined;
+      }),
     );
   }
 

@@ -30,8 +30,11 @@ public static class DependencyInjection
 
         services.AddScoped<IProductPricingService, ProductPricingService>();
         services.AddScoped<ICatalogService, CatalogService>();
-        services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IContentBlockService, ContentBlockService>();
+
+        // Content language for the current request; set by RequestCultureMiddleware (Store.Api).
+        services.AddScoped<RequestCultureContext>();
+        services.AddScoped<IRequestCulture>(sp => sp.GetRequiredService<RequestCultureContext>());
 
         services.AddScoped<ITaxService, TaxService>();
         services.AddScoped<ICouponService, CouponService>();

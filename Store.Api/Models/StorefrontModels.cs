@@ -198,4 +198,11 @@ public sealed record OrderDetailDto(
     IReadOnlyList<OrderItemDto> Items,
     /// <summary>The guest's contact email / order secret. Populated for the placing client only;
     /// nulled in the public tracking response so it isn't leaked by a tracking-number lookup.</summary>
-    string? GuestEmail = null);
+    string? GuestEmail = null,
+    /// <summary>Admin-only payment/refund rollup. Set only by the admin order-detail mapping; null on
+    /// storefront/public order DTOs.</summary>
+    PaymentSummaryDto? PaymentSummary = null);
+
+/// <summary>Admin order-detail payment rollup: the captured payment's amount, how much of it has been
+/// refunded, and the remaining refundable balance (captured minus already refunded).</summary>
+public sealed record PaymentSummaryDto(decimal CapturedTotal, decimal RefundedTotal, decimal Refundable);

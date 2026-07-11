@@ -70,6 +70,14 @@ builder.Services.Configure<ScheduledTaskOptions>(
 // Local media storage for admin uploads (product images, etc.).
 builder.Services.AddSingleton<IMediaStorage, LocalMediaStorage>();
 
+// HTTP download seam for MediaSeeder's seed-URL bootstrap source (fresh environments with no local
+// photo dump). Short timeout + no retries: a failed download just means that product stays imageless
+// until the next boot.
+builder.Services.AddHttpClient<IMediaDownloader, HttpMediaDownloader>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // ----- Identity (JWT-only API; no cookie schemes) -------------------------------------------------
 builder.Services
     .AddIdentityCore<User>(options =>
@@ -154,8 +162,10 @@ await AclSeeder.SeedAsync(app.Services);
 await LocationSeeder.SeedAsync(app.Services);
 // Real catalog seeding from catalog.seed.json (no-op when the file is absent).
 await CatalogSeeder.SeedAsync(app.Services);
-// English content overrides from translations.en.json (no-op when the file is absent).
-await LocalizationSeeder.SeedAsync(app.Services);
+// Product images for whatever CatalogSeeder left imageless: local seed-images/ dump first, then
+// downloads catalog.seed.json's URLs (Media:SeedImages=false disables; no-ops once every product
+// already has media, e.g. this machine's fully-seeded DB).
+await MediaSeeder.SeedAsync(app.Services);
 // Homepage content blocks (hero/story/values/CTA) with today's AR/EN copy as initial values.
 await ContentSeeder.SeedAsync(app.Services);
 // Transactional email foundation: default (placeholder) email account + starter message templates.
@@ -186,6 +196,8 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseCors(SpaCorsPolicy);
+
+app.UseMiddleware<RequestCultureMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

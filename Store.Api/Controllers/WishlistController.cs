@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Common;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -18,12 +19,15 @@ public sealed class WishlistController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IRequestCulture _culture;
 
-    public WishlistController(StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl)
+    public WishlistController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl, IRequestCulture culture)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
+        _culture = culture;
     }
 
     [HttpGet]
@@ -115,7 +119,7 @@ public sealed class WishlistController : ControllerBase
         wishList.WishListItems
             .OrderByDescending(i => i.Id)
             .Select(i => new WishListItemDto(
-                i.Id, i.ProductId, i.Product.Name, i.Product.Slug, i.Product.Price,
+                i.Id, i.ProductId, i.Product.Name.Resolve(_culture.Language)!, i.Product.Slug, i.Product.Price,
                 _mediaUrl.GetUrl(i.Product.ThumbnailImage?.FileName), i.Quantity,
                 i.Product.IsPublished && !i.Product.IsDeleted && i.Product.IsAllowToOrder))
             .ToList());

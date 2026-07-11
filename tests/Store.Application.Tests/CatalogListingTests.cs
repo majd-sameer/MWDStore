@@ -1,6 +1,7 @@
 using Store.Application.Catalog;
 using Store.Application.Catalog.Models;
 using Store.Application.Catalog.Pricing;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -20,9 +21,9 @@ public class CatalogListingTests
     private const long AcmeId = 1;
     private const long GlobexId = 2;
 
-    private static CatalogService NewService(StoreDbContext db, int pageSize = 10) =>
+    private static CatalogService NewService(StoreDbContext db, int pageSize = 10, IRequestCulture? culture = null) =>
         new(db, new ProductPricingService(new FixedTimeProvider(Now)), new CatalogOptions { ProductPageSize = pageSize },
-            new Store.Application.Common.LocalMediaUrlBuilder());
+            new Store.Application.Common.LocalMediaUrlBuilder(), culture ?? TestCulture.Arabic);
 
     // ---- seeding ----------------------------------------------------------
 
@@ -30,10 +31,10 @@ public class CatalogListingTests
     {
         var db = TestDb.New();
 
-        var electronics = new Category { Id = Electronics, Name = "Electronics", Slug = "electronics" };
-        var phones = new Category { Id = Phones, Name = "Phones", Slug = "phones", ParentId = Electronics };
-        var acme = new Brand { Id = AcmeId, Name = "Acme", Slug = "acme", IsPublished = true };
-        var globex = new Brand { Id = GlobexId, Name = "Globex", Slug = "globex", IsPublished = true };
+        var electronics = new Category { Id = Electronics, Name = new LocalizedString("Electronics"), Slug = "electronics" };
+        var phones = new Category { Id = Phones, Name = new LocalizedString("Phones"), Slug = "phones", ParentId = Electronics };
+        var acme = new Brand { Id = AcmeId, Name = new LocalizedString("Acme"), Slug = "acme", IsPublished = true };
+        var globex = new Brand { Id = GlobexId, Name = new LocalizedString("Globex"), Slug = "globex", IsPublished = true };
 
         db.Categories.AddRange(electronics, phones);
         db.Brands.AddRange(acme, globex);
@@ -60,7 +61,7 @@ public class CatalogListingTests
         var product = new Product
         {
             Id = id,
-            Name = name,
+            Name = new LocalizedString(name),
             Slug = "p" + id,
             Price = price,
             IsPublished = published,
@@ -110,8 +111,8 @@ public class CatalogListingTests
     public async Task Sort_DefaultOrdersFeaturedFirstThenById()
     {
         using var db = TestDb.New();
-        var electronics = new Category { Id = Electronics, Name = "Electronics", Slug = "electronics" };
-        var acme = new Brand { Id = AcmeId, Name = "Acme", Slug = "acme", IsPublished = true };
+        var electronics = new Category { Id = Electronics, Name = new LocalizedString("Electronics"), Slug = "electronics" };
+        var acme = new Brand { Id = AcmeId, Name = new LocalizedString("Acme"), Slug = "acme", IsPublished = true };
         db.Categories.Add(electronics);
         db.Brands.Add(acme);
 
@@ -151,8 +152,8 @@ public class CatalogListingTests
     public async Task Sort_InStockProductsLeadRegardlessOfSort()
     {
         using var db = TestDb.New();
-        var electronics = new Category { Id = Electronics, Name = "Electronics", Slug = "electronics" };
-        var acme = new Brand { Id = AcmeId, Name = "Acme", Slug = "acme", IsPublished = true };
+        var electronics = new Category { Id = Electronics, Name = new LocalizedString("Electronics"), Slug = "electronics" };
+        var acme = new Brand { Id = AcmeId, Name = new LocalizedString("Acme"), Slug = "acme", IsPublished = true };
         db.Categories.Add(electronics);
         db.Brands.Add(acme);
 
@@ -275,17 +276,20 @@ public class CatalogListingTests
     private static StoreDbContext SeedSearchFixture()
     {
         var db = TestDb.New();
-        var electronics = new Category { Id = Electronics, Name = "Electronics", Slug = "electronics" };
+        var electronics = new Category { Id = Electronics, Name = new LocalizedString("Electronics"), Slug = "electronics" };
         db.Categories.Add(electronics);
 
         void AddText(long id, string name, decimal price, bool published = true,
-            string? shortDesc = null, string? desc = null, string? spec = null)
+            string? shortDesc = null, string? desc = null, string? spec = null,
+            string? nameEn = null, string? shortDescEn = null, string? descEn = null)
         {
             var p = new Product
             {
-                Id = id, Name = name, Slug = "p" + id, Price = price,
+                Id = id, Name = new LocalizedString(name, nameEn), Slug = "p" + id, Price = price,
                 IsPublished = published, IsVisibleIndividually = true,
-                ShortDescription = shortDesc, Description = desc, Specification = spec,
+                ShortDescription = LocalizedString.From(shortDesc, shortDescEn),
+                Description = LocalizedString.From(desc, descEn),
+                Specification = spec,
                 CreatedById = 1, LatestUpdatedById = 1
             };
             p.ProductCategories.Add(new ProductCategory { ProductId = id, Product = p, CategoryId = Electronics, Category = electronics });
@@ -297,6 +301,9 @@ public class CatalogListingTests
         AddText(3, "USB Cable", 5m, spec: "length: 2m");
         AddText(4, "Monitor", 150m);
         AddText(5, "Keyboard Pro", 120m, published: false); // excluded
+        // Arabic base name with an English overlay whose term appears in neither the base name nor spec —
+        // it is only findable through the English column (drives the EN-search test).
+        AddText(6, "سماعة", 60m, nameEn: "Headphones");
 
         db.SaveChanges();
         return db;
@@ -337,7 +344,18 @@ public class CatalogListingTests
 
         // Unlike SimplCommerce (which redirected home), a blank query browses the whole catalog —
         // the listing page reuses this endpoint with filters but no search text. Id 5 is unpublished.
-        Assert.Equal(4, result.TotalProduct);
-        Assert.Equal([1L, 2L, 3L, 4L], Ids(result));
+        Assert.Equal(5, result.TotalProduct);
+        Assert.Equal([1L, 2L, 3L, 4L, 6L], Ids(result));
+    }
+
+    [Fact]
+    public async Task Search_MatchesEnglishOverlay_WhenBaseIsArabic()
+    {
+        using var db = SeedSearchFixture();
+        // "Headphones" lives only in Product 6's English Name column; the Arabic base is "سماعة".
+        // The approved Ar+En search filter must find it regardless of the request culture.
+        var result = await NewService(db).SearchAsync(new ProductListOptions { Query = "headphones" });
+
+        Assert.Equal([6L], Ids(result));
     }
 }

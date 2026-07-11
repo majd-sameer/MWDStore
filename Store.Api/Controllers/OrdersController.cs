@@ -15,12 +15,12 @@ namespace Store.Api.Controllers;
 public sealed class OrdersController : ControllerBase
 {
     private readonly StoreDbContext _db;
-    private readonly ILocalizationService _localization;
+    private readonly IRequestCulture _culture;
 
-    public OrdersController(StoreDbContext db, ILocalizationService localization)
+    public OrdersController(StoreDbContext db, IRequestCulture culture)
     {
         _db = db;
-        _localization = localization;
+        _culture = culture;
     }
 
     /// <summary>The customer's orders, newest first (master orders only — excludes vendor sub-orders).</summary>
@@ -53,9 +53,7 @@ public sealed class OrdersController : ControllerBase
             return NotFound();
         }
 
-        var detail = await order.ToDetail()
-            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
-        return Ok(detail);
+        return Ok(order.ToDetail(_culture.Language));
     }
 
     /// <summary>
@@ -100,9 +98,8 @@ public sealed class OrdersController : ControllerBase
                 order.OrderStatus, OrderStatusNames.For(order.OrderStatus), order.CreatedOn));
         }
 
-        // Strip the guest email (tracking-number-only lookup) and localize line-item names.
-        var detail = await (order.ToDetail() with { GuestEmail = null })
-            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
+        // Strip the guest email (tracking-number-only lookup); line-item names resolve per request culture.
+        var detail = order.ToDetail(_culture.Language) with { GuestEmail = null };
 
         return Ok(new OrderTrackingDto(
             order.Id,

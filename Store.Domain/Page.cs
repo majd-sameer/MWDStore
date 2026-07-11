@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Store.Domain;
@@ -7,17 +7,17 @@ public class Page
 {
     public long Id { get; set; }
 
-    public string? Body { get; set; }
+    public LocalizedString? Body { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public string Slug { get; set; } = null!;
 
-    public string? MetaTitle { get; set; }
+    public LocalizedString? MetaTitle { get; set; }
 
-    public string? MetaKeywords { get; set; }
+    public LocalizedString? MetaKeywords { get; set; }
 
-    public string? MetaDescription { get; set; }
+    public LocalizedString? MetaDescription { get; set; }
 
     public bool IsPublished { get; set; }
 
@@ -37,4 +37,3 @@ public class Page
 
     public User LatestUpdatedBy { get; set; } = null!;
 }
-

@@ -5,6 +5,10 @@ namespace Store.Application.Catalog.Models;
 /// </summary>
 public sealed class FilterOption
 {
+    /// <summary>Distinct product count of the unfiltered base query (a product in several
+    /// categories counts once — the per-category counts can sum to more).</summary>
+    public int Total { get; set; }
+
     public FilterPrice Price { get; set; } = new();
     public IList<FilterCategory> Categories { get; set; } = new List<FilterCategory>();
     public IList<FilterBrand> Brands { get; set; } = new List<FilterBrand>();

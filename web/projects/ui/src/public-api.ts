@@ -18,3 +18,8 @@ export * from './lib/stars/stars';
 export * from './lib/stepper/stepper';
 export * from './lib/accordion/accordion';
 export * from './lib/breadcrumb/breadcrumb';
+
+// Confirmation modal + responsive table cards
+export * from './lib/confirm/confirm.service';
+export * from './lib/confirm/confirm-dialog';
+export * from './lib/table-cards/table-cards';

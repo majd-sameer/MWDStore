@@ -98,6 +98,7 @@ public sealed class AdminProductTemplatesController : ControllerBase
     private static AdminProductTemplateDto ToDto(ProductTemplate t) => new(
         t.Id, t.Name,
         t.ProductAttributes
-            .Select(a => new AdminProductAttributeDto(a.Id, a.Name, a.GroupId, a.Group.Name))
+            .Select(a => new AdminProductAttributeDto(
+                a.Id, a.Name.Ar!, a.GroupId, a.Group.Name, a.Name.En, a.Name.En != null))
             .ToList());
 }

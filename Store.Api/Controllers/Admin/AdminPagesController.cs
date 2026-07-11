@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft.</summary>
+/// <summary>Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft. Name/Body/SEO
+/// fields are bilingual <see cref="LocalizedString"/> values (Arabic in the base column, English in
+/// the sibling "...En" column).</summary>
 [ApiController]
 [RequirePermission(Permissions.ContentManage)]
 [Route("api/admin/pages")]
@@ -28,25 +30,21 @@ public sealed class AdminPagesController : ControllerBase
         var pages = await _db.Pages
             .Where(p => !p.IsDeleted)
             .OrderByDescending(p => p.Id)
-            .Select(p => new AdminPageDto(
-                p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
-                p.IsPublished, p.PublishedOn, p.CreatedOn))
             .ToListAsync(cancellationToken);
 
-        return Ok(pages);
+        return Ok(pages.Select(ToDto).ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminPageDto>> Get(long id, CancellationToken cancellationToken)
     {
-        var page = await _db.Pages
-            .Where(p => p.Id == id && !p.IsDeleted)
-            .Select(p => new AdminPageDto(
-                p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
-                p.IsPublished, p.PublishedOn, p.CreatedOn))
-            .FirstOrDefaultAsync(cancellationToken);
+        var page = await _db.Pages.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+        if (page == null)
+        {
+            return NotFound();
+        }
 
-        return page == null ? NotFound() : Ok(page);
+        return Ok(ToDto(page));
     }
 
     [HttpPost]
@@ -116,19 +114,22 @@ public sealed class AdminPagesController : ControllerBase
         return NoContent();
     }
 
-    private void Apply(Page page, PageUpsertRequest request, DateTimeOffset now)
+    private static void Apply(Page page, PageUpsertRequest request, DateTimeOffset now)
     {
-        page.Name = request.Name;
+        page.Name = new LocalizedString(request.Name, request.NameEn);
         page.Slug = string.IsNullOrWhiteSpace(request.Slug) ? Slug.Generate(request.Name) : request.Slug;
-        page.Body = request.Body;
-        page.MetaTitle = request.MetaTitle;
-        page.MetaKeywords = request.MetaKeywords;
-        page.MetaDescription = request.MetaDescription;
+        page.Body = LocalizedString.From(request.Body, request.BodyEn);
+        page.MetaTitle = LocalizedString.From(request.MetaTitle, request.MetaTitleEn);
+        page.MetaKeywords = LocalizedString.From(request.MetaKeywords, request.MetaKeywordsEn);
+        page.MetaDescription = LocalizedString.From(request.MetaDescription, request.MetaDescriptionEn);
         page.IsPublished = request.IsPublished;
         page.PublishedOn ??= request.IsPublished ? now : null;
     }
 
     private static AdminPageDto ToDto(Page p) => new(
-        p.Id, p.Name, p.Slug, p.Body, p.MetaTitle, p.MetaKeywords, p.MetaDescription,
-        p.IsPublished, p.PublishedOn, p.CreatedOn);
+        p.Id, p.Name.Ar!, p.Slug, p.Body?.Ar, p.MetaTitle?.Ar, p.MetaKeywords?.Ar, p.MetaDescription?.Ar,
+        p.IsPublished, p.PublishedOn, p.CreatedOn,
+        p.Name.En, p.Body?.En, p.MetaTitle?.En, p.MetaKeywords?.En, p.MetaDescription?.En,
+        HasEnglish: p.Name.En != null || p.Body?.En != null || p.MetaTitle?.En != null
+            || p.MetaKeywords?.En != null || p.MetaDescription?.En != null);
 }

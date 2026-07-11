@@ -26,7 +26,7 @@ public sealed class CheckoutController : ControllerBase
     private readonly IShippingPriceService _shippingPriceService;
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
-    private readonly ILocalizationService _localization;
+    private readonly IRequestCulture _culture;
 
     public CheckoutController(
         ICartService cart,
@@ -34,14 +34,14 @@ public sealed class CheckoutController : ControllerBase
         IShippingPriceService shippingPriceService,
         StoreDbContext db,
         TimeProvider timeProvider,
-        ILocalizationService localization)
+        IRequestCulture culture)
     {
         _cart = cart;
         _orderService = orderService;
         _shippingPriceService = shippingPriceService;
         _db = db;
         _timeProvider = timeProvider;
-        _localization = localization;
+        _culture = culture;
     }
 
     /// <summary>The shipping methods (and prices) applicable to the cart for the given address.</summary>
@@ -243,7 +243,6 @@ public sealed class CheckoutController : ControllerBase
             return null;
         }
 
-        return await order.ToDetail()
-            .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
+        return order.ToDetail(_culture.Language);
     }
 }

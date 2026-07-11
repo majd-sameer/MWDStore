@@ -75,7 +75,7 @@ public sealed class CouponService : ICouponService
             var productIds = cart.Items.Select(x => x.ProductId).ToList();
             discountableProducts = await _db.Products
                 .Where(x => productIds.Contains(x.Id))
-                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name, Price = x.Price })
+                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name.Ar!, Price = x.Price })
                 .ToListAsync(cancellationToken);
         }
         else
@@ -150,7 +150,7 @@ public sealed class CouponService : ICouponService
             var productIds = cartRule.Products.Select(x => x.Id).ToList();
             discountableProducts = await _db.Products
                 .Where(x => productIds.Contains(x.Id))
-                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name, Price = x.Price })
+                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name.Ar!, Price = x.Price })
                 .ToListAsync(cancellationToken);
         }
 
@@ -159,7 +159,7 @@ public sealed class CouponService : ICouponService
             var categoryIds = cartRule.Categories.Select(x => x.Id).ToList();
             var byCategory = await _db.Products
                 .Where(x => x.ProductCategories.Any(c => categoryIds.Contains(c.CategoryId)))
-                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name, Price = x.Price })
+                .Select(x => new DiscountableProduct { Id = x.Id, Name = x.Name.Ar!, Price = x.Price })
                 .ToListAsync(cancellationToken);
             discountableProducts = discountableProducts.Concat(byCategory).ToList();
         }

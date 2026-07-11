@@ -27,6 +27,7 @@ public sealed class AdminInventoryController : ControllerBase
     public async Task<ActionResult<ProductStockDto>> Get(long productId, CancellationToken cancellationToken)
     {
         var product = await _db.Products
+            .AsNoTracking()
             .Where(p => p.Id == productId)
             .Select(p => new { p.Id, p.Name, p.StockQuantity })
             .FirstOrDefaultAsync(cancellationToken);
@@ -40,7 +41,7 @@ public sealed class AdminInventoryController : ControllerBase
             .Select(s => new StockRowDto(s.WarehouseId, s.Warehouse.Name, s.Quantity, s.ReservedQuantity))
             .ToListAsync(cancellationToken);
 
-        return Ok(new ProductStockDto(product.Id, product.Name, product.StockQuantity, rows));
+        return Ok(new ProductStockDto(product.Id, product.Name.Ar!, product.StockQuantity, rows));
     }
 
     /// <summary>

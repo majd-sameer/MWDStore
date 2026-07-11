@@ -14,22 +14,41 @@ import {
   submit,
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AdminProductAttributesService } from 'data-access';
+import {
+  AdminProductAttributesService,
+  type AdminProductAttributeDto,
+  type ProductAttributeUpsertRequest,
+} from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 
+/** `AdminProductAttributeDto`/`ProductAttributeUpsertRequest` don't yet declare the English overlay
+ * fields in the shared `data-access` models — extend them locally (structural typing lets the
+ * existing service methods accept the wider request/response shape without changes there). */
+interface AdminProductAttributeDtoEn extends AdminProductAttributeDto {
+  nameEn: string | null;
+  hasEnglish: boolean;
+}
+
+interface ProductAttributeUpsertRequestEn extends ProductAttributeUpsertRequest {
+  nameEn?: string | null;
+}
+
 interface AttributeModel {
   name: string;
   groupId: string;
+  nameEn: string;
 }
 
 /**
  * Create / edit a product attribute on its own page. The attributes API has no
  * single-fetch endpoint, so edit mode seeds from the list resource. Attribute
- * groups are managed back on the list page.
+ * groups are managed back on the list page. The Arabic name is the base entity
+ * column; the English name is the `LocalizedContentProperty` overlay, written
+ * in the same create/update call.
  */
 @Component({
   selector: 'app-admin-product-attribute-form',
@@ -58,10 +77,6 @@ interface AttributeModel {
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="attr-name" [required]="true" [error]="err(f.name())">
-                  <input id="attr-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
                 <lib-form-field [label]="'attributes.col_group' | translate" controlId="attr-group" [required]="true" [error]="err(f.groupId())">
                   <select id="attr-group" class="form-select"
                     [class.is-invalid]="!!err(f.groupId())" [formField]="f.groupId">
@@ -71,6 +86,26 @@ interface AttributeModel {
                     }
                   </select>
                 </lib-form-field>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'attributes.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="attr-name" [required]="true" [error]="err(f.name())">
+                      <input id="attr-name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                  </div>
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'attributes.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="attr-name-en">
+                      <input id="attr-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                  </div>
+                </div>
 
                 <div class="form-actions">
                   <button libButton variant="primary" [disabled]="f().submitting()">
@@ -102,10 +137,13 @@ export class AdminProductAttributeForm {
   protected readonly list = this.service.listResource();
   protected readonly groups = this.service.groupsResource();
   private readonly existing = computed(
-    () => this.list.value()?.find((a) => a.id === this.attributeId()) ?? null,
+    () =>
+      (this.list.value() as AdminProductAttributeDtoEn[] | undefined)?.find(
+        (a) => a.id === this.attributeId(),
+      ) ?? null,
   );
 
-  protected readonly model = signal<AttributeModel>({ name: '', groupId: '' });
+  protected readonly model = signal<AttributeModel>({ name: '', groupId: '', nameEn: '' });
   protected readonly f = form(this.model, (path) => {
     required(path.name, { message: 'Name is required' });
     required(path.groupId, { message: 'Group is required' });
@@ -125,7 +163,7 @@ export class AdminProductAttributeForm {
         return;
       }
       this.seeded = true;
-      this.model.set({ name: a.name ?? '', groupId: String(a.groupId) });
+      this.model.set({ name: a.name ?? '', groupId: String(a.groupId), nameEn: a.nameEn ?? '' });
     });
   }
 
@@ -133,7 +171,11 @@ export class AdminProductAttributeForm {
     event.preventDefault();
     void submit(this.f, async () => {
       this.serverError.set(null);
-      const body = { name: this.model().name, groupId: Number(this.model().groupId) };
+      const body: ProductAttributeUpsertRequestEn = {
+        name: this.model().name,
+        groupId: Number(this.model().groupId),
+        nameEn: this.model().nameEn || null,
+      };
       try {
         if (this.isNew()) {
           await firstValueFrom(this.service.create(body));

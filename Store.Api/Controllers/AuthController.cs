@@ -294,6 +294,20 @@ public sealed class AuthController : ControllerBase
         });
     }
 
+    /// <summary>Reports whether the signed-in user currently has a second factor enrolled.</summary>
+    [HttpGet("~/api/account/mfa/status")]
+    [Authorize]
+    public async Task<ActionResult<MfaStatusResponse>> MfaStatus()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new MfaStatusResponse { Enabled = user.TwoFactorEnabled });
+    }
+
     /// <summary>
     /// Confirms enrolment: verifies a current code against the pending authenticator key, turns on
     /// <c>TwoFactorEnabled</c>, and returns 10 one-time recovery codes (shown to the user exactly once).

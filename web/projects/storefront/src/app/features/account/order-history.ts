@@ -4,12 +4,13 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService, MoneyPipe } from 'core';
 import { OrderService } from 'data-access';
+import { TableCards } from 'ui';
 import { statusLabel } from './order-status';
 
 @Component({
   selector: 'app-order-history',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, TableCards],
   template: `
     <h1 class="h3 mb-4">{{ 'account.history_title' | translate }}</h1>
 
@@ -24,7 +25,7 @@ import { statusLabel } from './order-status';
     } @else if (orders.value(); as list) {
       @if (list.length) {
         <div class="table-responsive">
-          <table class="table align-middle">
+          <table class="table align-middle" libTableCards>
             <thead>
               <tr>
                 <th scope="col">{{ 'account.col_order' | translate }}</th>

@@ -47,7 +47,7 @@ public sealed class AdminShipmentsController : ControllerBase
             .Select(s => new AdminShipmentDto(
                 s.Id, s.OrderId, s.TrackingNumber, s.WarehouseId, s.Warehouse.Name, s.CreatedOn,
                 s.ShipmentItems.Select(i => new AdminShipmentItemDto(
-                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name, i.Quantity)).ToList()))
+                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name.Ar!, i.Quantity)).ToList()))
             .ToListAsync(cancellationToken);
 
         return Ok(items);
@@ -152,7 +152,7 @@ public sealed class AdminShipmentsController : ControllerBase
             .Select(s => new AdminShipmentDto(
                 s.Id, s.OrderId, s.TrackingNumber, s.WarehouseId, s.Warehouse.Name, s.CreatedOn,
                 s.ShipmentItems.Select(i => new AdminShipmentItemDto(
-                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name, i.Quantity)).ToList()))
+                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name.Ar!, i.Quantity)).ToList()))
             .FirstAsync(cancellationToken);
 
         return Ok(created);

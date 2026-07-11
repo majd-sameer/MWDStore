@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for product options (Color, Size, ...) used to build variations.</summary>
+/// <summary>Admin CRUD for product options (Color, Size, ...) used to build variations. The bilingual
+/// name lives on the entity as a <see cref="LocalizedString"/> (Arabic in the base column, English in
+/// the sibling "NameEn" column).</summary>
 [ApiController]
 [RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/product-options")]
@@ -24,29 +26,33 @@ public sealed class AdminProductOptionsController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminProductOptionListItem>>> List(CancellationToken cancellationToken)
     {
         var options = await _db.ProductOptions
-            .OrderBy(o => o.Name)
-            .Select(o => new AdminProductOptionListItem(o.Id, o.Name))
+            .OrderBy(o => o.Name.Ar)
             .ToListAsync(cancellationToken);
 
-        return Ok(options);
+        return Ok(options.Select(ToDto).ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminProductOptionListItem>> Get(long id, CancellationToken cancellationToken)
     {
         var option = await _db.ProductOptions.FindAsync([id], cancellationToken);
-        return option == null ? NotFound() : Ok(new AdminProductOptionListItem(option.Id, option.Name));
+        if (option == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToDto(option));
     }
 
     [HttpPost]
     public async Task<ActionResult<AdminProductOptionListItem>> Create(
         ProductOptionUpsertRequest request, CancellationToken cancellationToken)
     {
-        var option = new ProductOption { Name = request.Name };
+        var option = new ProductOption { Name = new LocalizedString(request.Name, request.NameEn) };
         _db.ProductOptions.Add(option);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(Get), new { id = option.Id }, new AdminProductOptionListItem(option.Id, option.Name));
+        return CreatedAtAction(nameof(Get), new { id = option.Id }, ToDto(option));
     }
 
     [HttpPut("{id:long}")]
@@ -59,11 +65,15 @@ public sealed class AdminProductOptionsController : ControllerBase
             return NotFound();
         }
 
-        option.Name = request.Name;
+        option.Name.Ar = request.Name;
+        option.Name.En = string.IsNullOrEmpty(request.NameEn) ? null : request.NameEn;
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminProductOptionListItem(option.Id, option.Name));
+        return Ok(ToDto(option));
     }
+
+    private static AdminProductOptionListItem ToDto(ProductOption o) =>
+        new(o.Id, o.Name.Ar!, o.Name.En, HasEnglish: o.Name.En != null);
 
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)

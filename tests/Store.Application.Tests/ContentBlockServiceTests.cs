@@ -1,18 +1,18 @@
 using Store.Application.Content;
-using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Covers the storefront read path (published-only, prefix filter, English overlay applied with
-/// fallback to the Arabic base) and the admin write path (round-trips base + English overlay
-/// fields, including clearing a translation) of <see cref="ContentBlockService"/>.
+/// Covers the storefront read path (published-only, prefix filter, resolves per request culture
+/// with fallback to the Arabic base) and the admin write path (round-trips base + English fields,
+/// including clearing a translation) of <see cref="ContentBlockService"/>.
 /// </summary>
 public class ContentBlockServiceTests
 {
-    private static ContentBlockService NewService(StoreDbContext db) => new(db, new LocalizationService(db));
+    private static ContentBlockService NewService(StoreDbContext db, Store.Application.Localization.IRequestCulture? culture = null) =>
+        new(db, culture ?? TestCulture.Arabic);
 
     private static StoreDbContext SeedFixture()
     {
@@ -21,42 +21,30 @@ public class ContentBlockServiceTests
         db.ContentBlocks.AddRange(
             new ContentBlock
             {
-                Id = 1, Key = "home.hero", Title = "عنوان البطل", Text = "نص البطل",
-                ImageUrl = "/home-hero.jpg", LinkUrl = "/shop", LinkText = "تسوّق الآن",
+                Id = 1, Key = "home.hero", Title = new LocalizedString("عنوان البطل", "Hero title"),
+                Text = new LocalizedString("نص البطل", "Hero text"),
+                ImageUrl = "/home-hero.jpg", LinkUrl = "/shop", LinkText = new LocalizedString("تسوّق الآن"),
                 SortOrder = 1, IsPublished = true,
             },
             new ContentBlock
             {
-                Id = 2, Key = "home.story", Title = "عنوان القصة", Text = "نص القصة",
+                Id = 2, Key = "home.story", Title = new LocalizedString("عنوان القصة"), Text = new LocalizedString("نص القصة"),
                 SortOrder = 2, IsPublished = true,
             },
             new ContentBlock
             {
-                Id = 3, Key = "home.value.1", Title = "الثقة", Text = "نص الثقة",
+                Id = 3, Key = "home.value.1", Title = new LocalizedString("الثقة"), Text = new LocalizedString("نص الثقة"),
                 SortOrder = 10, IsPublished = true,
             },
             new ContentBlock
             {
-                Id = 4, Key = "other.banner", Title = "غير ذلك", Text = "نص آخر",
+                Id = 4, Key = "other.banner", Title = new LocalizedString("غير ذلك"), Text = new LocalizedString("نص آخر"),
                 SortOrder = 1, IsPublished = true,
             },
             new ContentBlock
             {
-                Id = 5, Key = "home.draft", Title = "مسودة", Text = "غير منشور",
+                Id = 5, Key = "home.draft", Title = new LocalizedString("مسودة"), Text = new LocalizedString("غير منشور"),
                 SortOrder = 30, IsPublished = false,
-            });
-
-        db.Cultures.Add(new Culture { Id = "en-US", Name = "en-US" });
-        db.LocalizedContentProperties.AddRange(
-            new LocalizedContentProperty
-            {
-                EntityType = "ContentBlock", EntityId = 1, CultureId = "en-US",
-                ProperyName = "Title", Value = "Hero title",
-            },
-            new LocalizedContentProperty
-            {
-                EntityType = "ContentBlock", EntityId = 1, CultureId = "en-US",
-                ProperyName = "Text", Value = "Hero text",
             });
 
         db.SaveChanges();
@@ -71,7 +59,7 @@ public class ContentBlockServiceTests
         var db = SeedFixture();
         var service = NewService(db);
 
-        var blocks = await service.GetPublishedAsync(prefix: null, cultureId: null);
+        var blocks = await service.GetPublishedAsync(prefix: null);
 
         Assert.DoesNotContain(blocks, b => b.Key == "home.draft");
     }
@@ -82,7 +70,7 @@ public class ContentBlockServiceTests
         var db = SeedFixture();
         var service = NewService(db);
 
-        var blocks = await service.GetPublishedAsync(prefix: "home", cultureId: null);
+        var blocks = await service.GetPublishedAsync(prefix: "home");
 
         Assert.Equal(["home.hero", "home.story", "home.value.1"], blocks.Select(b => b.Key));
     }
@@ -93,18 +81,18 @@ public class ContentBlockServiceTests
         var db = SeedFixture();
         var service = NewService(db);
 
-        var blocks = await service.GetPublishedAsync(prefix: "home", cultureId: null);
+        var blocks = await service.GetPublishedAsync(prefix: "home");
 
         Assert.Equal(["home.hero", "home.story", "home.value.1"], blocks.Select(b => b.Key));
     }
 
     [Fact]
-    public async Task GetPublishedAsync_with_no_culture_returns_base_arabic_values()
+    public async Task GetPublishedAsync_with_arabic_culture_returns_base_arabic_values()
     {
         var db = SeedFixture();
-        var service = NewService(db);
+        var service = NewService(db, TestCulture.Arabic);
 
-        var blocks = await service.GetPublishedAsync(prefix: "home", cultureId: null);
+        var blocks = await service.GetPublishedAsync(prefix: "home");
         var hero = blocks.Single(b => b.Key == "home.hero");
 
         Assert.Equal("عنوان البطل", hero.Title);
@@ -112,12 +100,12 @@ public class ContentBlockServiceTests
     }
 
     [Fact]
-    public async Task GetPublishedAsync_with_english_culture_applies_overlay()
+    public async Task GetPublishedAsync_with_english_culture_resolves_english()
     {
         var db = SeedFixture();
-        var service = NewService(db);
+        var service = NewService(db, TestCulture.English);
 
-        var blocks = await service.GetPublishedAsync(prefix: "home", cultureId: "en-US");
+        var blocks = await service.GetPublishedAsync(prefix: "home");
         var hero = blocks.Single(b => b.Key == "home.hero");
 
         Assert.Equal("Hero title", hero.Title);
@@ -128,10 +116,10 @@ public class ContentBlockServiceTests
     public async Task GetPublishedAsync_falls_back_to_base_value_when_translation_missing()
     {
         var db = SeedFixture();
-        var service = NewService(db);
+        var service = NewService(db, TestCulture.English);
 
-        // "home.story" has no English overlay row.
-        var blocks = await service.GetPublishedAsync(prefix: "home", cultureId: "en-US");
+        // "home.story" has no English translation.
+        var blocks = await service.GetPublishedAsync(prefix: "home");
         var story = blocks.Single(b => b.Key == "home.story");
 
         Assert.Equal("عنوان القصة", story.Title);
@@ -164,7 +152,7 @@ public class ContentBlockServiceTests
     public async Task UpdateAsync_round_trips_base_and_english_fields()
     {
         var db = SeedFixture();
-        var service = NewService(db);
+        var service = NewService(db, TestCulture.English);
 
         var request = new ContentBlockUpdateRequest(
             Title: "عنوان محدث", Text: "نص محدث", ImageUrl: "/new-image.jpg",
@@ -189,8 +177,8 @@ public class ContentBlockServiceTests
         var fetched = await service.GetAsync(2);
         Assert.Equal("Updated title", fetched!.TitleEn);
 
-        // And the published storefront read now sees the new English overlay.
-        var published = await service.GetPublishedAsync(prefix: "home", cultureId: "en-US");
+        // And the published storefront read now sees the new English value.
+        var published = await service.GetPublishedAsync(prefix: "home");
         Assert.Null(published.SingleOrDefault(b => b.Key == "home.story")); // now unpublished
     }
 
@@ -198,7 +186,7 @@ public class ContentBlockServiceTests
     public async Task UpdateAsync_can_clear_an_existing_english_translation()
     {
         var db = SeedFixture();
-        var service = NewService(db);
+        var service = NewService(db, TestCulture.English);
 
         var request = new ContentBlockUpdateRequest(
             Title: "عنوان البطل", Text: "نص البطل", ImageUrl: "/home-hero.jpg",
@@ -211,7 +199,7 @@ public class ContentBlockServiceTests
         Assert.Equal("Hero text", updated.TextEn);
 
         // Falls back to the Arabic base on the public read once the English title is cleared.
-        var published = await service.GetPublishedAsync(prefix: "home", cultureId: "en-US");
+        var published = await service.GetPublishedAsync(prefix: "home");
         var hero = published.Single(b => b.Key == "home.hero");
         Assert.Equal("عنوان البطل", hero.Title);
     }

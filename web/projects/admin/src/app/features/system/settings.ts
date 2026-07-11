@@ -6,8 +6,11 @@ import {
 } from '@angular/core';
 import { AdminSystemService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, ToastService } from 'ui';
+import { Button, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** Setting keys matching this render as password inputs so secrets aren't shown in plain text. */
+const SECRET_KEY_PATTERN = /password|secret|apikey|api_key/i;
 
 /**
  * App settings (old Core configuration admin): edit values inline, add new keys.
@@ -16,7 +19,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslatePipe, PageHeader],
+  imports: [Button, TableCards, TranslatePipe, PageHeader],
   template: `
     <app-page-header
       [title]="'settings.title' | translate"
@@ -32,7 +35,8 @@ import { PageHeader } from '../../shared/page-header';
             </div>
           </div>
         } @else {
-          <table class="table table-sm align-middle">
+          <div class="table-responsive">
+          <table class="table table-sm align-middle" libTableCards>
             <thead>
               <tr>
                 <th style="width: 30%">{{ 'common.key' | translate }}</th>
@@ -46,7 +50,7 @@ import { PageHeader } from '../../shared/page-header';
                   <td class="font-monospace small">{{ s.id }}</td>
                   <td class="small text-body-secondary">{{ s.module }}</td>
                   <td>
-                    <input type="text" class="form-control form-control-sm"
+                    <input [type]="isSecretKey(s.id) ? 'password' : 'text'" class="form-control form-control-sm"
                       [value]="changes()[s.id] ?? s.value ?? ''"
                       (input)="stage(s.id, $any($event.target).value)" />
                   </td>
@@ -60,6 +64,7 @@ import { PageHeader } from '../../shared/page-header';
               }
             </tbody>
           </table>
+          </div>
 
           <div class="row g-2 align-items-end mb-3">
             <div class="col-md-4">
@@ -99,6 +104,10 @@ export class AdminSettings {
 
   protected hasChanges(): boolean {
     return Object.keys(this.changes()).length > 0;
+  }
+
+  protected isSecretKey(key: string): boolean {
+    return SECRET_KEY_PATTERN.test(key);
   }
 
   protected stage(key: string, value: string): void {

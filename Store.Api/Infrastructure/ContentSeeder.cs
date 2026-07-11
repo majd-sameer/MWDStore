@@ -9,18 +9,11 @@ namespace Store.Api.Infrastructure;
 /// values" cards, CTA band) with today's hardcoded copy — so switching the storefront sections over
 /// to reading from the API changes nothing visible. Idempotent by <see cref="ContentBlock.Key"/>:
 /// a key that already exists is left untouched (an admin may have edited it since), only missing
-/// keys are inserted. English overlays are inserted alongside via
-/// <c>LocalizedContentProperty</c> (<c>EntityType = "ContentBlock"</c>, <c>CultureId = "en-US"</c>),
-/// the same mechanism <c>LocalizationSeeder</c> uses for products/news.
+/// keys are inserted. Title/Text/LinkText are written directly as bilingual
+/// <see cref="LocalizedString"/> values.
 /// </summary>
 public static class ContentSeeder
 {
-    private const string EnglishCultureId = "en-US";
-    private const string EntityType = "ContentBlock";
-    private const string PropTitle = "Title";
-    private const string PropText = "Text";
-    private const string PropLinkText = "LinkText";
-
     private sealed record Seed(
         string Key, int SortOrder,
         string? TitleAr, string? TextAr, string? ImageUrl, string? LinkUrl, string? LinkTextAr,
@@ -98,51 +91,23 @@ public static class ContentSeeder
             return;
         }
 
-        if (!await db.Cultures.AnyAsync(c => c.Id == EnglishCultureId, cancellationToken))
-        {
-            db.Cultures.Add(new Culture { Id = EnglishCultureId, Name = EnglishCultureId });
-            await db.SaveChangesAsync(cancellationToken);
-        }
-
         foreach (var seed in toInsert)
         {
             var block = new ContentBlock
             {
                 Key = seed.Key,
-                Title = seed.TitleAr,
-                Text = seed.TextAr,
+                Title = new LocalizedString(seed.TitleAr, seed.TitleEn),
+                Text = LocalizedString.From(seed.TextAr, seed.TextEn),
                 ImageUrl = seed.ImageUrl,
                 LinkUrl = seed.LinkUrl,
-                LinkText = seed.LinkTextAr,
+                LinkText = LocalizedString.From(seed.LinkTextAr, seed.LinkTextEn),
                 SortOrder = seed.SortOrder,
                 IsPublished = true,
             };
             db.ContentBlocks.Add(block);
-            await db.SaveChangesAsync(cancellationToken); // need block.Id for the overlay rows below
-
-            AddOverlay(db, block.Id, PropTitle, seed.TitleEn);
-            AddOverlay(db, block.Id, PropText, seed.TextEn);
-            AddOverlay(db, block.Id, PropLinkText, seed.LinkTextEn);
         }
 
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Content blocks seeded: {Count} new.", toInsert.Count);
-    }
-
-    private static void AddOverlay(StoreDbContext db, long entityId, string property, string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return;
-        }
-
-        db.LocalizedContentProperties.Add(new LocalizedContentProperty
-        {
-            EntityType = EntityType,
-            EntityId = entityId,
-            CultureId = EnglishCultureId,
-            ProperyName = property,
-            Value = value,
-        });
     }
 }

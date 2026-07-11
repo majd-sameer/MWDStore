@@ -7,7 +7,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { AdminTaxService } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, Icon, ToastService } from 'ui';
+import { Button, ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -18,7 +18,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-taxes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'taxes.title' | translate"
@@ -70,7 +70,7 @@ import { PageHeader } from '../../shared/page-header';
               <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
             } @else if (rates.value(); as rows) {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th>{{ 'taxes.tax_class' | translate }}</th>
@@ -133,6 +133,7 @@ import { PageHeader } from '../../shared/page-header';
 })
 export class AdminTaxes {
   private readonly service = inject(AdminTaxService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -167,8 +168,15 @@ export class AdminTaxes {
     });
   }
 
-  protected removeClass(id: number, name: string | null): void {
-    if (!confirm(this.translate.instant('taxes.confirm_delete_class', { name: name ?? '' }))) {
+  protected async removeClass(id: number, name: string | null): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('taxes.confirm_delete_class', { name: name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteClass(id).subscribe({
@@ -183,8 +191,15 @@ export class AdminTaxes {
 
   // ----- Rates ----------------------------------------------------------------
 
-  protected removeRate(id: number): void {
-    if (!confirm(this.translate.instant('taxes.confirm_delete_rate'))) {
+  protected async removeRate(id: number): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('taxes.confirm_delete_rate'),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(id);

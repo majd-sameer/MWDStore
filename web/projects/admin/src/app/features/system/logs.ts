@@ -7,13 +7,14 @@ import {
 import { DatePipe } from '@angular/common';
 import { AdminOperationsService } from 'data-access';
 import { TranslatePipe } from '@ngx-translate/core';
+import { TableCards } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /** Read-only system logs: activity log + most-searched queries (old ActivityLog/Search admin pages). */
 @Component({
   selector: 'app-admin-logs',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, TranslatePipe, PageHeader],
+  imports: [DatePipe, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'logs.title' | translate"
@@ -38,7 +39,7 @@ import { PageHeader } from '../../shared/page-header';
     @if (tab() === 'activity') {
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <table class="table table-sm table-hover align-middle mb-0">
+          <table class="table table-sm table-hover align-middle mb-0" libTableCards>
             <thead>
               <tr>
                 <th>#</th>
@@ -71,7 +72,7 @@ import { PageHeader } from '../../shared/page-header';
     } @else {
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <table class="table table-sm table-hover align-middle mb-0">
+          <table class="table table-sm table-hover align-middle mb-0" libTableCards>
             <thead>
               <tr>
                 <th>{{ 'logs.col_query' | translate }}</th>

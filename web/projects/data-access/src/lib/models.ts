@@ -42,6 +42,37 @@ export interface AuthResponse {
   userId: number;
   email: string | null;
   fullName?: string | null;
+  /** `true` when the credentials were valid but a TOTP code is still required. */
+  mfaRequired?: boolean;
+  /** Short-lived token to present to `/api/auth/mfa/verify` together with the code. */
+  challengeToken?: string | null;
+}
+
+export interface MfaVerifyRequest {
+  challengeToken: string;
+  /** Current authenticator code — or an unused recovery code. */
+  code: string;
+}
+
+export interface MfaStatusResponse {
+  enabled: boolean;
+}
+
+export interface MfaSetupResponse {
+  sharedKey: string | null;
+  authenticatorUri: string | null;
+}
+
+export interface MfaEnableRequest {
+  code: string;
+}
+
+export interface MfaEnableResponse {
+  recoveryCodes: string[] | null;
+}
+
+export interface MfaDisableRequest {
+  code: string;
 }
 
 export interface AccountProfile {
@@ -133,6 +164,8 @@ export interface FilterBrand {
 }
 
 export interface FilterOption {
+  /** Distinct product count of the unfiltered base query. */
+  total: number;
   price: FilterPrice;
   categories: FilterCategory[] | null;
   brands: FilterBrand[] | null;
@@ -445,6 +478,8 @@ export interface OrderDetailDto {
   items: OrderItemDto[] | null;
   /** Guest contact email / order secret — set for the placing client only, null in public tracking. */
   guestEmail: string | null;
+  /** Captured/refunded totals for the refund panel — admin order detail only, null elsewhere. */
+  paymentSummary?: OrderPaymentSummaryDto | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -498,6 +533,51 @@ export interface MediaDto {
   url: string;
   caption: string | null;
   mediaType: number;
+}
+
+export interface MediaListItemDto {
+  id: number;
+  fileName: string | null;
+  url: string;
+  caption: string | null;
+  mediaType: number;
+  fileSize: number;
+  /** How many products/categories/brands reference this file (0 = safe to delete). */
+  referenceCount: number;
+}
+
+export interface MediaListResult {
+  items: MediaListItemDto[] | null;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface RefundOrderRequest {
+  /** Omit for a full refund of the remaining refundable balance. */
+  amount?: number | null;
+  reason?: string | null;
+  /** Client-generated key making retries safe. */
+  idempotencyKey?: string | null;
+}
+
+export interface RefundResultDto {
+  refundId: number;
+  orderId: number;
+  paymentId: number;
+  amount: number;
+  totalRefunded: number;
+  paymentStatus: number;
+  fullyRefunded: boolean;
+  providerRefundId: string | null;
+  alreadyProcessed: boolean;
+}
+
+export interface OrderPaymentSummaryDto {
+  capturedTotal: number;
+  refundedTotal: number;
+  /** Remaining balance a refund may claim (captured − refunded). */
+  refundable: number;
 }
 
 export interface AdminProductListItem {

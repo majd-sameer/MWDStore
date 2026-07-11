@@ -89,10 +89,10 @@ public static class DevDataSeeder
             var now = timeProvider.GetUtcNow();
             product = new Product
             {
-                Name = "Newman Sample Product",
+                Name = new LocalizedString("Newman Sample Product"),
                 Slug = SampleProductSlug,
                 NormalizedName = "NEWMAN SAMPLE PRODUCT",
-                ShortDescription = "A sample product seeded for integration testing.",
+                ShortDescription = new LocalizedString("A sample product seeded for integration testing."),
                 Price = 49.99m,
                 IsPublished = true,
                 PublishedOn = now,
@@ -144,7 +144,7 @@ public static class DevDataSeeder
         {
             category = new Category
             {
-                Name = name,
+                Name = new LocalizedString(name),
                 Slug = slug,
                 DisplayOrder = displayOrder,
                 ParentId = parentId,

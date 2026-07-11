@@ -16,10 +16,12 @@ public sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
 
         builder.HasIndex(e => e.ThumbnailImageId, "IX_News_NewsItem_ThumbnailImageId");
 
+        builder.OwnsLocalized(e => e.Name, "Name", 450, required: true);
+        builder.OwnsLocalized(e => e.ShortContent, "ShortContent", 450);
+        builder.OwnsLocalized(e => e.FullContent, "FullContent");
+        // Meta* stay plain string (unlocalized), per Phase 4 scope.
         builder.Property(e => e.MetaKeywords).HasMaxLength(450);
         builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.ShortContent).HasMaxLength(450);
         builder.Property(e => e.Slug).HasMaxLength(450);
 
         builder.HasOne(d => d.CreatedBy).WithMany(p => p.NewsItemCreatedBies)

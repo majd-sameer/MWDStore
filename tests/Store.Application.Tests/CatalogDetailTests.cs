@@ -1,5 +1,6 @@
 using Store.Application.Catalog;
 using Store.Application.Catalog.Pricing;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -20,14 +21,15 @@ public class CatalogDetailTests
     private const long ColorOptionId = 1;
     private const long SizeOptionId = 2;
 
-    private static CatalogService NewService(StoreDbContext db) =>
+    private static CatalogService NewService(StoreDbContext db, ContentLanguage? language = null) =>
         new(db, new ProductPricingService(new FixedTimeProvider(Now)), new CatalogOptions(),
-            new Store.Application.Common.LocalMediaUrlBuilder());
+            new Store.Application.Common.LocalMediaUrlBuilder(),
+            language is null ? TestCulture.Arabic : new RequestCultureContext { Language = language.Value });
 
     private static Product NewProduct(long id, string name, decimal price, bool published = true) => new()
     {
         Id = id,
-        Name = name,
+        Name = new LocalizedString(name),
         Slug = "p" + id,
         Price = price,
         IsPublished = published,
@@ -41,10 +43,10 @@ public class CatalogDetailTests
     {
         var db = TestDb.New();
 
-        var apparel = new Category { Id = 3, Name = "Apparel", Slug = "apparel" };
-        var brand = new Brand { Id = 1, Name = "Acme", Slug = "acme", IsPublished = true };
-        var color = new ProductOption { Id = ColorOptionId, Name = "Color" };
-        var size = new ProductOption { Id = SizeOptionId, Name = "Size" };
+        var apparel = new Category { Id = 3, Name = new LocalizedString("Apparel"), Slug = "apparel" };
+        var brand = new Brand { Id = 1, Name = new LocalizedString("Acme"), Slug = "acme", IsPublished = true };
+        var color = new ProductOption { Id = ColorOptionId, Name = new LocalizedString("Color") };
+        var size = new ProductOption { Id = SizeOptionId, Name = new LocalizedString("Size") };
         db.Categories.Add(apparel);
         db.Brands.Add(brand);
         db.ProductOptions.AddRange(color, size);
@@ -101,7 +103,7 @@ public class CatalogDetailTests
         ProductId = product.Id,
         Product = product,
         AttributeId = attrId,
-        Attribute = new ProductAttribute { Id = attrId, Name = name },
+        Attribute = new ProductAttribute { Id = attrId, Name = new LocalizedString(name) },
         Value = value
     };
 
@@ -193,5 +195,57 @@ public class CatalogDetailTests
 
         Assert.NotNull(model);
         Assert.Empty(model!.Variations);
+    }
+
+    // ---- option/attribute name localization (entity LocalizedString.En) ------------------------------
+
+    private static void SetAttributeEnglishName(StoreDbContext db, long attributeId, string value)
+    {
+        db.ProductAttributes.Single(a => a.Id == attributeId).Name.En = value;
+        db.SaveChanges();
+    }
+
+    private static void SetOptionEnglishName(StoreDbContext db, long optionId, string value)
+    {
+        db.ProductOptions.Single(o => o.Id == optionId).Name.En = value;
+        db.SaveChanges();
+    }
+
+    [Fact]
+    public async Task Detail_localizes_attribute_names_under_english_culture()
+    {
+        using var db = SeedProductWithVariations();
+        SetAttributeEnglishName(db, 1, "Material EN"); // attrId 1 = "Material"
+
+        var localized = await NewService(db, ContentLanguage.English).GetProductDetailAsync(ParentId);
+        Assert.Equal("Material EN", localized!.Attributes.Single(a => a.Value == "Cotton").Name);
+
+        var baseline = await NewService(db).GetProductDetailAsync(ParentId);
+        Assert.Equal("Material", baseline!.Attributes.Single(a => a.Value == "Cotton").Name);
+    }
+
+    [Fact]
+    public async Task Detail_falls_back_to_base_attribute_name_when_translation_missing()
+    {
+        using var db = SeedProductWithVariations();
+        SetAttributeEnglishName(db, 1, "Material EN"); // "Fit" (id 2) has none
+
+        var localized = await NewService(db, ContentLanguage.English).GetProductDetailAsync(ParentId);
+        Assert.Equal("Fit", localized!.Attributes.Single(a => a.Value == "Slim").Name);
+    }
+
+    [Fact]
+    public async Task Detail_localizes_variation_option_names_under_english_culture()
+    {
+        using var db = SeedProductWithVariations();
+        SetOptionEnglishName(db, ColorOptionId, "Colour");
+
+        var localized = await NewService(db, ContentLanguage.English).GetProductDetailAsync(ParentId);
+        var v1 = localized!.Variations.Single(v => v.Id == 11);
+        Assert.Equal(["Colour", "Size"], v1.Options.Select(o => o.OptionName).ToArray());
+
+        var baseline = await NewService(db).GetProductDetailAsync(ParentId);
+        var baselineV1 = baseline!.Variations.Single(v => v.Id == 11);
+        Assert.Equal(["Color", "Size"], baselineV1.Options.Select(o => o.OptionName).ToArray());
     }
 }

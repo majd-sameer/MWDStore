@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for news categories and news items (old News module). Deletes are soft.</summary>
+/// <summary>Admin CRUD for news categories and news items (old News module). Deletes are soft.
+/// News item Name/ShortContent/FullContent are bilingual <see cref="LocalizedString"/> values;
+/// Meta* fields stay plain (unlocalized) strings.</summary>
 [ApiController]
 [RequirePermission(Permissions.ContentManage)]
 [Route("api/admin/news")]
@@ -97,15 +99,25 @@ public sealed class AdminNewsController : ControllerBase
     [HttpGet("items")]
     public async Task<ActionResult<IReadOnlyList<AdminNewsItemListItem>>> ListItems(CancellationToken cancellationToken)
     {
-        var items = await _db.NewsItems
+        var rows = await _db.NewsItems
+            .AsNoTracking()
             .Where(n => !n.IsDeleted)
             .OrderByDescending(n => n.Id)
-            .Select(n => new AdminNewsItemListItem(
-                n.Id, n.Name, n.Slug, n.IsPublished, n.CreatedOn,
-                n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null))
+            .Select(n => new
+            {
+                n.Id,
+                NameAr = n.Name.Ar,
+                NameEn = n.Name.En,
+                n.Slug,
+                n.IsPublished,
+                n.CreatedOn,
+                ThumbnailFileName = n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null
+            })
             .ToListAsync(cancellationToken);
 
-        return Ok(items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList());
+        return Ok(rows.Select(r => new AdminNewsItemListItem(
+            r.Id, r.NameAr!, r.Slug, r.IsPublished, r.CreatedOn,
+            _mediaStorage.GetUrl(r.ThumbnailFileName), HasEnglish: r.NameEn != null)).ToList());
     }
 
     [HttpGet("items/{id:long}")]
@@ -116,7 +128,12 @@ public sealed class AdminNewsController : ControllerBase
             .Include(n => n.ThumbnailImage)
             .FirstOrDefaultAsync(n => n.Id == id && !n.IsDeleted, cancellationToken);
 
-        return item == null ? NotFound() : Ok(ToDetail(item));
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToDetail(item));
     }
 
     [HttpPost("items")]
@@ -183,10 +200,10 @@ public sealed class AdminNewsController : ControllerBase
 
     private static void ApplyItem(NewsItem item, NewsItemUpsertRequest request, DateTimeOffset now)
     {
-        item.Name = request.Name;
+        item.Name = new LocalizedString(request.Name, request.NameEn);
         item.Slug = string.IsNullOrWhiteSpace(request.Slug) ? Slug.Generate(request.Name) : request.Slug;
-        item.ShortContent = request.ShortContent;
-        item.FullContent = request.FullContent;
+        item.ShortContent = LocalizedString.From(request.ShortContent, request.ShortContentEn);
+        item.FullContent = LocalizedString.From(request.FullContent, request.FullContentEn);
         item.MetaTitle = request.MetaTitle;
         item.MetaKeywords = request.MetaKeywords;
         item.MetaDescription = request.MetaDescription;
@@ -209,8 +226,9 @@ public sealed class AdminNewsController : ControllerBase
     }
 
     private AdminNewsItemDetail ToDetail(NewsItem n) => new(
-        n.Id, n.Name, n.Slug, n.ShortContent, n.FullContent,
+        n.Id, n.Name.Ar!, n.Slug, n.ShortContent?.Ar, n.FullContent?.Ar,
         n.MetaTitle, n.MetaKeywords, n.MetaDescription,
         n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
-        n.Categories.Select(c => c.Id).ToList());
+        n.Categories.Select(c => c.Id).ToList(),
+        n.Name.En, n.ShortContent?.En, n.FullContent?.En);
 }

@@ -221,5 +221,5 @@ public sealed class AdminPromotionsController : ControllerBase
         r.DiscountStep, r.UsageLimitPerCoupon, r.UsageLimitPerCustomer,
         r.Coupons.FirstOrDefault()?.Code,
         r.Categories.Select(c => c.Id).ToList(),
-        r.Products.Select(p => new AdminProductLinkDto(p.Id, p.Name, p.IsPublished)).ToList());
+        r.Products.Select(p => new AdminProductLinkDto(p.Id, p.Name.Ar!, p.IsPublished)).ToList());
 }

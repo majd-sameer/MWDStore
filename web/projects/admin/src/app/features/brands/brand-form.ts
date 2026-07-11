@@ -16,6 +16,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminBrandsService,
+  type AdminBrandDto,
   type BrandUpsertRequest,
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
@@ -24,15 +25,34 @@ import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 
+/**
+ * The backend now also returns/accepts the English overlay fields (`nameEn`, `descriptionEn`,
+ * `hasEnglish`, ...) on top of the generated `AdminBrandDto`/`BrandUpsertRequest` — kept as a local
+ * extension here rather than edited into `data-access/models.ts` (out of scope for this change;
+ * structural typing lets the existing service methods accept the wider request shape).
+ */
+interface AdminBrandDtoEn extends AdminBrandDto {
+  nameEn?: string | null;
+  descriptionEn?: string | null;
+  hasEnglish?: boolean;
+}
+
+interface BrandUpsertRequestEn extends BrandUpsertRequest {
+  nameEn?: string | null;
+  descriptionEn?: string | null;
+}
+
 interface BrandModel {
   name: string;
   slug: string;
   description: string;
   isPublished: boolean;
+  nameEn: string;
+  descriptionEn: string;
 }
 
 function emptyModel(): BrandModel {
-  return { name: '', slug: '', description: '', isPublished: true };
+  return { name: '', slug: '', description: '', isPublished: true, nameEn: '', descriptionEn: '' };
 }
 
 /**
@@ -67,15 +87,37 @@ function emptyModel(): BrandModel {
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field [label]="'common.name' | translate" controlId="brand-name" [required]="true" [error]="err(f.name())">
-                  <input id="brand-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="brand-name" [required]="true" [error]="err(f.name())">
+                      <input id="brand-name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'common.description' | translate" controlId="brand-desc">
+                      <textarea id="brand-desc" rows="3" class="form-control" dir="rtl" [formField]="f.description"></textarea>
+                    </lib-form-field>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="brand-name-en">
+                      <input id="brand-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'common.description' | translate" controlId="brand-desc-en">
+                      <textarea id="brand-desc-en" rows="3" class="form-control" dir="ltr" [formField]="f.descriptionEn"></textarea>
+                    </lib-form-field>
+                  </div>
+                </div>
+
+                <hr class="my-3" />
+
                 <lib-form-field [label]="'common.slug' | translate" controlId="brand-slug" [hint]="'common.slug_hint' | translate">
                   <input id="brand-slug" type="text" class="form-control" [formField]="f.slug" />
-                </lib-form-field>
-                <lib-form-field [label]="'common.description' | translate" controlId="brand-desc">
-                  <textarea id="brand-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
                 </lib-form-field>
                 <div class="form-check form-switch mb-3">
                   <input id="brand-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />
@@ -125,7 +167,7 @@ export class AdminBrandForm {
       if (this.isNew() || this.seeded) {
         return;
       }
-      const b = this.existing.value();
+      const b = this.existing.value() as AdminBrandDtoEn | undefined;
       if (!b) {
         return;
       }
@@ -135,6 +177,8 @@ export class AdminBrandForm {
         slug: b.slug ?? '',
         description: b.description ?? '',
         isPublished: b.isPublished,
+        nameEn: b.nameEn ?? '',
+        descriptionEn: b.descriptionEn ?? '',
       });
     });
   }
@@ -144,11 +188,13 @@ export class AdminBrandForm {
     void submit(this.f, async () => {
       this.serverError.set(null);
       const m = this.model();
-      const body: BrandUpsertRequest = {
+      const body: BrandUpsertRequestEn = {
         name: m.name,
         slug: m.slug || null,
         description: m.description || null,
         isPublished: m.isPublished,
+        nameEn: m.nameEn || null,
+        descriptionEn: m.descriptionEn || null,
       };
       try {
         if (this.isNew()) {

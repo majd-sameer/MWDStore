@@ -7,7 +7,7 @@ public class ProductAttribute
 {
     public long Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public long GroupId { get; set; }
 

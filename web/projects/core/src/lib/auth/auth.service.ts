@@ -76,9 +76,27 @@ export class AuthService {
     return roles.some((role) => current.includes(role));
   }
 
-  /** Authenticates and stores the resulting access token in memory. */
+  /**
+   * Authenticates and stores the resulting access token in memory. When the
+   * account has MFA enabled the API returns `{ mfaRequired, challengeToken }`
+   * instead of tokens — no session is stored and the caller must complete the
+   * challenge via {@link mfaVerify}.
+   */
   login(body: LoginRequest): Observable<AuthResponse> {
-    return this.api.login(body).pipe(tap((response) => this.setSession(response)));
+    return this.api.login(body).pipe(
+      tap((response) => {
+        if (!response.mfaRequired) {
+          this.setSession(response);
+        }
+      }),
+    );
+  }
+
+  /** Completes an MFA login challenge and stores the resulting session. */
+  mfaVerify(challengeToken: string, code: string): Observable<AuthResponse> {
+    return this.api
+      .mfaVerify({ challengeToken, code })
+      .pipe(tap((response) => this.setSession(response)));
   }
 
   /** Registers and stores the resulting access token in memory. */

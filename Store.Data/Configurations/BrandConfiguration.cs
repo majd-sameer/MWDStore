@@ -10,7 +10,8 @@ public sealed class BrandConfiguration : IEntityTypeConfiguration<Brand>
     {
         builder.ToTable("Brand");
 
-        builder.Property(e => e.Name).HasMaxLength(450);
+        builder.OwnsLocalized(e => e.Name, "Name", 450, required: true);
+        builder.OwnsLocalized(e => e.Description, "Description");
         builder.Property(e => e.Slug).HasMaxLength(450);
     }
 }

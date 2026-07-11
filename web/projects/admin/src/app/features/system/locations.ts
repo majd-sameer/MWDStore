@@ -7,7 +7,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { AdminSystemService, type AdminCountryDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -18,7 +18,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-locations',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'countries.title' | translate"
@@ -41,7 +41,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (countries.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th>{{ 'countries.col_code' | translate }}</th>
@@ -110,6 +110,7 @@ import { PageHeader } from '../../shared/page-header';
 })
 export class AdminLocations {
   private readonly service = inject(AdminSystemService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -133,8 +134,15 @@ export class AdminLocations {
       });
   }
 
-  protected removeCountry(c: AdminCountryDto): void {
-    if (!confirm(this.translate.instant('countries.confirm_delete', { name: c.name ?? c.id }))) {
+  protected async removeCountry(c: AdminCountryDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('countries.confirm_delete', { name: c.name ?? c.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(c.id);

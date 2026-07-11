@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MoneyPipe } from 'core';
 import {
   ChangeDetectionStrategy,
@@ -6,6 +7,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -19,7 +21,7 @@ import {
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ToastService } from 'ui';
+import { ConfirmService, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import {
   ORDER_STATUS,
@@ -35,7 +37,7 @@ import {
 @Component({
   selector: 'app-admin-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, RouterLink, TranslatePipe, PageHeader],
+  imports: [MoneyPipe, DatePipe, RouterLink, TranslatePipe, PageHeader, TableCards],
   template: `
     <nav class="mb-3" aria-label="breadcrumb">
       <a routerLink="/orders" class="text-decoration-none">← {{ 'orders.title' | translate }}</a>
@@ -64,7 +66,8 @@ import {
           <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-body fw-semibold">{{ 'dashboard.col_items' | translate }}</div>
             <div class="card-body p-0">
-              <table class="table align-middle mb-0">
+              <div class="table-responsive">
+              <table class="table align-middle mb-0" libTableCards>
                 <thead>
                   <tr>
                     <th scope="col">{{ 'products.col_product' | translate }}</th>
@@ -86,6 +89,7 @@ import {
                   }
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
@@ -215,20 +219,79 @@ import {
             </div>
           </div>
 
+          @if (o.paymentSummary; as ps) {
+            <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header bg-body fw-semibold">{{ 'order_detail.refund_title' | translate }}</div>
+              <div class="card-body">
+                <dl class="row mb-3 small">
+                  <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.captured_total' | translate }}</dt>
+                  <dd class="col-5 text-end">{{ ps.capturedTotal | money }}</dd>
+                  <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.refunded_total' | translate }}</dt>
+                  <dd class="col-5 text-end">{{ ps.refundedTotal | money }}</dd>
+                  <dt class="col-7 fw-normal text-body-secondary">{{ 'order_detail.refundable' | translate }}</dt>
+                  <dd class="col-5 text-end fw-semibold">{{ ps.refundable | money }}</dd>
+                </dl>
+                @if (ps.refundable <= 0 && ps.capturedTotal > 0) {
+                  <p class="text-body-secondary small mb-0">{{ 'order_detail.fully_refunded' | translate }}</p>
+                } @else {
+                  <div class="mb-2">
+                    <label class="form-label small" for="refund-amount">{{ 'order_detail.refund_amount' | translate }}</label>
+                    <input
+                      id="refund-amount"
+                      type="number"
+                      class="form-control form-control-sm"
+                      min="0.001"
+                      step="0.01"
+                      [max]="ps.refundable"
+                      [value]="refundAmount()"
+                      (input)="refundAmount.set($any($event.target).valueAsNumber)"
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small" for="refund-reason">{{ 'order_detail.refund_reason' | translate }}</label>
+                    <input
+                      id="refund-reason"
+                      type="text"
+                      class="form-control form-control-sm"
+                      [value]="refundReason()"
+                      (input)="refundReason.set($any($event.target).value)"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm w-100"
+                    [disabled]="saving() || !isRefundAmountValid(ps.refundable)"
+                    (click)="refund(o.id, ps.refundable)"
+                  >
+                    {{ (saving() ? 'common.saving' : 'order_detail.refund') | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
           <div class="card border-0 shadow-sm">
             <div class="card-header bg-body fw-semibold">{{ 'order_detail.update_status' | translate }}</div>
             <div class="card-body">
               <div class="input-group mb-2">
-                <select class="form-select" [value]="o.orderStatus" #sel>
+                <select
+                  class="form-select"
+                  (change)="selectedStatus.set(+$any($event.target).value)"
+                >
+                  <!-- [selected] per option, not [value] on the select: the select's value
+                       binding applies before the @for options exist, so the browser would
+                       fall back to the first option ("New"). -->
                   @for (opt of statusOptions; track opt.value) {
-                    <option [value]="opt.value">{{ 'orders.status_' + opt.value | translate }}</option>
+                    <option [value]="opt.value" [selected]="opt.value === selectedStatus()">
+                      {{ 'orders.status_' + opt.value | translate }}
+                    </option>
                   }
                 </select>
                 <button
                   type="button"
                   class="btn btn-primary"
-                  [disabled]="saving()"
-                  (click)="updateStatus(o.id, sel.value)"
+                  [disabled]="saving() || selectedStatus() === o.orderStatus"
+                  (click)="updateStatus(o.id, selectedStatus())"
                 >
                   {{ (saving() ? 'common.saving' : 'order_detail.apply') | translate }}
                 </button>
@@ -255,6 +318,7 @@ export class AdminOrderDetail {
   private readonly warehousesService = inject(AdminWarehousesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   private readonly idParam = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
@@ -270,6 +334,17 @@ export class AdminOrderDetail {
 
   protected readonly shipments = signal<AdminShipmentDto[]>([]);
   protected readonly shipQty = signal<Record<number, number>>({});
+
+  /** Tracks the status `<select>`; resets to the order's current status whenever it (re)loads. */
+  protected readonly selectedStatus = linkedSignal(
+    () => this.order.value()?.orderStatus ?? ORDER_STATUS.New,
+  );
+
+  /** Refund amount input; defaults to (and resets to) the current refundable balance on load. */
+  protected readonly refundAmount = linkedSignal(
+    () => this.order.value()?.paymentSummary?.refundable ?? 0,
+  );
+  protected readonly refundReason = signal('');
 
   /** Order items with shipped quantities subtracted; the create-shipment form lists these. */
   protected readonly unshippedItems = computed(() => {
@@ -350,9 +425,9 @@ export class AdminOrderDetail {
       });
   }
 
-  protected updateStatus(id: number, value: string): void {
+  protected updateStatus(id: number, status: number): void {
     this.saving.set(true);
-    void firstValueFrom(this.service.updateStatus(id, { orderStatus: Number(value) }))
+    void firstValueFrom(this.service.updateStatus(id, { orderStatus: status }))
       .then(() => {
         this.toast.success(this.translate.instant('order_detail.status_updated'));
         this.order.reload();
@@ -361,8 +436,15 @@ export class AdminOrderDetail {
       .finally(() => this.saving.set(false));
   }
 
-  protected cancel(id: number): void {
-    if (!confirm(this.translate.instant('order_detail.confirm_cancel'))) {
+  protected async cancel(id: number): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('order_detail.confirm_cancel'),
+      okText: this.translate.instant('order_detail.cancel_order'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.saving.set(true);
@@ -373,5 +455,55 @@ export class AdminOrderDetail {
       })
       .catch(() => this.toast.error(this.translate.instant('order_detail.cancel_failed')))
       .finally(() => this.saving.set(false));
+  }
+
+  /** `true` when the refund amount input holds a value the API will accept. */
+  protected isRefundAmountValid(refundable: number): boolean {
+    const amount = this.refundAmount();
+    return Number.isFinite(amount) && amount >= 0.001 && amount <= refundable;
+  }
+
+  protected async refund(orderId: number, refundable: number): Promise<void> {
+    if (!this.isRefundAmountValid(refundable)) {
+      return;
+    }
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('order_detail.confirm_refund'),
+      okText: this.translate.instant('order_detail.refund'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
+      return;
+    }
+
+    this.saving.set(true);
+    const amount = this.refundAmount();
+    const reason = this.refundReason().trim();
+    try {
+      await firstValueFrom(
+        this.service.refund(orderId, {
+          amount,
+          reason: reason || null,
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      );
+      this.toast.success(this.translate.instant('order_detail.refund_ok'));
+      this.refundReason.set('');
+      this.order.reload();
+    } catch (err) {
+      const detail =
+        err instanceof HttpErrorResponse && typeof err.error?.error === 'string'
+          ? err.error.error
+          : null;
+      this.toast.error(
+        detail
+          ? this.translate.instant('order_detail.refund_failed_detail', { message: detail })
+          : this.translate.instant('order_detail.refund_failed'),
+      );
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

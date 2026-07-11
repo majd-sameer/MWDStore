@@ -42,11 +42,13 @@ public sealed class AdminSystemLogsController : ControllerBase
     {
         var queries = await _db.Queries
             .GroupBy(q => q.QueryText)
-            .Select(g => new AdminSearchQueryDto(g.Key, g.Count(), g.Max(q => q.CreatedOn)))
+            .Select(g => new { QueryText = g.Key, Count = g.Count(), LastUsedOn = g.Max(q => q.CreatedOn) })
             .OrderByDescending(q => q.Count)
             .Take(200)
             .ToListAsync(cancellationToken);
 
-        return Ok(queries);
+        return Ok(queries
+            .Select(q => new AdminSearchQueryDto(q.QueryText, q.Count, q.LastUsedOn))
+            .ToList());
     }
 }

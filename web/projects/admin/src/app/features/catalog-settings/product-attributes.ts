@@ -11,8 +11,14 @@ import {
   type AdminProductAttributeGroupDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, Icon, ToastService } from 'ui';
+import { Button, ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** `AdminProductAttributeDto` doesn't yet declare `hasEnglish` in the shared `data-access` models —
+ * see `product-attribute-form.ts` for the matching extended request/response shape. */
+interface AdminProductAttributeDtoEn extends AdminProductAttributeDto {
+  hasEnglish: boolean;
+}
 
 /**
  * Product attribute browser: the attribute list with a small group manager
@@ -23,7 +29,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-product-attributes',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Button, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'attributes.title' | translate"
@@ -48,21 +54,29 @@ import { PageHeader } from '../../shared/page-header';
               <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
             } @else if (list.value(); as rows) {
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" libTableCards>
                   <thead>
                     <tr>
                       <th scope="col">{{ 'common.name' | translate }}</th>
                       <th scope="col">{{ 'attributes.col_group' | translate }}</th>
+                      <th scope="col">{{ 'attributes.col_language' | translate }}</th>
                       <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (a of rows; track a.id) {
+                    @for (a of asEn(rows); track a.id) {
                       <tr>
                         <td>
                           <a [routerLink]="['/product-attributes', a.id]" class="text-decoration-none fw-medium">{{ a.name }}</a>
                         </td>
                         <td class="text-body-secondary">{{ a.groupName }}</td>
+                        <td>
+                          @if (a.hasEnglish) {
+                            <span class="badge text-bg-info-subtle text-info-emphasis">{{ 'attributes.lang_ar_en' | translate }}</span>
+                          } @else {
+                            <span class="badge text-bg-light text-body-secondary">{{ 'attributes.lang_ar_only' | translate }}</span>
+                          }
+                        </td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
                             <a [routerLink]="['/product-attributes', a.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -82,7 +96,7 @@ import { PageHeader } from '../../shared/page-header';
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="3">
+                        <td colspan="4">
                           <div class="empty-state">
                             <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                             <div class="empty-title">{{ 'attributes.empty' | translate }}</div>
@@ -132,15 +146,26 @@ export class AdminProductAttributes {
   private readonly service = inject(AdminProductAttributesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.listResource();
   protected readonly groups = this.service.groupsResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(a: AdminProductAttributeDto): void {
-    if (!confirm(this.translate.instant('attributes.confirm_delete', { name: a.name ?? '#' + a.id }))) {
-      return;
-    }
+  /** Narrows the list rows to the extended DTO shape that carries `hasEnglish`. */
+  protected asEn(rows: AdminProductAttributeDto[]): AdminProductAttributeDtoEn[] {
+    return rows as AdminProductAttributeDtoEn[];
+  }
+
+  protected async remove(a: AdminProductAttributeDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('attributes.confirm_delete', { name: a.name ?? '#' + a.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(a.id);
     this.service.delete(a.id).subscribe({
       next: () => {
@@ -169,10 +194,15 @@ export class AdminProductAttributes {
     });
   }
 
-  protected removeGroup(g: AdminProductAttributeGroupDto): void {
-    if (!confirm(this.translate.instant('attributes.confirm_delete_group', { name: g.name ?? '' }))) {
-      return;
-    }
+  protected async removeGroup(g: AdminProductAttributeGroupDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('attributes.confirm_delete_group', { name: g.name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.service.deleteGroup(g.id).subscribe({
       next: () => {
         this.groups.reload();

@@ -8,6 +8,12 @@
 //   - Product slug = lowercase SKU (names are Arabic, and the source site uses the same scheme).
 //   - "In stock" rows get DEFAULT_STOCK_QTY units; "Out of stock" rows get 0.
 //   - image_url is kept as an absolute external URL (the media URL builders pass those through).
+//   - Bilingual columns are optional: when the CSV also has `product_name_en` / `description_en`
+//     columns, they are emitted as `nameEn` / `shortDescriptionEn` / `descriptionEn` so
+//     CatalogSeeder writes LocalizedString.From(ar, en) with a real English translation. The
+//     current CSV has none of these columns, so today's output is unchanged (no `*En` fields —
+//     LocalizedString treats their absence as null, exactly like today's plain-Arabic seed).
+//     Same for categories: a CATEGORIES entry may set `nameEn` to emit `nameEn` on that category.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +69,11 @@ for (const required of ["category", "product_name", "price_jod", "image_url", "s
   if (!(required in col)) throw new Error(`CSV is missing expected column '${required}'`);
 }
 
+// Optional bilingual columns — absent from today's CSV, so nameEn/*En stay undefined and are
+// omitted from the output JSON (JSON.stringify drops undefined properties).
+const hasNameEn = "product_name_en" in col;
+const hasDescriptionEn = "description_en" in col;
+
 const products = [];
 const seenSkus = new Set();
 let duplicates = 0;
@@ -81,14 +92,18 @@ for (const r of rows) {
 
   const inStock = r[col.stock_status].trim().toLowerCase() === "in stock";
   const description = r[col.description].trim();
+  const descriptionEn = hasDescriptionEn ? r[col.description_en].trim() || undefined : undefined;
 
   products.push({
     slug: key,
     sku,
     name: r[col.product_name].trim().replace(/\s+/g, " "),
+    nameEn: hasNameEn ? (r[col.product_name_en].trim().replace(/\s+/g, " ") || undefined) : undefined,
     price,
     shortDescription: description,
+    shortDescriptionEn: descriptionEn,
     description,
+    descriptionEn,
     stock: inStock ? DEFAULT_STOCK_QTY : 0,
     categories: [category.slug],
     images: [r[col.image_url].trim()],
@@ -99,7 +114,7 @@ for (const r of rows) {
 const seed = {
   categories: Object.values(CATEGORIES)
     .sort((a, b) => a.displayOrder - b.displayOrder)
-    .map(c => ({ slug: c.slug, name: c.name, parent: null, displayOrder: c.displayOrder })),
+    .map(c => ({ slug: c.slug, name: c.name, nameEn: c.nameEn, parent: null, displayOrder: c.displayOrder })),
   products,
 };
 

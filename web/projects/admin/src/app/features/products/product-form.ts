@@ -28,9 +28,33 @@ import {
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, FormField, ToastService } from 'ui';
+import { Button, FormField, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { firstError } from '../../shared/field-error';
+
+/**
+ * `AdminProductDetail` extended with the English overlay fields (`LocalizedContentProperty`,
+ * culture `en-US`). The backend already returns these; they're declared locally rather than in
+ * `data-access/models.ts` (out of scope for this feature) — structural typing means the cast is safe.
+ */
+export interface AdminProductDetailEn extends AdminProductDetail {
+  nameEn: string | null;
+  shortDescriptionEn: string | null;
+  descriptionEn: string | null;
+  metaTitleEn: string | null;
+  metaKeywordsEn: string | null;
+  metaDescriptionEn: string | null;
+}
+
+/** `ProductUpsertRequest` extended with the English overlay fields the admin form can now edit. */
+export interface ProductUpsertRequestEn extends ProductUpsertRequest {
+  nameEn?: string | null;
+  shortDescriptionEn?: string | null;
+  descriptionEn?: string | null;
+  metaTitleEn?: string | null;
+  metaKeywordsEn?: string | null;
+  metaDescriptionEn?: string | null;
+}
 
 interface ProductFormModel {
   name: string;
@@ -43,6 +67,12 @@ interface ProductFormModel {
   metaTitle: string;
   metaKeywords: string;
   metaDescription: string;
+  nameEn: string;
+  shortDescriptionEn: string;
+  descriptionEn: string;
+  metaTitleEn: string;
+  metaKeywordsEn: string;
+  metaDescriptionEn: string;
   price: number;
   oldPrice: string;
   specialPrice: string;
@@ -69,6 +99,12 @@ function emptyModel(): ProductFormModel {
     metaTitle: '',
     metaKeywords: '',
     metaDescription: '',
+    nameEn: '',
+    shortDescriptionEn: '',
+    descriptionEn: '',
+    metaTitleEn: '',
+    metaKeywordsEn: '',
+    metaDescriptionEn: '',
     price: 0,
     oldPrice: '',
     specialPrice: '',
@@ -141,7 +177,7 @@ interface AttributeRow {
 @Component({
   selector: 'app-admin-product-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, TableCards],
   template: `
     <nav class="mb-3" aria-label="breadcrumb">
       <a routerLink="/products" class="text-decoration-none">← {{ 'products.title' | translate }}</a>
@@ -166,11 +202,6 @@ interface AttributeRow {
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-body">
-                <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name())">
-                  <input id="name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
-
                 <div class="row">
                   <div class="col-md-4">
                     <lib-form-field [label]="'common.slug' | translate" controlId="slug" [hint]="'common.slug_hint' | translate">
@@ -189,15 +220,42 @@ interface AttributeRow {
                   </div>
                 </div>
 
-                <lib-form-field [label]="'product_form.short_description' | translate" controlId="shortDescription">
-                  <textarea id="shortDescription" rows="2" class="form-control"
-                    [formField]="f.shortDescription"></textarea>
-                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name())">
+                      <input id="name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'product_form.short_description' | translate" controlId="shortDescription">
+                      <textarea id="shortDescription" rows="2" class="form-control" dir="rtl"
+                        [formField]="f.shortDescription"></textarea>
+                    </lib-form-field>
+                    <lib-form-field [label]="'common.description' | translate" controlId="description">
+                      <textarea id="description" rows="5" class="form-control" dir="rtl"
+                        [formField]="f.description"></textarea>
+                    </lib-form-field>
+                  </div>
 
-                <lib-form-field [label]="'common.description' | translate" controlId="description">
-                  <textarea id="description" rows="5" class="form-control"
-                    [formField]="f.description"></textarea>
-                </lib-form-field>
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'common.name' | translate" controlId="nameEn">
+                      <input id="nameEn" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'product_form.short_description' | translate" controlId="shortDescriptionEn">
+                      <textarea id="shortDescriptionEn" rows="2" class="form-control" dir="ltr"
+                        [formField]="f.shortDescriptionEn"></textarea>
+                    </lib-form-field>
+                    <lib-form-field [label]="'common.description' | translate" controlId="descriptionEn">
+                      <textarea id="descriptionEn" rows="5" class="form-control" dir="ltr"
+                        [formField]="f.descriptionEn"></textarea>
+                    </lib-form-field>
+                  </div>
+                </div>
 
                 <lib-form-field [label]="'product_form.specification' | translate" controlId="specification">
                   <textarea id="specification" rows="3" class="form-control"
@@ -209,24 +267,47 @@ interface AttributeRow {
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-header bg-body fw-semibold">{{ 'product_form.seo' | translate }}</div>
               <div class="card-body">
-                <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
-                  <input id="metaTitle" type="text" class="form-control" [formField]="f.metaTitle" />
-                </lib-form-field>
-                <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="metaKeywords">
-                  <input id="metaKeywords" type="text" class="form-control" [formField]="f.metaKeywords" />
-                </lib-form-field>
-                <lib-form-field [label]="'pages.meta_description' | translate" controlId="metaDescription">
-                  <textarea id="metaDescription" rows="2" class="form-control"
-                    [formField]="f.metaDescription"></textarea>
-                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
+                      <input id="metaTitle" type="text" class="form-control" dir="rtl" [formField]="f.metaTitle" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="metaKeywords">
+                      <input id="metaKeywords" type="text" class="form-control" dir="rtl" [formField]="f.metaKeywords" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_description' | translate" controlId="metaDescription">
+                      <textarea id="metaDescription" rows="2" class="form-control" dir="rtl"
+                        [formField]="f.metaDescription"></textarea>
+                    </lib-form-field>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitleEn">
+                      <input id="metaTitleEn" type="text" class="form-control" dir="ltr" [formField]="f.metaTitleEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_keywords' | translate" controlId="metaKeywordsEn">
+                      <input id="metaKeywordsEn" type="text" class="form-control" dir="ltr" [formField]="f.metaKeywordsEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'pages.meta_description' | translate" controlId="metaDescriptionEn">
+                      <textarea id="metaDescriptionEn" rows="2" class="form-control" dir="ltr"
+                        [formField]="f.metaDescriptionEn"></textarea>
+                    </lib-form-field>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-header bg-body fw-semibold">{{ 'nav.attributes' | translate }}</div>
               <div class="card-body">
-                <div class="d-flex gap-2 mb-3">
-                  <select class="form-select w-auto flex-grow-1" #attrSelect>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <select class="form-select w-auto mw-100 flex-grow-1" #attrSelect>
                     <option value="">{{ 'product_form.choose_attribute' | translate }}</option>
                     @for (a of availableAttributes(); track a.id) {
                       <option value="{{ a.id }}">{{ a.groupName }} / {{ a.name }}</option>
@@ -256,8 +337,8 @@ interface AttributeRow {
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-header bg-body fw-semibold">{{ 'product_form.options_title' | translate }}</div>
               <div class="card-body">
-                <div class="d-flex gap-2 mb-3">
-                  <select class="form-select w-auto flex-grow-1" #optSelect>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <select class="form-select w-auto mw-100 flex-grow-1" #optSelect>
                     <option value="">{{ 'product_form.choose_option' | translate }}</option>
                     @for (o of availableOptions(); track o.id) {
                       <option value="{{ o.id }}">{{ o.name }}</option>
@@ -271,7 +352,7 @@ interface AttributeRow {
 
                 @for (row of optionRows(); track row.optionId) {
                   <div class="border rounded p-3 mb-3">
-                    <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
                       <span class="fw-semibold">{{ row.name }}</span>
                       <select class="form-select form-select-sm w-auto"
                         [value]="row.displayType"
@@ -313,7 +394,7 @@ interface AttributeRow {
 
                 @if (variationRows().length) {
                   <div class="table-responsive mt-3">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm align-middle" libTableCards>
                       <thead>
                         <tr>
                           <th>{{ 'product_form.col_variation' | translate }}</th>
@@ -641,11 +722,11 @@ export class AdminProductForm {
         return;
       }
       this.seeded = true;
-      this.seedFrom(p);
+      this.seedFrom(p as AdminProductDetailEn);
     });
   }
 
-  private seedFrom(p: AdminProductDetail): void {
+  private seedFrom(p: AdminProductDetailEn): void {
     this.model.set({
       name: p.name ?? '',
       slug: p.slug ?? '',
@@ -657,6 +738,12 @@ export class AdminProductForm {
       metaTitle: p.metaTitle ?? '',
       metaKeywords: p.metaKeywords ?? '',
       metaDescription: p.metaDescription ?? '',
+      nameEn: p.nameEn ?? '',
+      shortDescriptionEn: p.shortDescriptionEn ?? '',
+      descriptionEn: p.descriptionEn ?? '',
+      metaTitleEn: p.metaTitleEn ?? '',
+      metaKeywordsEn: p.metaKeywordsEn ?? '',
+      metaDescriptionEn: p.metaDescriptionEn ?? '',
       price: p.price,
       oldPrice: p.oldPrice === null ? '' : String(p.oldPrice),
       specialPrice: p.specialPrice === null ? '' : String(p.specialPrice),
@@ -967,7 +1054,7 @@ export class AdminProductForm {
     void submit(this.f, async () => {
       this.serverError.set(null);
       const m = this.model();
-      const body: ProductUpsertRequest = {
+      const body: ProductUpsertRequestEn = {
         name: m.name,
         slug: m.slug || null,
         sku: m.sku || null,
@@ -978,6 +1065,12 @@ export class AdminProductForm {
         metaTitle: m.metaTitle || null,
         metaKeywords: m.metaKeywords || null,
         metaDescription: m.metaDescription || null,
+        nameEn: m.nameEn || null,
+        shortDescriptionEn: m.shortDescriptionEn || null,
+        descriptionEn: m.descriptionEn || null,
+        metaTitleEn: m.metaTitleEn || null,
+        metaKeywordsEn: m.metaKeywordsEn || null,
+        metaDescriptionEn: m.metaDescriptionEn || null,
         price: Number(m.price),
         oldPrice: m.oldPrice.trim() === '' ? null : Number(m.oldPrice),
         specialPrice: m.specialPrice.trim() === '' ? null : Number(m.specialPrice),

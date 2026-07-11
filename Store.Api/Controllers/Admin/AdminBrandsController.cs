@@ -7,7 +7,9 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin brand management (CRUD). Deletes are soft.</summary>
+/// <summary>Admin brand management (CRUD). Deletes are soft. Brand name/description are bilingual
+/// <see cref="LocalizedString"/> values (Arabic in the base column, English in the sibling
+/// "...En" column).</summary>
 [ApiController]
 [RequirePermission(Permissions.CatalogManage)]
 [Route("api/admin/brands")]
@@ -15,7 +17,10 @@ public sealed class AdminBrandsController : ControllerBase
 {
     private readonly StoreDbContext _db;
 
-    public AdminBrandsController(StoreDbContext db) => _db = db;
+    public AdminBrandsController(StoreDbContext db)
+    {
+        _db = db;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AdminBrandDto>>> List(
@@ -27,19 +32,23 @@ public sealed class AdminBrandsController : ControllerBase
             brands = brands.Where(b => !b.IsDeleted);
         }
 
-        var items = await brands
-            .OrderBy(b => b.Name)
-            .Select(b => new AdminBrandDto(b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted))
+        var rows = await brands
+            .OrderBy(b => b.Name.Ar)
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        return Ok(rows.Select(ToDto).ToList());
     }
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminBrandDto>> Get(long id, CancellationToken cancellationToken)
     {
         var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
-        return brand == null ? NotFound() : Ok(ToDto(brand));
+        if (brand == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToDto(brand));
     }
 
     [HttpPost]
@@ -77,6 +86,7 @@ public sealed class AdminBrandsController : ControllerBase
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+
         return Ok(ToDto(brand));
     }
 
@@ -96,11 +106,14 @@ public sealed class AdminBrandsController : ControllerBase
 
     private static void Apply(Brand brand, BrandUpsertRequest request)
     {
-        brand.Name = request.Name;
+        brand.Name = new LocalizedString(request.Name, request.NameEn);
         brand.Slug = string.IsNullOrWhiteSpace(request.Slug) ? Slug.Generate(request.Name) : request.Slug;
-        brand.Description = request.Description;
+        brand.Description = LocalizedString.From(request.Description, request.DescriptionEn);
         brand.IsPublished = request.IsPublished;
     }
 
-    private static AdminBrandDto ToDto(Brand b) => new(b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted);
+    private static AdminBrandDto ToDto(Brand b) => new(
+        b.Id, b.Name.Ar!, b.Slug, b.Description?.Ar, b.IsPublished, b.IsDeleted,
+        b.Name.En, b.Description?.En,
+        HasEnglish: b.Name.En != null || b.Description?.En != null);
 }

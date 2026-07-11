@@ -10,7 +10,7 @@ import {
   type AdminContactDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, ToastService } from 'ui';
+import { Button, ConfirmService, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /** Contact submissions inbox + contact-area management (old Contacts module). */
@@ -92,14 +92,22 @@ import { PageHeader } from '../../shared/page-header';
 })
 export class AdminContacts {
   private readonly service = inject(AdminOperationsService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
   protected readonly list = this.service.contactsResource();
   protected readonly areas = this.service.contactAreasResource();
 
-  protected remove(c: AdminContactDto): void {
-    if (!confirm(this.translate.instant('contacts.confirm_delete_submission'))) {
+  protected async remove(c: AdminContactDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('contacts.confirm_delete_submission'),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteContact(c.id).subscribe({
@@ -133,8 +141,15 @@ export class AdminContacts {
     });
   }
 
-  protected removeArea(a: AdminContactAreaDto): void {
-    if (!confirm(this.translate.instant('contacts.confirm_delete_area', { name: a.name ?? '' }))) {
+  protected async removeArea(a: AdminContactAreaDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('contacts.confirm_delete_area', { name: a.name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteContactArea(a.id).subscribe({

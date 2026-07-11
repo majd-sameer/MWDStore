@@ -259,19 +259,11 @@ namespace Store.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -452,9 +444,6 @@ namespace Store.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -466,22 +455,6 @@ namespace Store.Data.Migrations
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
-
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaKeywords")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<long?>("ParentId")
                         .HasColumnType("bigint");
@@ -742,23 +715,12 @@ namespace Store.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("LinkText")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("LinkUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
-
-                    b.Property<string>("Text")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Id");
 
@@ -1230,9 +1192,6 @@ namespace Store.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedOn")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("FullContent")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1256,17 +1215,8 @@ namespace Store.Data.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTimeOffset?>("PublishedOn")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("ShortContent")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -1535,9 +1485,6 @@ namespace Store.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Body")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<long>("CreatedById")
                         .HasColumnType("bigint");
 
@@ -1555,22 +1502,6 @@ namespace Store.Data.Migrations
 
                     b.Property<DateTimeOffset>("LatestUpdatedOn")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaKeywords")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTimeOffset?>("PublishedOn")
                         .HasColumnType("datetimeoffset");
@@ -1726,9 +1657,6 @@ namespace Store.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedOn")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -1763,22 +1691,6 @@ namespace Store.Data.Migrations
                     b.Property<DateTimeOffset>("LatestUpdatedOn")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MetaKeywords")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
@@ -1797,10 +1709,6 @@ namespace Store.Data.Migrations
 
                     b.Property<int>("ReviewsCount")
                         .HasColumnType("int");
-
-                    b.Property<string>("ShortDescription")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Sku")
                         .HasMaxLength(450)
@@ -1863,11 +1771,6 @@ namespace Store.Data.Migrations
 
                     b.Property<long>("GroupId")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -2027,11 +1930,6 @@ namespace Store.Data.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -3333,6 +3231,59 @@ namespace Store.Data.Migrations
                     b.Navigation("StateOrProvince");
                 });
 
+            modelBuilder.Entity("Store.Domain.Brand", b =>
+                {
+                    b.OwnsOne("Store.Domain.LocalizedString", "Description", b1 =>
+                        {
+                            b1.Property<long>("BrandId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Description");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("DescriptionEn");
+
+                            b1.HasKey("BrandId");
+
+                            b1.ToTable("Brand");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BrandId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("BrandId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("BrandId");
+
+                            b1.ToTable("Brand");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BrandId");
+                        });
+
+                    b.Navigation("Description");
+
+                    b.Navigation("Name")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Store.Domain.CartItem", b =>
                 {
                     b.HasOne("Store.Domain.User", "Customer")
@@ -3382,6 +3333,129 @@ namespace Store.Data.Migrations
                     b.HasOne("Store.Domain.Medium", "ThumbnailImage")
                         .WithMany("Categories")
                         .HasForeignKey("ThumbnailImageId");
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Description", b1 =>
+                        {
+                            b1.Property<long>("CategoryId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Description");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("DescriptionEn");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Category");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaDescription", b1 =>
+                        {
+                            b1.Property<long>("CategoryId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescription");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescriptionEn");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Category");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaKeywords", b1 =>
+                        {
+                            b1.Property<long>("CategoryId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywords");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywordsEn");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Category");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaTitle", b1 =>
+                        {
+                            b1.Property<long>("CategoryId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitle");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitleEn");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Category");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("CategoryId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Category");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
+                    b.Navigation("Description");
+
+                    b.Navigation("MetaDescription");
+
+                    b.Navigation("MetaKeywords");
+
+                    b.Navigation("MetaTitle");
+
+                    b.Navigation("Name")
+                        .IsRequired();
 
                     b.Navigation("Parent");
 
@@ -3465,6 +3539,82 @@ namespace Store.Data.Migrations
                     b.Navigation("ContactArea");
                 });
 
+            modelBuilder.Entity("Store.Domain.ContentBlock", b =>
+                {
+                    b.OwnsOne("Store.Domain.LocalizedString", "LinkText", b1 =>
+                        {
+                            b1.Property<long>("ContentBlockId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("LinkText");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("LinkTextEn");
+
+                            b1.HasKey("ContentBlockId");
+
+                            b1.ToTable("ContentBlock");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ContentBlockId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Text", b1 =>
+                        {
+                            b1.Property<long>("ContentBlockId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Text");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("TextEn");
+
+                            b1.HasKey("ContentBlockId");
+
+                            b1.ToTable("ContentBlock");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ContentBlockId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Title", b1 =>
+                        {
+                            b1.Property<long>("ContentBlockId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("Title");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("TitleEn");
+
+                            b1.HasKey("ContentBlockId");
+
+                            b1.ToTable("ContentBlock");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ContentBlockId");
+                        });
+
+                    b.Navigation("LinkText");
+
+                    b.Navigation("Text");
+
+                    b.Navigation("Title");
+                });
+
             modelBuilder.Entity("Store.Domain.Coupon", b =>
                 {
                     b.HasOne("Store.Domain.CartRule", "CartRule")
@@ -3544,9 +3694,84 @@ namespace Store.Data.Migrations
                         .WithMany("NewsItems")
                         .HasForeignKey("ThumbnailImageId");
 
+                    b.OwnsOne("Store.Domain.LocalizedString", "FullContent", b1 =>
+                        {
+                            b1.Property<long>("NewsItemId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("FullContent");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("FullContentEn");
+
+                            b1.HasKey("NewsItemId");
+
+                            b1.ToTable("NewsItem");
+
+                            b1.WithOwner()
+                                .HasForeignKey("NewsItemId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("NewsItemId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("NewsItemId");
+
+                            b1.ToTable("NewsItem");
+
+                            b1.WithOwner()
+                                .HasForeignKey("NewsItemId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "ShortContent", b1 =>
+                        {
+                            b1.Property<long>("NewsItemId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("ShortContent");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("ShortContentEn");
+
+                            b1.HasKey("NewsItemId");
+
+                            b1.ToTable("NewsItem");
+
+                            b1.WithOwner()
+                                .HasForeignKey("NewsItemId");
+                        });
+
                     b.Navigation("CreatedBy");
 
+                    b.Navigation("FullContent");
+
                     b.Navigation("LatestUpdatedBy");
+
+                    b.Navigation("Name")
+                        .IsRequired();
+
+                    b.Navigation("ShortContent");
 
                     b.Navigation("ThumbnailImage");
                 });
@@ -3662,9 +3887,132 @@ namespace Store.Data.Migrations
                         .HasForeignKey("LatestUpdatedById")
                         .IsRequired();
 
+                    b.OwnsOne("Store.Domain.LocalizedString", "Body", b1 =>
+                        {
+                            b1.Property<long>("PageId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Body");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("BodyEn");
+
+                            b1.HasKey("PageId");
+
+                            b1.ToTable("Page");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaDescription", b1 =>
+                        {
+                            b1.Property<long>("PageId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescription");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescriptionEn");
+
+                            b1.HasKey("PageId");
+
+                            b1.ToTable("Page");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaKeywords", b1 =>
+                        {
+                            b1.Property<long>("PageId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywords");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywordsEn");
+
+                            b1.HasKey("PageId");
+
+                            b1.ToTable("Page");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaTitle", b1 =>
+                        {
+                            b1.Property<long>("PageId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitle");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitleEn");
+
+                            b1.HasKey("PageId");
+
+                            b1.ToTable("Page");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("PageId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("PageId");
+
+                            b1.ToTable("Page");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageId");
+                        });
+
+                    b.Navigation("Body");
+
                     b.Navigation("CreatedBy");
 
                     b.Navigation("LatestUpdatedBy");
+
+                    b.Navigation("MetaDescription");
+
+                    b.Navigation("MetaKeywords");
+
+                    b.Navigation("MetaTitle");
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Store.Domain.Payment", b =>
@@ -3728,11 +4076,159 @@ namespace Store.Data.Migrations
                         .WithMany("Products")
                         .HasForeignKey("ThumbnailImageId");
 
+                    b.OwnsOne("Store.Domain.LocalizedString", "Description", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Description");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("DescriptionEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaDescription", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescription");
+
+                            b1.Property<string>("En")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("MetaDescriptionEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaKeywords", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywords");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaKeywordsEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "MetaTitle", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitle");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("MetaTitleEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
+                    b.OwnsOne("Store.Domain.LocalizedString", "ShortDescription", b1 =>
+                        {
+                            b1.Property<long>("ProductId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("ShortDescription");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("ShortDescriptionEn");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Product");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
                     b.Navigation("Brand");
 
                     b.Navigation("CreatedBy");
 
+                    b.Navigation("Description");
+
                     b.Navigation("LatestUpdatedBy");
+
+                    b.Navigation("MetaDescription");
+
+                    b.Navigation("MetaKeywords");
+
+                    b.Navigation("MetaTitle");
+
+                    b.Navigation("Name")
+                        .IsRequired();
+
+                    b.Navigation("ShortDescription");
 
                     b.Navigation("TaxClass");
 
@@ -3746,7 +4242,34 @@ namespace Store.Data.Migrations
                         .HasForeignKey("GroupId")
                         .IsRequired();
 
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("ProductAttributeId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("ProductAttributeId");
+
+                            b1.ToTable("ProductAttribute");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductAttributeId");
+                        });
+
                     b.Navigation("Group");
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Store.Domain.ProductAttributeValue", b =>
@@ -3815,6 +4338,36 @@ namespace Store.Data.Migrations
                     b.Navigation("Media");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Store.Domain.ProductOption", b =>
+                {
+                    b.OwnsOne("Store.Domain.LocalizedString", "Name", b1 =>
+                        {
+                            b1.Property<long>("ProductOptionId")
+                                .HasColumnType("bigint");
+
+                            b1.Property<string>("Ar")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("Name");
+
+                            b1.Property<string>("En")
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)")
+                                .HasColumnName("NameEn");
+
+                            b1.HasKey("ProductOptionId");
+
+                            b1.ToTable("ProductOption");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductOptionId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Store.Domain.ProductOptionCombination", b =>

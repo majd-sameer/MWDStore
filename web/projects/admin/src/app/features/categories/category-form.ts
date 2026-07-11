@@ -16,6 +16,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminCategoriesService,
+  type AdminCategoryDto,
   type CategoryUpsertRequest,
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
@@ -24,6 +25,23 @@ import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 
+/**
+ * The backend now also returns/accepts the English overlay fields (`nameEn`, `descriptionEn`,
+ * `hasEnglish`, ...) on top of the generated `AdminCategoryDto`/`CategoryUpsertRequest` — kept as a
+ * local extension here rather than edited into `data-access/models.ts` (out of scope for this
+ * change; structural typing lets the existing service methods accept the wider request shape).
+ */
+interface AdminCategoryDtoEn extends AdminCategoryDto {
+  nameEn?: string | null;
+  descriptionEn?: string | null;
+  hasEnglish?: boolean;
+}
+
+interface CategoryUpsertRequestEn extends CategoryUpsertRequest {
+  nameEn?: string | null;
+  descriptionEn?: string | null;
+}
+
 interface CategoryModel {
   name: string;
   slug: string;
@@ -31,6 +49,8 @@ interface CategoryModel {
   displayOrder: number;
   isPublished: boolean;
   includeInMenu: boolean;
+  nameEn: string;
+  descriptionEn: string;
 }
 
 function emptyModel(): CategoryModel {
@@ -41,6 +61,8 @@ function emptyModel(): CategoryModel {
     displayOrder: 0,
     isPublished: true,
     includeInMenu: true,
+    nameEn: '',
+    descriptionEn: '',
   };
 }
 
@@ -78,24 +100,46 @@ function emptyModel(): CategoryModel {
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <lib-form-field
-                  [label]="'categories.name' | translate"
-                  controlId="cat-name"
-                  [required]="true"
-                  [error]="err(f.name())"
-                >
-                  <input id="cat-name" type="text" class="form-control"
-                    [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
-                </lib-form-field>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.base_lang' | translate }}
+                    </h2>
+                    <lib-form-field
+                      [label]="'categories.name' | translate"
+                      controlId="cat-name"
+                      [required]="true"
+                      [error]="err(f.name())"
+                    >
+                      <input id="cat-name" type="text" class="form-control" dir="rtl"
+                        [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'categories.description' | translate" controlId="cat-desc">
+                      <textarea id="cat-desc" rows="3" class="form-control" dir="rtl" [formField]="f.description"></textarea>
+                    </lib-form-field>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'categories.name' | translate" controlId="cat-name-en">
+                      <input id="cat-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'categories.description' | translate" controlId="cat-desc-en">
+                      <textarea id="cat-desc-en" rows="3" class="form-control" dir="ltr" [formField]="f.descriptionEn"></textarea>
+                    </lib-form-field>
+                  </div>
+                </div>
+
+                <hr class="my-3" />
+
                 <lib-form-field
                   [label]="'categories.slug' | translate"
                   controlId="cat-slug"
                   [hint]="'categories.slug_hint' | translate"
                 >
                   <input id="cat-slug" type="text" class="form-control" [formField]="f.slug" />
-                </lib-form-field>
-                <lib-form-field [label]="'categories.description' | translate" controlId="cat-desc">
-                  <textarea id="cat-desc" rows="3" class="form-control" [formField]="f.description"></textarea>
                 </lib-form-field>
                 <lib-form-field [label]="'categories.display_order' | translate" controlId="cat-order">
                   <input id="cat-order" type="number" class="form-control" [formField]="f.displayOrder" />
@@ -155,7 +199,7 @@ export class AdminCategoryForm {
       if (this.isNew() || this.seeded) {
         return;
       }
-      const c = this.existing.value();
+      const c = this.existing.value() as AdminCategoryDtoEn | undefined;
       if (!c) {
         return;
       }
@@ -167,6 +211,8 @@ export class AdminCategoryForm {
         displayOrder: c.displayOrder,
         isPublished: c.isPublished,
         includeInMenu: c.includeInMenu,
+        nameEn: c.nameEn ?? '',
+        descriptionEn: c.descriptionEn ?? '',
       });
     });
   }
@@ -176,13 +222,15 @@ export class AdminCategoryForm {
     void submit(this.f, async () => {
       this.serverError.set(null);
       const m = this.model();
-      const body: CategoryUpsertRequest = {
+      const body: CategoryUpsertRequestEn = {
         name: m.name,
         slug: m.slug || null,
         description: m.description || null,
         displayOrder: Number(m.displayOrder),
         isPublished: m.isPublished,
         includeInMenu: m.includeInMenu,
+        nameEn: m.nameEn || null,
+        descriptionEn: m.descriptionEn || null,
       };
       try {
         if (this.isNew()) {

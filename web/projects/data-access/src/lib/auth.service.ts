@@ -6,6 +6,12 @@ import type {
   AuthResponse,
   ForgotPasswordRequest,
   LoginRequest,
+  MfaDisableRequest,
+  MfaEnableRequest,
+  MfaEnableResponse,
+  MfaSetupResponse,
+  MfaStatusResponse,
+  MfaVerifyRequest,
   RegisterRequest,
   ResetPasswordRequest,
 } from './models';
@@ -37,5 +43,32 @@ export class AuthService {
   /** POST /api/auth/reset-password */
   resetPassword(body: ResetPasswordRequest): Observable<void> {
     return this.http.post<void>(`${API_ROOT}/auth/reset-password`, body);
+  }
+
+  // ----- MFA -----------------------------------------------------------------
+
+  /** POST /api/auth/mfa/verify — exchanges a login challenge + TOTP/recovery code for tokens. */
+  mfaVerify(body: MfaVerifyRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${API_ROOT}/auth/mfa/verify`, body);
+  }
+
+  /** GET /api/account/mfa/status (authenticated). */
+  mfaStatus(): Observable<MfaStatusResponse> {
+    return this.http.get<MfaStatusResponse>(`${API_ROOT}/account/mfa/status`);
+  }
+
+  /** POST /api/account/mfa/setup — (re)generates the authenticator key for enrollment. */
+  mfaSetup(): Observable<MfaSetupResponse> {
+    return this.http.post<MfaSetupResponse>(`${API_ROOT}/account/mfa/setup`, null);
+  }
+
+  /** POST /api/account/mfa/enable — confirms a code and returns recovery codes. */
+  mfaEnable(body: MfaEnableRequest): Observable<MfaEnableResponse> {
+    return this.http.post<MfaEnableResponse>(`${API_ROOT}/account/mfa/enable`, body);
+  }
+
+  /** POST /api/account/mfa/disable — requires a current authenticator or recovery code. */
+  mfaDisable(body: MfaDisableRequest): Observable<void> {
+    return this.http.post<void>(`${API_ROOT}/account/mfa/disable`, body);
   }
 }

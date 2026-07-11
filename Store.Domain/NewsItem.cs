@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Store.Domain;
@@ -7,16 +7,17 @@ public class NewsItem
 {
     public long Id { get; set; }
 
-    public string? ShortContent { get; set; }
+    public LocalizedString? ShortContent { get; set; }
 
-    public string? FullContent { get; set; }
+    public LocalizedString? FullContent { get; set; }
 
     public long? ThumbnailImageId { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public string Slug { get; set; } = null!;
 
+    // Meta* stay plain string (effectively unlocalized today) — do not add En meta columns.
     public string? MetaTitle { get; set; }
 
     public string? MetaKeywords { get; set; }
@@ -45,4 +46,3 @@ public class NewsItem
 
     public ICollection<NewsCategory> Categories { get; set; } = [];
 }
-

@@ -11,13 +11,21 @@ import {
   AdminBrandsService,
   AdminCategoriesService,
   AdminProductsService,
+  type AdminProductListItem,
   type AdminProductQuery,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 const PAGE_SIZE = 20;
+
+/** `AdminProductListItem` extended with the EN-availability flag the backend now returns (see
+ * `AdminProductListItemDto` on the API side) — declared locally since `data-access/models.ts` is out
+ * of scope for this feature. */
+export interface AdminProductListItemEn extends AdminProductListItem {
+  hasEnglish: boolean;
+}
 
 /** Publish-state segments for the filter chips. */
 type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
@@ -32,7 +40,7 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
 @Component({
   selector: 'app-admin-product-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [MoneyPipe, RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'products.title' | translate"
@@ -62,7 +70,7 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
           </div>
           <div class="col-6 col-md-auto">
             <select
-              class="form-select w-auto"
+              class="form-select w-auto mw-100"
               [attr.aria-label]="'products.brand' | translate"
               [value]="brandId() ?? ''"
               (change)="setBrand($event)"
@@ -75,7 +83,7 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
           </div>
           <div class="col-6 col-md-auto">
             <select
-              class="form-select w-auto"
+              class="form-select w-auto mw-100"
               [attr.aria-label]="'products.category' | translate"
               [value]="categoryId() ?? ''"
               (change)="setCategory($event)"
@@ -121,9 +129,9 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
           <div class="alert alert-danger mb-0">
             {{ 'common.error_api' | translate }}
           </div>
-        } @else if (products.value(); as rows) {
+        } @else if (productRows(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'products.col_product' | translate }}</th>
@@ -154,6 +162,12 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
                           <a [routerLink]="['/products', p.id]" class="text-decoration-none fw-medium">
                             {{ p.name }}
                           </a>
+                          @if (!p.hasEnglish) {
+                            <span
+                              class="badge text-bg-light border text-body-secondary ms-1"
+                              [title]="'common.en_missing' | translate"
+                            >{{ 'common.en_missing' | translate }}</span>
+                          }
                           <div class="small text-body-secondary">#{{ p.id }} · {{ p.slug }}</div>
                         </div>
                       </div>
@@ -192,7 +206,17 @@ type StatusFilter = 'all' | 'published' | 'draft' | 'deleted';
                         >
                           <lib-icon name="pencil" [size]="15" [label]="'common.edit' | translate" />
                         </a>
-                        @if (!p.isDeleted) {
+                        @if (p.isDeleted) {
+                          <button
+                            type="button"
+                            class="action-btn"
+                            [title]="'common.restore' | translate"
+                            [disabled]="restoringId() === p.id"
+                            (click)="restore(p.id, p.name)"
+                          >
+                            <i class="bi bi-arrow-counterclockwise" style="font-size: 15px" [attr.aria-label]="'common.restore' | translate"></i>
+                          </button>
+                        } @else {
                           <button
                             type="button"
                             class="action-btn action-btn-danger"
@@ -265,6 +289,7 @@ export class AdminProductList {
   private readonly categoriesService = inject(AdminCategoriesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly term = signal('');
   protected readonly status = signal<StatusFilter>('all');
@@ -272,6 +297,7 @@ export class AdminProductList {
   protected readonly categoryId = signal<number | null>(null);
   protected readonly page = signal(1);
   protected readonly deletingId = signal<number | null>(null);
+  protected readonly restoringId = signal<number | null>(null);
 
   protected readonly brands = this.brandsService.listResource(() => false);
   protected readonly categories = this.categoriesService.listResource(() => false);
@@ -294,9 +320,15 @@ export class AdminProductList {
 
   protected readonly products = this.service.listResource(this.query);
 
+  /** Rows cast to include `hasEnglish` — the API returns it; `AdminProductListItem` in
+   * `data-access/models.ts` doesn't declare it (see `AdminProductListItemEn`). */
+  protected readonly productRows = computed(
+    () => (this.products.value() ?? []) as AdminProductListItemEn[],
+  );
+
   /** A full page back implies there may be another page. */
   protected readonly hasMore = computed(
-    () => (this.products.value()?.length ?? 0) === PAGE_SIZE,
+    () => this.productRows().length === PAGE_SIZE,
   );
 
   protected readonly hasFilters = computed(
@@ -369,10 +401,15 @@ export class AdminProductList {
     }
   }
 
-  protected remove(id: number, name: string | null): void {
-    if (!confirm(this.translate.instant('products.confirm_delete', { name: name ?? '#' + id }))) {
-      return;
-    }
+  protected async remove(id: number, name: string | null): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('products.confirm_delete', { name: name ?? '#' + id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(id);
     this.service.delete(id).subscribe({
       next: () => {
@@ -383,6 +420,28 @@ export class AdminProductList {
       error: () => {
         this.toast.error(this.translate.instant('products.delete_failed'));
         this.deletingId.set(null);
+      },
+    });
+  }
+
+  protected async restore(id: number, name: string | null): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('products.confirm_restore', { name: name ?? '#' + id }),
+      okText: this.translate.instant('common.restore'),
+      cancelText: this.translate.instant('common.cancel'),
+    });
+    if (!ok) return;
+    this.restoringId.set(id);
+    this.service.restore(id).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('products.restored'));
+        this.restoringId.set(null);
+        this.products.reload();
+      },
+      error: () => {
+        this.toast.error(this.translate.instant('products.restore_failed'));
+        this.restoringId.set(null);
       },
     });
   }

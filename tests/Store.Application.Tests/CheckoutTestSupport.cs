@@ -12,10 +12,11 @@ internal static class CheckoutTestSupport
         long id, string name, decimal price,
         decimal? specialPrice = null, DateTimeOffset? specialStart = null, DateTimeOffset? specialEnd = null,
         long? taxClassId = null, long? vendorId = null,
-        bool stockTracking = false, int stock = 0, bool published = true, bool allowToOrder = true) => new()
+        bool stockTracking = false, int stock = 0, bool published = true, bool allowToOrder = true,
+        string? nameEn = null) => new()
     {
         Id = id,
-        Name = name,
+        Name = new LocalizedString(name, nameEn),
         Slug = "p" + id,
         Price = price,
         SpecialPrice = specialPrice,

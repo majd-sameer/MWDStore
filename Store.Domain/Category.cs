@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Store.Domain;
@@ -7,17 +7,17 @@ public class Category
 {
     public long Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public string Slug { get; set; } = null!;
 
-    public string? MetaTitle { get; set; }
+    public LocalizedString? MetaTitle { get; set; }
 
-    public string? MetaKeywords { get; set; }
+    public LocalizedString? MetaKeywords { get; set; }
 
-    public string? MetaDescription { get; set; }
+    public LocalizedString? MetaDescription { get; set; }
 
-    public string? Description { get; set; }
+    public LocalizedString? Description { get; set; }
 
     public int DisplayOrder { get; set; }
 
@@ -41,4 +41,3 @@ public class Category
 
     public ICollection<CartRule> CartRules { get; set; } = [];
 }
-

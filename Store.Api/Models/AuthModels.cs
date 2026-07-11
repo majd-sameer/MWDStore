@@ -77,6 +77,12 @@ public sealed class MfaEnableResponse
     public required IReadOnlyList<string> RecoveryCodes { get; set; }
 }
 
+/// <summary>Returned by <c>/api/account/mfa/status</c>: whether the signed-in user has a second factor enrolled.</summary>
+public sealed class MfaStatusResponse
+{
+    public required bool Enabled { get; set; }
+}
+
 public sealed class MfaDisableRequest
 {
     /// <summary>A current authenticator code, or an unused recovery code, proving control of the second factor.</summary>

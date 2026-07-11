@@ -2,7 +2,13 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { type AdminOrderQuery, API_ROOT, toQueryParams } from '../http-utils';
-import type { OrderDetailDto, OrderSummaryDto, UpdateOrderStatusRequest } from '../models';
+import type {
+  OrderDetailDto,
+  OrderSummaryDto,
+  RefundOrderRequest,
+  RefundResultDto,
+  UpdateOrderStatusRequest,
+} from '../models';
 
 /** Admin order management (`/api/admin/orders`). */
 @Injectable({ providedIn: 'root' })
@@ -51,6 +57,14 @@ export class AdminOrdersService {
     return this.http.post<OrderDetailDto>(
       `${API_ROOT}/admin/orders/${id}/cancel`,
       null,
+    );
+  }
+
+  /** POST /api/admin/orders/{id}/refund — full (no amount) or partial refund; idempotent per key. */
+  refund(id: number, body: RefundOrderRequest): Observable<RefundResultDto> {
+    return this.http.post<RefundResultDto>(
+      `${API_ROOT}/admin/orders/${id}/refund`,
+      body,
     );
   }
 }

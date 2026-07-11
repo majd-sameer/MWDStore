@@ -869,10 +869,12 @@ export class ProductList {
     return [...cats].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
   });
 
-  /** Every seeded product belongs to exactly one category, so the facet sum is
-   *  the catalog total for the "all products" row. */
-  protected readonly allCount = computed(() =>
-    this.categories().reduce((sum, c) => sum + c.count, 0),
+  /** Distinct catalog total for the "all products" row (a product in several
+   *  categories would be double-counted by summing the per-category counts). */
+  protected readonly allCount = computed(
+    () =>
+      this.data()?.filterOption?.total ??
+      this.categories().reduce((sum, c) => sum + c.count, 0),
   );
 
   protected readonly brands = computed(() => this.data()?.filterOption?.brands ?? []);

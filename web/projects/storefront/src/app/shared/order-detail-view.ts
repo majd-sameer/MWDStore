@@ -3,13 +3,14 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService, MoneyPipe } from 'core';
 import type { OrderAddressDto, OrderDetailDto } from 'data-access';
+import { TableCards } from 'ui';
 import { statusLabel } from '../features/account/order-status';
 
 /** Presentational rendering of a single order, shared by confirmation + account. */
 @Component({
   selector: 'app-order-detail-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, TranslatePipe],
+  imports: [MoneyPipe, DatePipe, TranslatePipe, TableCards],
   template: `
     @if (order(); as order) {
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
@@ -23,7 +24,7 @@ import { statusLabel } from '../features/account/order-status';
       </div>
 
       <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle" libTableCards>
           <thead>
             <tr>
               <th scope="col">{{ 'orderview.product' | translate }}</th>

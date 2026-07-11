@@ -1,5 +1,8 @@
 {
-  "brand": { "name": "Made With Determination", "console": "Admin Console" },
+  "brand": {
+    "name": "Made With Determination",
+    "console": "Admin Console"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "catalog": "Catalog",
@@ -32,7 +35,10 @@
     "countries": "Countries",
     "localization": "Localization",
     "settings": "Settings",
-    "logs": "Logs"
+    "logs": "Logs",
+    "media": "Media",
+    "security": "Security",
+    "menu": "Menu"
   },
   "topbar": {
     "signed_in_as": "Signed in as",
@@ -40,6 +46,7 @@
   },
   "common": {
     "language": "العربية",
+    "en_missing": "EN missing",
     "loading": "Loading…",
     "error_api": "Couldn't load data. Is Store.Api running?",
     "actions": "Actions",
@@ -50,6 +57,10 @@
     "delete": "Delete",
     "view": "View",
     "cancel": "Cancel",
+    "close": "Close",
+    "confirm_title": "Please confirm",
+    "restore": "Restore",
+    "copy": "Copy",
     "previous": "Previous",
     "next": "Next",
     "page_info": "Page {{page}} · {{count}} shown",
@@ -93,7 +104,12 @@
     "password_required": "Password is required",
     "no_server": "Cannot reach the server. Make sure the API is running.",
     "invalid": "Invalid email or password.",
-    "no_access": "This account does not have access to the admin console."
+    "no_access": "This account does not have access to the admin console.",
+    "mfa_hint": "Enter the 6-digit code from your authenticator app (or an unused recovery code).",
+    "mfa_code": "Verification code",
+    "mfa_verify": "Verify",
+    "mfa_back": "Back to sign-in",
+    "mfa_invalid": "That code didn't work. Check your authenticator and try again."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -149,6 +165,9 @@
   "products": {
     "title": "Products",
     "subtitle": "Search, publish and manage the catalog.",
+    "confirm_restore": "Restore “{{name}}”?",
+    "restored": "Product restored.",
+    "restore_failed": "Could not restore the product.",
     "new": "New product",
     "search_ph": "Search products by name…",
     "show_deleted": "Show deleted",
@@ -249,6 +268,18 @@
   "order_detail": {
     "title": "Order #{{id}}",
     "load_failed": "Couldn't load this order.",
+    "refund_title": "Refund",
+    "captured_total": "Captured",
+    "refunded_total": "Refunded",
+    "refundable": "Refundable",
+    "refund_amount": "Amount",
+    "refund_reason": "Reason (optional)",
+    "refund": "Refund",
+    "fully_refunded": "This order has been fully refunded.",
+    "confirm_refund": "Refund this order? This cannot be undone.",
+    "refund_ok": "Refund processed.",
+    "refund_failed": "Could not process the refund.",
+    "refund_failed_detail": "Refund failed: {{message}}",
     "col_qty": "Qty",
     "col_line_total": "Line total",
     "shipments_title": "Shipments",
@@ -398,7 +429,12 @@
     "create": "Create option",
     "created_ok": "Option created.",
     "updated_ok": "Option updated.",
-    "save_failed": "Could not save the option."
+    "save_failed": "Could not save the option.",
+    "base_lang": "Arabic (base)",
+    "english": "English",
+    "col_language": "Language",
+    "lang_ar_en": "AR + EN",
+    "lang_ar_only": "AR only"
   },
   "attributes": {
     "title": "Product attributes",
@@ -425,7 +461,12 @@
     "create": "Create attribute",
     "created_ok": "Attribute created.",
     "updated_ok": "Attribute updated.",
-    "save_failed": "Could not save the attribute."
+    "save_failed": "Could not save the attribute.",
+    "base_lang": "Arabic (base)",
+    "english": "English",
+    "col_language": "Language",
+    "lang_ar_en": "AR + EN",
+    "lang_ar_only": "AR only"
   },
   "templates": {
     "title": "Product templates",
@@ -531,7 +572,12 @@
     "create": "Create page",
     "created_ok": "Page created.",
     "updated_ok": "Page updated.",
-    "save_failed": "Could not save the page. The slug may already exist."
+    "save_failed": "Could not save the page. The slug may already exist.",
+    "base_lang": "Arabic (base)",
+    "english": "English",
+    "col_language": "Language",
+    "lang_ar_en": "AR + EN",
+    "lang_ar_only": "AR only"
   },
   "news": {
     "title": "News",
@@ -881,5 +927,47 @@
     "message": "Your account isn't permitted to use the admin console.",
     "signin_other": "Sign in as a different user",
     "back_dashboard": "Back to dashboard"
+  },
+  "media": {
+    "title": "Media library",
+    "subtitle": "Browse, upload, and clean up uploaded files.",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "search_ph": "Search by filename…",
+    "in_use": "In use ({{count}})",
+    "unused": "Unused",
+    "copy_url": "Copy URL",
+    "copy_ok": "URL copied to clipboard.",
+    "copy_failed": "Couldn't copy the URL.",
+    "empty": "No files uploaded yet.",
+    "confirm_delete": "Delete \"{{name}}\"? This can't be undone.",
+    "deleted_ok": "File deleted.",
+    "delete_failed": "Couldn't delete the file.",
+    "delete_referenced": "This file is still used by a product, category, or brand and can't be deleted.",
+    "upload_failed": "Couldn't upload \"{{name}}\"."
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Manage two-factor authentication for your account.",
+    "mfa_title": "Two-factor authentication (TOTP)",
+    "disabled_explain": "Two-factor authentication is off. Turning it on requires an authenticator app (Google Authenticator, Authy, etc.) at every sign-in.",
+    "setup": "Set up",
+    "setup_failed": "Couldn't start setup. Try again.",
+    "setup_explain": "Scan the QR code with your authenticator app, or enter the shared key manually, then confirm with the 6-digit code it generates.",
+    "qr_alt": "Two-factor setup QR code",
+    "shared_key": "Shared key",
+    "code_label": "Authenticator code",
+    "code_invalid": "That code didn't work. Double-check your authenticator app and try again.",
+    "enable": "Enable",
+    "recovery_codes_title": "Your recovery codes",
+    "recovery_warning": "Save these codes somewhere safe — each one can be used once if you lose access to your authenticator app. They won't be shown again.",
+    "copy_all": "Copy all",
+    "copy_ok": "Copied to clipboard.",
+    "recovery_done": "I've saved my codes",
+    "enabled": "Enabled",
+    "enabled_explain": "Two-factor authentication is protecting this account.",
+    "disable": "Disable",
+    "disabled_ok": "Two-factor authentication disabled.",
+    "confirm_disable": "Disable two-factor authentication for your account?"
   }
 }

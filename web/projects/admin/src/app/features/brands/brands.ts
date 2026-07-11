@@ -1,14 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminBrandsService, type AdminBrandDto } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** The backend also returns `hasEnglish` — kept as a local extension (see brand-form.ts). */
+interface AdminBrandDtoEn extends AdminBrandDto {
+  hasEnglish?: boolean;
+}
 
 /**
  * Brand browser: a full-width list. Creating and editing happen on their own
@@ -17,7 +23,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-brands',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'brands.title' | translate"
@@ -38,9 +44,9 @@ import { PageHeader } from '../../shared/page-header';
           </div>
         } @else if (list.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-        } @else if (list.value(); as rows) {
+        } @else if (list.value()) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'common.name' | translate }}</th>
@@ -49,10 +55,18 @@ import { PageHeader } from '../../shared/page-header';
                 </tr>
               </thead>
               <tbody>
-                @for (b of rows; track b.id) {
+                @for (b of rows(); track b.id) {
                   <tr>
                     <td>
                       <a [routerLink]="['/brands', b.id]" class="text-decoration-none fw-medium">{{ b.name }}</a>
+                      @if (!b.hasEnglish) {
+                        <span
+                          class="badge text-bg-warning-subtle text-warning-emphasis ms-1"
+                          [title]="'common.en_missing' | translate"
+                        >
+                          {{ 'common.en_missing' | translate }}
+                        </span>
+                      }
                       <div class="small text-body-secondary">{{ b.slug }}</div>
                     </td>
                     <td>
@@ -104,14 +118,21 @@ export class AdminBrands {
   private readonly service = inject(AdminBrandsService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.listResource(() => true);
+  protected readonly rows = computed(() => (this.list.value() ?? []) as AdminBrandDtoEn[]);
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(b: AdminBrandDto): void {
-    if (!confirm(this.translate.instant('brands.confirm_delete', { name: b.name ?? '#' + b.id }))) {
-      return;
-    }
+  protected async remove(b: AdminBrandDtoEn): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('brands.confirm_delete', { name: b.name ?? '#' + b.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(b.id);
     this.service.delete(b.id).subscribe({
       next: () => {

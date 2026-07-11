@@ -10,7 +10,7 @@ import {
   type AdminProductTemplateDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -21,7 +21,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-product-templates',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'templates.title' | translate"
@@ -44,7 +44,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'templates.col_template' | translate }}</th>
@@ -105,14 +105,20 @@ export class AdminProductTemplates {
   private readonly service = inject(AdminOperationsService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.templatesResource();
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(t: AdminProductTemplateDto): void {
-    if (!confirm(this.translate.instant('templates.confirm_delete', { name: t.name ?? '#' + t.id }))) {
-      return;
-    }
+  protected async remove(t: AdminProductTemplateDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('templates.confirm_delete', { name: t.name ?? '#' + t.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(t.id);
     this.service.deleteTemplate(t.id).subscribe({
       next: () => {

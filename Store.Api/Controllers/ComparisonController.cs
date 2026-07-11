@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Common;
+using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
 
@@ -20,12 +21,15 @@ public sealed class ComparisonController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IRequestCulture _culture;
 
-    public ComparisonController(StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl)
+    public ComparisonController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl, IRequestCulture culture)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
+        _culture = culture;
     }
 
     [HttpGet]
@@ -40,11 +44,12 @@ public sealed class ComparisonController : ControllerBase
             .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
+        var lang = _culture.Language;
         var items = comparing.Select(c => new ComparisonProductDto(
-            c.ProductId, c.Product.Name, c.Product.Slug, c.Product.Price,
+            c.ProductId, c.Product.Name.Resolve(lang)!, c.Product.Slug, c.Product.Price,
             _mediaUrl.GetUrl(c.Product.ThumbnailImage?.FileName),
             c.Product.ProductAttributeValues
-                .Select(a => new ComparisonAttributeDto(a.Attribute.Name, a.Value))
+                .Select(a => new ComparisonAttributeDto(a.Attribute.Name.Resolve(lang)!, a.Value))
                 .ToList()))
             .ToList();
 

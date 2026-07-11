@@ -7,9 +7,9 @@ public class Product
 {
     public long Id { get; set; }
 
-    public string? ShortDescription { get; set; }
+    public LocalizedString? ShortDescription { get; set; }
 
-    public string? Description { get; set; }
+    public LocalizedString? Description { get; set; }
 
     public string? Specification { get; set; }
 
@@ -57,15 +57,15 @@ public class Product
 
     public long? TaxClassId { get; set; }
 
-    public string Name { get; set; } = null!;
+    public LocalizedString Name { get; set; } = new();
 
     public string Slug { get; set; } = null!;
 
-    public string? MetaTitle { get; set; }
+    public LocalizedString? MetaTitle { get; set; }
 
-    public string? MetaKeywords { get; set; }
+    public LocalizedString? MetaKeywords { get; set; }
 
-    public string? MetaDescription { get; set; }
+    public LocalizedString? MetaDescription { get; set; }
 
     public bool IsPublished { get; set; }
 

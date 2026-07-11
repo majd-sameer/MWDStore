@@ -16,6 +16,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AdminCmsService,
   AdminMediaService,
+  type AdminNewsItemDetail,
   type NewsItemUpsertRequest,
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
@@ -24,16 +25,46 @@ import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 
+/**
+ * `AdminNewsItemDetail` extended with the English overlay fields (`LocalizedContentProperty`,
+ * culture `en-US`). The backend already returns these; they're declared locally rather than in
+ * `data-access/models.ts` (out of scope for this feature) — structural typing means the cast is safe.
+ */
+export interface AdminNewsItemDetailEn extends AdminNewsItemDetail {
+  nameEn: string | null;
+  shortContentEn: string | null;
+  fullContentEn: string | null;
+}
+
+/** `NewsItemUpsertRequest` extended with the English overlay fields the admin form can now edit. */
+export interface NewsItemUpsertRequestEn extends NewsItemUpsertRequest {
+  nameEn?: string | null;
+  shortContentEn?: string | null;
+  fullContentEn?: string | null;
+}
+
 interface NewsModel {
   name: string;
   slug: string;
   shortContent: string;
   fullContent: string;
+  nameEn: string;
+  shortContentEn: string;
+  fullContentEn: string;
   isPublished: boolean;
 }
 
 function emptyModel(): NewsModel {
-  return { name: '', slug: '', shortContent: '', fullContent: '', isPublished: true };
+  return {
+    name: '',
+    slug: '',
+    shortContent: '',
+    fullContent: '',
+    nameEn: '',
+    shortContentEn: '',
+    fullContentEn: '',
+    isPublished: true,
+  };
 }
 
 /**
@@ -68,26 +99,44 @@ function emptyModel(): NewsModel {
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
+                <lib-form-field [label]="'common.slug' | translate" controlId="nw-slug" [hint]="'common.slug_hint' | translate">
+                  <input id="nw-slug" type="text" class="form-control" [formField]="f.slug" />
+                </lib-form-field>
+
                 <div class="row">
                   <div class="col-md-6">
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.base_lang' | translate }}
+                    </h2>
                     <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name" [required]="true" [error]="err(f.name())">
-                      <input id="nw-name" type="text" class="form-control"
+                      <input id="nw-name" type="text" class="form-control" dir="rtl"
                         [class.is-invalid]="!!err(f.name())" [formField]="f.name" />
                     </lib-form-field>
+                    <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short">
+                      <textarea id="nw-short" rows="2" class="form-control" dir="rtl" [formField]="f.shortContent"></textarea>
+                    </lib-form-field>
+                    <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full">
+                      <textarea id="nw-full" rows="10" class="form-control font-monospace" dir="rtl"
+                        [formField]="f.fullContent"></textarea>
+                    </lib-form-field>
                   </div>
+
                   <div class="col-md-6">
-                    <lib-form-field [label]="'common.slug' | translate" controlId="nw-slug" [hint]="'common.slug_hint' | translate">
-                      <input id="nw-slug" type="text" class="form-control" [formField]="f.slug" />
+                    <h2 class="h6 text-body-secondary text-uppercase mb-3">
+                      {{ 'content_blocks.english' | translate }}
+                    </h2>
+                    <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name-en">
+                      <input id="nw-name-en" type="text" class="form-control" dir="ltr" [formField]="f.nameEn" />
+                    </lib-form-field>
+                    <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short-en">
+                      <textarea id="nw-short-en" rows="2" class="form-control" dir="ltr" [formField]="f.shortContentEn"></textarea>
+                    </lib-form-field>
+                    <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full-en">
+                      <textarea id="nw-full-en" rows="10" class="form-control font-monospace" dir="ltr"
+                        [formField]="f.fullContentEn"></textarea>
                     </lib-form-field>
                   </div>
                 </div>
-                <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short">
-                  <textarea id="nw-short" rows="2" class="form-control" [formField]="f.shortContent"></textarea>
-                </lib-form-field>
-                <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full">
-                  <textarea id="nw-full" rows="10" class="form-control font-monospace"
-                    [formField]="f.fullContent"></textarea>
-                </lib-form-field>
 
                 <label class="form-label" for="nw-thumb">{{ 'news.thumbnail' | translate }}</label>
                 <div class="d-flex align-items-center gap-3 mb-2">
@@ -170,11 +219,15 @@ export class AdminNewsForm {
       this.loading.set(true);
       this.service.getNewsItem(this.newsId()).subscribe({
         next: (detail) => {
+          const detailEn = detail as AdminNewsItemDetailEn;
           this.model.set({
             name: detail.name ?? '',
             slug: detail.slug ?? '',
             shortContent: detail.shortContent ?? '',
             fullContent: detail.fullContent ?? '',
+            nameEn: detailEn.nameEn ?? '',
+            shortContentEn: detailEn.shortContentEn ?? '',
+            fullContentEn: detailEn.fullContentEn ?? '',
             isPublished: detail.isPublished,
           });
           this.categoryIds.set(detail.categoryIds);
@@ -227,11 +280,14 @@ export class AdminNewsForm {
     void submit(this.f, async () => {
       this.serverError.set(null);
       const m = this.model();
-      const body: NewsItemUpsertRequest = {
+      const body: NewsItemUpsertRequestEn = {
         name: m.name,
         slug: m.slug || null,
         shortContent: m.shortContent || null,
         fullContent: m.fullContent || null,
+        nameEn: m.nameEn || null,
+        shortContentEn: m.shortContentEn || null,
+        fullContentEn: m.fullContentEn || null,
         isPublished: m.isPublished,
         thumbnailImageId: this.thumbnailId(),
         categoryIds: this.categoryIds(),

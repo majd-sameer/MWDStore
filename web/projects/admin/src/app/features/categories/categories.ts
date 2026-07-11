@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -10,8 +11,13 @@ import {
   type AdminCategoryDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
+
+/** The backend also returns `hasEnglish` — kept as a local extension (see category-form.ts). */
+interface AdminCategoryDtoEn extends AdminCategoryDto {
+  hasEnglish?: boolean;
+}
 
 /**
  * Category browser: a full-width list with publish status and display order.
@@ -21,7 +27,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-categories',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'categories.title' | translate"
@@ -43,9 +49,9 @@ import { PageHeader } from '../../shared/page-header';
           </div>
         } @else if (list.error()) {
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
-        } @else if (list.value(); as rows) {
+        } @else if (list.value()) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'common.name' | translate }}</th>
@@ -55,12 +61,20 @@ import { PageHeader } from '../../shared/page-header';
                 </tr>
               </thead>
               <tbody>
-                @for (c of rows; track c.id) {
+                @for (c of rows(); track c.id) {
                   <tr>
                     <td>
                       <a [routerLink]="['/categories', c.id]" class="text-decoration-none fw-medium">
                         {{ c.name }}
                       </a>
+                      @if (!c.hasEnglish) {
+                        <span
+                          class="badge text-bg-warning-subtle text-warning-emphasis ms-1"
+                          [title]="'common.en_missing' | translate"
+                        >
+                          {{ 'common.en_missing' | translate }}
+                        </span>
+                      }
                       <div class="small text-body-secondary">{{ c.slug }}</div>
                     </td>
                     <td class="text-end">{{ c.displayOrder }}</td>
@@ -117,14 +131,21 @@ export class AdminCategories {
   private readonly service = inject(AdminCategoriesService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmService = inject(ConfirmService);
 
   protected readonly list = this.service.listResource(() => true);
+  protected readonly rows = computed(() => (this.list.value() ?? []) as AdminCategoryDtoEn[]);
   protected readonly deletingId = signal<number | null>(null);
 
-  protected remove(c: AdminCategoryDto): void {
-    if (!confirm(this.translate.instant('categories.confirm_delete', { name: c.name ?? '#' + c.id }))) {
-      return;
-    }
+  protected async remove(c: AdminCategoryDtoEn): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('categories.confirm_delete', { name: c.name ?? '#' + c.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
     this.deletingId.set(c.id);
     this.service.delete(c.id).subscribe({
       next: () => {

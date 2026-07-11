@@ -13,7 +13,7 @@ import {
   type StateOrProvinceLookupDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, ToastService } from 'ui';
+import { Button, ConfirmService, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 interface CountryModel {
@@ -185,6 +185,7 @@ export class AdminCountryForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(AdminSystemService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -312,8 +313,15 @@ export class AdminCountryForm {
     });
   }
 
-  protected removeState(s: StateOrProvinceLookupDto): void {
-    if (!confirm(this.translate.instant('countries.confirm_delete_state', { name: s.name ?? '' }))) {
+  protected async removeState(s: StateOrProvinceLookupDto): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('countries.confirm_delete_state', { name: s.name ?? '' }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.service.deleteState(s.id).subscribe({

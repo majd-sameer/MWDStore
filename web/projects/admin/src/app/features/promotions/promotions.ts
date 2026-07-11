@@ -12,7 +12,7 @@ import {
   type AdminCartRuleUsageDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Icon, ToastService } from 'ui';
+import { ConfirmService, Icon, TableCards, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 
 /**
@@ -23,7 +23,7 @@ import { PageHeader } from '../../shared/page-header';
 @Component({
   selector: 'app-admin-promotions',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DatePipe, Icon, TranslatePipe, PageHeader],
+  imports: [RouterLink, DatePipe, Icon, TranslatePipe, PageHeader, TableCards],
   template: `
     <app-page-header
       [title]="'promotions.title' | translate"
@@ -46,7 +46,7 @@ import { PageHeader } from '../../shared/page-header';
           <div class="alert alert-danger mb-0">{{ 'common.error_api' | translate }}</div>
         } @else if (list.value(); as rows) {
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" libTableCards>
               <thead>
                 <tr>
                   <th scope="col">{{ 'common.name' | translate }}</th>
@@ -114,7 +114,8 @@ import { PageHeader } from '../../shared/page-header';
     <div class="card border-0 shadow-sm">
       <div class="card-header bg-body fw-semibold">{{ 'promotions.usages_title' | translate }}</div>
       <div class="card-body">
-        <table class="table table-sm align-middle mb-0">
+        <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0" libTableCards>
           <thead>
             <tr>
               <th>{{ 'promotions.col_promotion' | translate }}</th>
@@ -142,12 +143,14 @@ import { PageHeader } from '../../shared/page-header';
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   `,
 })
 export class AdminPromotions {
   private readonly service = inject(AdminPromotionsService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -162,8 +165,15 @@ export class AdminPromotions {
     });
   }
 
-  protected remove(r: AdminCartRuleListItem): void {
-    if (!confirm(this.translate.instant('promotions.confirm_delete', { name: r.name ?? '#' + r.id }))) {
+  protected async remove(r: AdminCartRuleListItem): Promise<void> {
+    const ok = await this.confirmService.confirm({
+      title: this.translate.instant('common.confirm_title'),
+      message: this.translate.instant('promotions.confirm_delete', { name: r.name ?? '#' + r.id }),
+      okText: this.translate.instant('common.delete'),
+      cancelText: this.translate.instant('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) {
       return;
     }
     this.deletingId.set(r.id);
