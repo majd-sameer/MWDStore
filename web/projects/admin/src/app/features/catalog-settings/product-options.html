@@ -20,6 +20,8 @@
               <thead>
                 <tr>
                   <th scope="col">{{ 'common.name' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -31,6 +33,8 @@
                         {{ o.name }}
                       </button>
                     </td>
+                    <td class="small text-body-secondary text-nowrap">{{ o.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ o.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <button
@@ -55,7 +59,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="2">
+                    <td colspan="4">
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">{{ 'options.empty' | translate }}</div>
@@ -82,10 +86,12 @@
         </h2>
         <button
           type="button"
-          class="btn-close"
-          [attr.aria-label]="'common.cancel' | translate"
+          class="action-btn"
+          [title]="'common.close' | translate"
           (click)="closePanel()"
-        ></button>
+        >
+          <lib-icon name="x" [size]="16" [label]="'common.close' | translate" />
+        </button>
       </div>
       <div class="offcanvas-body">
         @if (serverError(); as message) {

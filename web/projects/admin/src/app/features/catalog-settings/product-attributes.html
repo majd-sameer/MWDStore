@@ -23,6 +23,8 @@
                     <tr>
                       <th scope="col">{{ 'common.name' | translate }}</th>
                       <th scope="col">{{ 'attributes.col_group' | translate }}</th>
+                      <th scope="col">{{ 'common.created_by' | translate }}</th>
+                      <th scope="col">{{ 'common.modified_by' | translate }}</th>
                       <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
                   </thead>
@@ -33,6 +35,8 @@
                           <button type="button" class="btn btn-link p-0 text-decoration-none fw-medium text-start align-baseline" (click)="openEdit(a)">{{ a.name }}</button>
                         </td>
                         <td class="text-body-secondary">{{ a.groupName }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ a.createdBy ?? '—' }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ a.modifiedBy ?? '—' }}</td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
                             <button type="button" class="action-btn" [title]="'common.edit' | translate" (click)="openEdit(a)">
@@ -52,7 +56,7 @@
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="3">
+                        <td colspan="5">
                           <div class="empty-state">
                             <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                             <div class="empty-title">{{ 'attributes.empty' | translate }}</div>

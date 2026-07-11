@@ -11,7 +11,7 @@ public sealed record MediaDto(long Id, string? FileName, string Url, string? Cap
 public sealed record AdminProductListItem(
     long Id, string Name, string Slug, decimal Price, decimal? OldPrice,
     int StockQuantity, bool IsPublished, bool IsDeleted, long? BrandId,
-    bool HasOptions, bool IsVisibleIndividually, bool IsSignature, string? ThumbnailUrl);
+    bool HasOptions, bool IsVisibleIndividually, bool IsSignature, string? ThumbnailUrl, string? CreatedBy = null, string? ModifiedBy = null);
 
 /// <summary>One value of a product option (mirrors SimplCommerce's <c>ProductOptionValueVm</c>;
 /// the list is JSON-serialized into <c>ProductOptionValue.Value</c>).</summary>
@@ -186,7 +186,7 @@ public sealed record ProductQuickSearchItem(long Id, string Name, string? Sku, b
 
 // ----- Product options (admin CRUD) ----------------------------------------------------------------
 
-public sealed record AdminProductOptionListItem(long Id, string Name, string? NameEn);
+public sealed record AdminProductOptionListItem(long Id, string Name, string? NameEn, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class ProductOptionUpsertRequest
 {
@@ -200,7 +200,7 @@ public sealed class ProductOptionUpsertRequest
 // ----- Product attributes (admin CRUD) --------------------------------------------------------------
 
 public sealed record AdminProductAttributeDto(
-    long Id, string Name, string? NameEn, long GroupId, string GroupName, string? GroupNameEn);
+    long Id, string Name, string? NameEn, long GroupId, string GroupName, string? GroupNameEn, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class ProductAttributeUpsertRequest
 {
@@ -252,7 +252,7 @@ public sealed class CategoryUpsertRequest
 
 public sealed record AdminCategoryDto(
     long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
-    int DisplayOrder, bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted);
+    int DisplayOrder, bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted, string? CreatedBy = null, string? ModifiedBy = null);
 
 // ----- Brands -------------------------------------------------------------------------------------
 
@@ -275,7 +275,7 @@ public sealed class BrandUpsertRequest
 
 public sealed record AdminBrandDto(
     long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
-    bool IsPublished, bool IsDeleted);
+    bool IsPublished, bool IsDeleted, string? CreatedBy = null, string? ModifiedBy = null);
 
 // ----- Order management ---------------------------------------------------------------------------
 
@@ -307,7 +307,7 @@ public sealed class StockAdjustmentRequest
 
 // ----- Tax ----------------------------------------------------------------------------------------
 
-public sealed record AdminTaxClassDto(long Id, string Name);
+public sealed record AdminTaxClassDto(long Id, string Name, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class TaxClassUpsertRequest
 {
@@ -317,7 +317,7 @@ public sealed class TaxClassUpsertRequest
 
 public sealed record AdminTaxRateDto(
     long Id, long TaxClassId, string TaxClassName, string? CountryId, string? CountryName,
-    long? StateOrProvinceId, string? StateOrProvinceName, string? ZipCode, decimal Rate);
+    long? StateOrProvinceId, string? StateOrProvinceName, string? ZipCode, decimal Rate, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class TaxRateUpsertRequest
 {
@@ -335,7 +335,7 @@ public sealed class TaxRateUpsertRequest
 // ----- Shipping -------------------------------------------------------------------------------------
 
 public sealed record AdminShippingProviderDto(
-    string Id, string Name, bool IsEnabled, decimal? FreeShippingMinimumOrderAmount);
+    string Id, string Name, bool IsEnabled, decimal? FreeShippingMinimumOrderAmount, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class ShippingProviderUpdateRequest
 {
@@ -351,7 +351,7 @@ public sealed class ShippingProviderUpdateRequest
 public sealed record AdminTableRateDto(
     long Id, string? ShippingProviderId, string? ShippingProviderName,
     string? CountryId, string? CountryName, long? StateOrProvinceId, string? StateOrProvinceName,
-    string? ZipCode, decimal MinOrderSubtotal, decimal ShippingPrice, string? Note);
+    string? ZipCode, decimal MinOrderSubtotal, decimal ShippingPrice, string? Note, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class TableRateUpsertRequest
 {
@@ -377,7 +377,7 @@ public sealed class TableRateUpsertRequest
 public sealed record AdminWarehouseDto(
     long Id, string Name, string? ContactName, string? Phone, string? AddressLine1, string? AddressLine2,
     string? City, string? ZipCode, long StateOrProvinceId, string? StateOrProvinceName,
-    string CountryId, string? CountryName);
+    string CountryId, string? CountryName, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class WarehouseUpsertRequest
 {
@@ -408,7 +408,7 @@ public sealed record StateOrProvinceLookupDto(long Id, string Name, string? Name
 
 public sealed record AdminCartRuleListItem(
     long Id, string Name, bool IsActive, bool IsCouponRequired, string? RuleToApply,
-    decimal DiscountAmount, DateTimeOffset? StartOn, DateTimeOffset? EndOn, int CouponCount, int UsageCount);
+    decimal DiscountAmount, DateTimeOffset? StartOn, DateTimeOffset? EndOn, int CouponCount, int UsageCount, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminCartRuleDetail(
     long Id, string Name, string? Description, bool IsActive, DateTimeOffset? StartOn, DateTimeOffset? EndOn,
@@ -454,7 +454,7 @@ public sealed record AdminCartRuleUsageDto(
 
 public sealed record AdminUserListItem(
     long Id, string? Email, string FullName, string? PhoneNumber, DateTimeOffset CreatedOn,
-    bool IsDeleted, IReadOnlyList<string> Roles, IReadOnlyList<string> CustomerGroups);
+    bool IsDeleted, IReadOnlyList<string> Roles, IReadOnlyList<string> CustomerGroups, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminUserDetail(
     long Id, string? Email, string FullName, string? PhoneNumber,
@@ -492,7 +492,7 @@ public sealed record RoleDto(long Id, string? Name);
 
 public sealed record AdminCustomerListItem(
     long Id, string? Email, string FullName, string? PhoneNumber, DateTimeOffset CreatedOn,
-    bool IsDeleted, int OrderCount, decimal TotalSpent, IReadOnlyList<string> CustomerGroups);
+    bool IsDeleted, int OrderCount, decimal TotalSpent, IReadOnlyList<string> CustomerGroups, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminCustomerDetail(
     long Id, string? Email, string FullName, string? PhoneNumber, IReadOnlyList<long> CustomerGroupIds);
@@ -536,11 +536,11 @@ public sealed class CustomerGroupUpsertRequest
 
 public sealed record AdminReviewDto(
     long Id, string? Title, string? Comment, int Rating, string? ReviewerName, string? UserEmail,
-    int Status, DateTimeOffset CreatedOn, long EntityId, string? EntityTypeId, string? ProductName);
+    int Status, DateTimeOffset CreatedOn, long EntityId, string? EntityTypeId, string? ProductName, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminCommentDto(
     long Id, string? CommentText, string? CommenterName, string? UserEmail,
-    int Status, DateTimeOffset CreatedOn, long EntityId, string? EntityTypeId, long? ParentId);
+    int Status, DateTimeOffset CreatedOn, long EntityId, string? EntityTypeId, long? ParentId, string? CreatedBy = null, string? ModifiedBy = null);
 
 /// <summary>1 = Pending, 5 = Approved, 8 = NotApproved (the old SimplCommerce enum values).</summary>
 public sealed class ModerationStatusRequest
@@ -555,7 +555,7 @@ public sealed record AdminPageDto(
     long Id, string Name, string? NameEn, string Slug, string? Body, string? BodyEn,
     string? MetaTitle, string? MetaTitleEn, string? MetaKeywords, string? MetaKeywordsEn,
     string? MetaDescription, string? MetaDescriptionEn,
-    bool IsPublished, DateTimeOffset? PublishedOn, DateTimeOffset CreatedOn);
+    bool IsPublished, DateTimeOffset? PublishedOn, DateTimeOffset CreatedOn, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class PageUpsertRequest
 {
@@ -584,7 +584,7 @@ public sealed record AdminMenuItemDto(
     long Id, long MenuId, long? ParentId, string? Name, string? NameEn, string? CustomLink, int DisplayOrder);
 
 public sealed record AdminMenuDto(long Id, string Name, string? NameEn, bool IsPublished, bool IsSystem,
-    IReadOnlyList<AdminMenuItemDto> Items);
+    IReadOnlyList<AdminMenuItemDto> Items, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class MenuUpsertRequest
 {
@@ -635,14 +635,16 @@ public sealed class NewsCategoryUpsertRequest
 }
 
 public sealed record AdminNewsItemListItem(
-    long Id, string Name, string Slug, bool IsPublished, DateTimeOffset CreatedOn, string? ThumbnailUrl);
+    long Id, string Name, string Slug, bool IsPublished, DateTimeOffset CreatedOn, string? ThumbnailUrl, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminNewsItemDetail(
     long Id, string Name, string? NameEn, string Slug, string? ShortContent, string? ShortContentEn,
     string? FullContent, string? FullContentEn,
     string? MetaTitle, string? MetaTitleEn, string? MetaKeywords, string? MetaKeywordsEn,
     string? MetaDescription, string? MetaDescriptionEn,
-    bool IsPublished, long? ThumbnailImageId, string? ThumbnailUrl, IReadOnlyList<long> CategoryIds);
+    bool IsPublished, long? ThumbnailImageId, string? ThumbnailUrl, IReadOnlyList<long> CategoryIds,
+    long? ProductId = null, string? ProductName = null,
+    DateTimeOffset? AlertExpiresOn = null, string? AlertCtaUrl = null);
 
 public sealed class NewsItemUpsertRequest
 {
@@ -672,6 +674,15 @@ public sealed class NewsItemUpsertRequest
     public bool IsPublished { get; set; } = true;
     public long? ThumbnailImageId { get; set; }
     public IList<long> CategoryIds { get; set; } = new List<long>();
+
+    /// <summary>Success stories only: the linked product whose story this tells (null clears it).</summary>
+    public long? ProductId { get; set; }
+
+    /// <summary>Alerts only: when the home band should stop showing this alert (null = no expiry).</summary>
+    public DateTimeOffset? AlertExpiresOn { get; set; }
+
+    /// <summary>Alerts only: optional call-to-action link for the home band (null = link to the article).</summary>
+    public string? AlertCtaUrl { get; set; }
 }
 
 // ----- Payments --------------------------------------------------------------------------------------
@@ -691,7 +702,7 @@ public sealed class PaymentProviderUpdateRequest
 
 public sealed record AdminPaymentDto(
     long Id, long OrderId, decimal Amount, decimal PaymentFee, string? PaymentMethod,
-    string? GatewayTransactionId, int Status, DateTimeOffset CreatedOn);
+    string? GatewayTransactionId, int Status, DateTimeOffset CreatedOn, string? CreatedBy = null, string? ModifiedBy = null);
 
 // ----- Settings, countries/states, localization --------------------------------------------------------
 
@@ -789,7 +800,7 @@ public sealed class ShipmentCreateRequest
 
 public sealed record AdminVendorDto(
     long Id, string Name, string? NameEn, string Slug, string? Email, string? Description,
-    string? DescriptionEn, bool IsActive);
+    string? DescriptionEn, bool IsActive, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class VendorUpsertRequest
 {
@@ -812,7 +823,7 @@ public sealed class VendorUpsertRequest
 
 public sealed record AdminContactDto(
     long Id, string? FullName, string? EmailAddress, string? PhoneNumber, string? Address,
-    string? Content, long ContactAreaId, string ContactAreaName, DateTimeOffset CreatedOn);
+    string? Content, long ContactAreaId, string ContactAreaName, DateTimeOffset CreatedOn, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed record AdminContactAreaDto(long Id, string Name);
 
@@ -833,7 +844,7 @@ public sealed record AdminSearchQueryDto(string QueryText, int Count, DateTimeOf
 // ----- Product templates -----------------------------------------------------------------------------------
 
 public sealed record AdminProductTemplateDto(
-    long Id, string Name, IReadOnlyList<AdminProductAttributeDto> Attributes);
+    long Id, string Name, IReadOnlyList<AdminProductAttributeDto> Attributes, string? CreatedBy = null, string? ModifiedBy = null);
 
 public sealed class ProductTemplateUpsertRequest
 {

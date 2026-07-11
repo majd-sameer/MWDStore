@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -29,10 +30,12 @@ public sealed class AdminPaymentsController : ControllerBase
     ];
 
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminPaymentsController(StoreDbContext db)
+    public AdminPaymentsController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet("providers")]
@@ -106,6 +109,12 @@ public sealed class AdminPaymentsController : ControllerBase
                 p.GatewayTransactionId, p.Status, p.CreatedOn))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(result);
+        var ids = result.Items.Select(p => p.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Payment), ids, cancellationToken);
+        var items = result.Items
+            .Select(p => p with { CreatedBy = stamps.CreatedBy(p.Id), ModifiedBy = stamps.ModifiedBy(p.Id) })
+            .ToList();
+
+        return Ok(result with { Items = items });
     }
 }

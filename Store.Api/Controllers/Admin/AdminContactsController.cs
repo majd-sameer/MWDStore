@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -15,10 +16,12 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminContactsController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminContactsController(StoreDbContext db)
+    public AdminContactsController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -32,6 +35,12 @@ public sealed class AdminContactsController : ControllerBase
                 c.Id, c.FullName, c.EmailAddress, c.PhoneNumber, c.Address, c.Content,
                 c.ContactAreaId, c.ContactArea.Name, c.CreatedOn))
             .ToListAsync(cancellationToken);
+
+        var ids = contacts.Select(x => x.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Contact), ids, cancellationToken);
+        contacts = contacts
+            .Select(x => x with { CreatedBy = stamps.CreatedBy(x.Id), ModifiedBy = stamps.ModifiedBy(x.Id) })
+            .ToList();
 
         return Ok(contacts);
     }

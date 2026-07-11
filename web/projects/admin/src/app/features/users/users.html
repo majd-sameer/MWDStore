@@ -43,6 +43,8 @@
                       <th scope="col">{{ 'users.col_user' | translate }}</th>
                       <th scope="col">{{ 'users.col_roles' | translate }}</th>
                       <th scope="col">{{ 'common.created' | translate }}</th>
+                      <th scope="col">{{ 'common.created_by' | translate }}</th>
+                      <th scope="col">{{ 'common.modified_by' | translate }}</th>
                       <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
                   </thead>
@@ -59,6 +61,8 @@
                           }
                         </td>
                         <td class="small">{{ u.createdOn | date: 'mediumDate' }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ u.createdBy ?? '—' }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ u.modifiedBy ?? '—' }}</td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
                             <a [routerLink]="['/users', u.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -78,7 +82,7 @@
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="4" class="text-center text-body-secondary py-4">
+                        <td colspan="6" class="text-center text-body-secondary py-4">
                           {{ 'users.empty' | translate }}
                         </td>
                       </tr>

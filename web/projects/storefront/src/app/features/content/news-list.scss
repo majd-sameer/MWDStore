@@ -27,6 +27,40 @@
       margin-block: 0.35rem 0;
     }
 
+    /* ---- Category tabs (drive the ?category= query param) ---- */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-block-start: 1.2rem;
+    }
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      padding-block: 6px;
+      padding-inline: 15px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: var(--surface);
+      color: var(--ink-2);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+    }
+    .tab:hover {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+    .tab.is-active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-ink);
+    }
+
     /* ---- Stories grid: 3 per row, 1 per row under 980px ---- */
     .stories-wrap {
       padding-block: 40px;
@@ -53,6 +87,16 @@
     .story:hover {
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
+    }
+    /* Subtle per-category accent stripe (tokens only) */
+    .story[data-cat='success-story'] {
+      border-inline-start: 3px solid var(--accent);
+    }
+    .story[data-cat='activity'] {
+      border-inline-start: 3px solid var(--green);
+    }
+    .story[data-cat='alert'] {
+      border-inline-start: 3px solid var(--navy);
     }
     .story-media {
       display: block;

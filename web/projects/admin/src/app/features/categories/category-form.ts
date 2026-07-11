@@ -19,7 +19,7 @@ import {
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, FormField, ToastService } from 'ui';
+import { Button, FormField, Icon, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
@@ -53,7 +53,7 @@ function emptyModel(): CategoryModel {
 @Component({
   selector: 'app-admin-category-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, TranslatePipe, MultiLangInput],
+  imports: [Control, FormField, Button, Icon, TranslatePipe, MultiLangInput],
   templateUrl: './category-form.html',
 })
 export class AdminCategoryForm {

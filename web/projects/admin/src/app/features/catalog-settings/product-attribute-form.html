@@ -5,10 +5,12 @@
       </h2>
       <button
         type="button"
-        class="btn-close"
-        [attr.aria-label]="'common.close' | translate"
+        class="action-btn"
+        [title]="'common.close' | translate"
         (click)="onCancel()"
-      ></button>
+      >
+        <lib-icon name="x" [size]="16" [label]="'common.close' | translate" />
+      </button>
     </div>
 
     <div class="offcanvas-body">

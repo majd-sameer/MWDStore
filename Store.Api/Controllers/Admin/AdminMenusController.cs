@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -26,13 +27,16 @@ public sealed class AdminMenusController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminMenusController(
-        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -44,7 +48,15 @@ public sealed class AdminMenusController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var (menuOverlay, itemOverlay) = await LoadOverlaysAsync(menus, cancellationToken);
-        return Ok(menus.Select(m => ToDto(m, menuOverlay, itemOverlay)).ToList());
+        var stamps = await _auditStamps.ReadAsync(nameof(Menu), menus.Select(m => m.Id).ToList(), cancellationToken);
+
+        return Ok(menus
+            .Select(m => ToDto(m, menuOverlay, itemOverlay) with
+            {
+                CreatedBy = stamps.CreatedBy(m.Id),
+                ModifiedBy = stamps.ModifiedBy(m.Id),
+            })
+            .ToList());
     }
 
     [HttpGet("{id:long}")]

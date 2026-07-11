@@ -83,6 +83,8 @@
                   <th scope="col">{{ 'products.col_price' | translate }}</th>
                   <th scope="col">{{ 'products.col_stock' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -138,6 +140,8 @@
                         <app-status-pill tone="warning" class="ms-1">{{ 'products.signature' | translate }}</app-status-pill>
                       }
                     </td>
+                    <td class="small text-body-secondary text-nowrap">{{ p.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ p.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         @if (!p.isDeleted) {
@@ -173,7 +177,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="6">
+                    <td colspan="8">
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">

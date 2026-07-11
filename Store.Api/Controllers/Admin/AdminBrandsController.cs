@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -25,13 +26,16 @@ public sealed class AdminBrandsController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminBrandsController(
-        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -49,13 +53,15 @@ public sealed class AdminBrandsController : ControllerBase
             .Select(b => new { b.Id, b.Name, b.Slug, b.Description, b.IsPublished, b.IsDeleted })
             .ToListAsync(cancellationToken);
 
-        var overlay = await _localization.GetOverlayAsync(
-            EntityType, items.Select(b => b.Id).ToList(), EnCulture, cancellationToken);
+        var ids = items.Select(b => b.Id).ToList();
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
+        var stamps = await _auditStamps.ReadAsync(nameof(Brand), ids, cancellationToken);
 
         var dtos = items
             .Select(b => new AdminBrandDto(
                 b.Id, b.Name, overlay.Get(b.Id, LocalizedProperty.Name), b.Slug,
-                b.Description, overlay.Get(b.Id, LocalizedProperty.Description), b.IsPublished, b.IsDeleted))
+                b.Description, overlay.Get(b.Id, LocalizedProperty.Description), b.IsPublished, b.IsDeleted,
+                stamps.CreatedBy(b.Id), stamps.ModifiedBy(b.Id)))
             .ToList();
 
         return Ok(dtos);

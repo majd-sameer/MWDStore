@@ -19,7 +19,7 @@ import {
 } from 'data-access';
 import { firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, FormField, ToastService } from 'ui';
+import { Button, FormField, Icon, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
 
@@ -37,7 +37,7 @@ interface AttributeModel {
 @Component({
   selector: 'app-admin-product-attribute-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, NgSelectModule, FormField, Button, TranslatePipe, MultiLangInput],
+  imports: [Control, NgSelectModule, FormField, Button, Icon, TranslatePipe, MultiLangInput],
   templateUrl: './product-attribute-form.html',
 })
 export class AdminProductAttributeForm {

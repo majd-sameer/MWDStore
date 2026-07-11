@@ -11,7 +11,6 @@ import type {
   AdminPageDto,
   MenuItemUpsertRequest,
   MenuUpsertRequest,
-  NewsCategoryUpsertRequest,
   NewsItemUpsertRequest,
   PageUpsertRequest,
 } from '../models';
@@ -90,34 +89,17 @@ export class AdminCmsService {
 
   // ----- News ----------------------------------------------------------------
 
-  /** GET /api/admin/news/categories */
+  /**
+   * GET /api/admin/news/categories — the three fixed, seeded categories
+   * (success-story, activity, alert). Read-only from the admin: they are code-owned,
+   * so there is no create/rename/delete here.
+   */
   newsCategoriesResource() {
     return runInInjectionContext(this.injector, () =>
       httpResource<AdminNewsCategoryDto[]>(
         () => `${API_ROOT}/admin/news/categories`,
       ),
     );
-  }
-
-  createNewsCategory(body: NewsCategoryUpsertRequest): Observable<AdminNewsCategoryDto> {
-    return this.http.post<AdminNewsCategoryDto>(
-      `${API_ROOT}/admin/news/categories`,
-      body,
-    );
-  }
-
-  updateNewsCategory(
-    id: number,
-    body: NewsCategoryUpsertRequest,
-  ): Observable<AdminNewsCategoryDto> {
-    return this.http.put<AdminNewsCategoryDto>(
-      `${API_ROOT}/admin/news/categories/${id}`,
-      body,
-    );
-  }
-
-  deleteNewsCategory(id: number): Observable<void> {
-    return this.http.delete<void>(`${API_ROOT}/admin/news/categories/${id}`);
   }
 
   /** GET /api/admin/news/items */

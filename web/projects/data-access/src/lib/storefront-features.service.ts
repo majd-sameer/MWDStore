@@ -5,6 +5,7 @@ import { API_ROOT, toQueryParams } from './http-utils';
 import { LocaleState } from './locale-state';
 import type {
   AddWishListItemRequest,
+  AlertDto,
   ComparisonProductDto,
   ContactAreaPublicDto,
   NewsDetailDto,
@@ -61,18 +62,39 @@ export class StorefrontFeaturesService {
     return this.http.get<PublicPageDto>(`${API_ROOT}/pages/${encodeURIComponent(slug)}`);
   }
 
-  news(page = 1): Observable<NewsListItemDto[]> {
+  news(page = 1, category?: string | null): Observable<NewsListItemDto[]> {
     return this.http.get<NewsListItemDto[]>(`${API_ROOT}/news`, {
-      params: toQueryParams({ page }),
+      params: toQueryParams({ page, category: category ?? undefined }),
     });
   }
 
-  /** GET /api/news as a reactive resource (SSR-rendered + transfer-cached). */
-  newsResource(page: () => number = () => 1) {
+  /**
+   * GET /api/news as a reactive resource (SSR-rendered + transfer-cached).
+   * Pass a `category` slug signal to scope the list to one news category
+   * (success-story / activity / alert); null/omitted returns all categories.
+   */
+  newsResource(
+    page: () => number = () => 1,
+    category: () => string | null = () => null,
+  ) {
     return runInInjectionContext(this.injector, () =>
       httpResource<NewsListItemDto[]>(() => ({
         url: `${API_ROOT}/news`,
-        params: toQueryParams({ page: page(), culture: this.locale.language() }),
+        params: toQueryParams({
+          page: page(),
+          category: category() ?? undefined,
+          culture: this.locale.language(),
+        }),
+      })),
+    );
+  }
+
+  /** GET /api/home/alerts as a reactive resource for the home announcement band. */
+  alertsResource() {
+    return runInInjectionContext(this.injector, () =>
+      httpResource<AlertDto[]>(() => ({
+        url: `${API_ROOT}/home/alerts`,
+        params: toQueryParams({ culture: this.locale.language() }),
       })),
     );
   }

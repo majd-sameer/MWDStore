@@ -133,6 +133,14 @@
             </div>
           }
         </div>
+        <button
+          type="button"
+          class="action-btn"
+          [title]="'common.close' | translate"
+          (click)="closePanel()"
+        >
+          <lib-icon name="x" [size]="16" [label]="'common.close' | translate" />
+        </button>
       </div>
       <div class="offcanvas-body">
         @if (stock.isLoading()) {

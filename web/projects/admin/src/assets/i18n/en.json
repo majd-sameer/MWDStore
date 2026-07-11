@@ -252,6 +252,8 @@
     "loading": "Loading…",
     "error_api": "Couldn't load data. Is Store.Api running?",
     "actions": "Actions",
+    "created_by": "Created by",
+    "modified_by": "Modified by",
     "status": "Status",
     "name": "Name",
     "all": "All",
@@ -749,14 +751,6 @@
     "confirm_delete": "Delete “{{name}}”?",
     "deleted_ok": "Article deleted.",
     "delete_failed": "Could not delete the article.",
-    "categories_title": "News categories",
-    "no_categories": "No categories yet.",
-    "new_category_ph": "New category",
-    "category_create_failed": "Could not create the category.",
-    "category_updated": "Category updated.",
-    "category_update_failed": "Could not update the category.",
-    "confirm_delete_category": "Delete category “{{name}}”?",
-    "category_delete_failed": "Could not delete the category.",
     "new_title": "New article",
     "edit_title": "Edit article",
     "load_one_failed": "Couldn't load this article.",
@@ -764,12 +758,24 @@
     "short_content": "Short content",
     "full_content": "Full content (HTML)",
     "thumbnail": "Thumbnail",
-    "no_categories_defined": "No categories defined.",
+    "category_label": "Category",
+    "category_none": "— Select a category —",
     "upload_failed": "Could not upload the image.",
     "create": "Create article",
     "created_ok": "Article created.",
     "updated_ok": "Article updated.",
-    "save_failed": "Could not save the article."
+    "save_failed": "Could not save the article.",
+    "story": {
+      "linked_product": "Linked product",
+      "search_ph": "Search products by name…"
+    },
+    "alert": {
+      "hint": "Alerts appear as a banner at the top of the home page.",
+      "expires_on": "Expires on",
+      "expires_hint": "Leave empty to show until unpublished.",
+      "cta_url": "Button link (CTA)",
+      "cta_hint": "Optional. Leave empty to link to the article."
+    }
   },
   "menus": {
     "title": "Menus",

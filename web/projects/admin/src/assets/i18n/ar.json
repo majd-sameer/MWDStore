@@ -252,6 +252,8 @@
     "loading": "جارٍ التحميل…",
     "error_api": "تعذّر تحميل البيانات. هل خادم Store.Api يعمل؟",
     "actions": "إجراءات",
+    "created_by": "أنشئ بواسطة",
+    "modified_by": "عُدّل بواسطة",
     "status": "الحالة",
     "name": "الاسم",
     "all": "الكل",
@@ -749,14 +751,6 @@
     "confirm_delete": "هل تريد حذف «{{name}}»؟",
     "deleted_ok": "تم حذف المقال.",
     "delete_failed": "تعذّر حذف المقال.",
-    "categories_title": "فئات الأخبار",
-    "no_categories": "لا توجد فئات بعد.",
-    "new_category_ph": "فئة جديدة",
-    "category_create_failed": "تعذّر إنشاء الفئة.",
-    "category_updated": "تم تحديث الفئة.",
-    "category_update_failed": "تعذّر تحديث الفئة.",
-    "confirm_delete_category": "هل تريد حذف الفئة «{{name}}»؟",
-    "category_delete_failed": "تعذّر حذف الفئة.",
     "new_title": "مقال جديد",
     "edit_title": "تعديل المقال",
     "load_one_failed": "تعذّر تحميل هذا المقال.",
@@ -764,12 +758,24 @@
     "short_content": "محتوى مختصر",
     "full_content": "المحتوى الكامل (HTML)",
     "thumbnail": "الصورة المصغّرة",
-    "no_categories_defined": "لا توجد فئات معرّفة.",
+    "category_label": "الفئة",
+    "category_none": "— اختر الفئة —",
     "upload_failed": "تعذّر رفع الصورة.",
     "create": "إنشاء المقال",
     "created_ok": "تم إنشاء المقال.",
     "updated_ok": "تم تحديث المقال.",
-    "save_failed": "تعذّر حفظ المقال."
+    "save_failed": "تعذّر حفظ المقال.",
+    "story": {
+      "linked_product": "المنتج المرتبط",
+      "search_ph": "ابحث عن المنتجات بالاسم…"
+    },
+    "alert": {
+      "hint": "تظهر التنبيهات كشريط في أعلى الصفحة الرئيسية.",
+      "expires_on": "تنتهي في",
+      "expires_hint": "اتركه فارغًا لعرضه حتى إلغاء النشر.",
+      "cta_url": "رابط الزر (CTA)",
+      "cta_hint": "اختياري. اتركه فارغًا للربط بالمقال."
+    }
   },
   "menus": {
     "title": "القوائم",

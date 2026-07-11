@@ -66,18 +66,25 @@ public sealed class ContentController : ControllerBase
 
     [HttpGet("news")]
     public async Task<ActionResult<IReadOnlyList<NewsListItemDto>>> News(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 12, CancellationToken cancellationToken = default)
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 12, [FromQuery] string? category = null,
+        CancellationToken cancellationToken = default)
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 50);
 
-        var items = await _db.NewsItems
-            .Where(n => n.IsPublished && !n.IsDeleted)
+        var query = _db.NewsItems.Where(n => n.IsPublished && !n.IsDeleted);
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(n => n.Categories.Any(c => c.Slug == category));
+        }
+
+        var items = await query
             .OrderByDescending(n => n.PublishedOn)
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(n => new NewsListItemDto(
                 n.Id, n.Name, n.Slug, n.ShortContent,
-                n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null, n.PublishedOn))
+                n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null, n.PublishedOn,
+                n.Categories.OrderBy(c => c.DisplayOrder).Select(c => c.Slug).FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
         var cultureId = RequestCulture.OverlayCultureId(Request);
@@ -97,6 +104,8 @@ public sealed class ContentController : ControllerBase
     {
         var item = await _db.NewsItems
             .Include(n => n.ThumbnailImage)
+            .Include(n => n.Categories)
+            .Include(n => n.Product).ThenInclude(p => p!.ThumbnailImage)
             .FirstOrDefaultAsync(n => n.Slug == slug && n.IsPublished && !n.IsDeleted, cancellationToken);
         if (item == null)
         {
@@ -107,6 +116,20 @@ public sealed class ContentController : ControllerBase
         var overlay = await _localization.GetOverlayAsync(
             LocalizedEntity.NewsItem, new[] { item.Id }, cultureId, cancellationToken);
 
+        var categorySlug = item.Categories.OrderBy(c => c.DisplayOrder).Select(c => c.Slug).FirstOrDefault();
+
+        NewsLinkedProductDto? product = null;
+        // Only surface the linked product when it is still publicly visible.
+        if (item.Product is { IsPublished: true, IsDeleted: false } p)
+        {
+            var productOverlay = await _localization.GetOverlayAsync(
+                LocalizedEntity.Product, new[] { p.Id }, cultureId, cancellationToken);
+            product = new NewsLinkedProductDto(
+                p.Id,
+                productOverlay.Apply(p.Id, LocalizedProperty.Name, p.Name) ?? p.Name,
+                p.Slug, p.Price, _mediaUrl.GetUrl(p.ThumbnailImage?.FileName));
+        }
+
         return Ok(new NewsDetailDto(
             item.Id,
             overlay.Apply(item.Id, LocalizedProperty.Name, item.Name) ?? item.Name,
@@ -114,7 +137,37 @@ public sealed class ContentController : ControllerBase
             overlay.Apply(item.Id, LocalizedProperty.ShortContent, item.ShortContent),
             overlay.Apply(item.Id, LocalizedProperty.FullContent, item.FullContent),
             _mediaUrl.GetUrl(item.ThumbnailImage?.FileName),
-            item.MetaTitle, item.MetaKeywords, item.MetaDescription, item.PublishedOn));
+            item.MetaTitle, item.MetaKeywords, item.MetaDescription, item.PublishedOn,
+            categorySlug, product));
+    }
+
+    /// <summary>
+    /// Published <c>alert</c>-category news for the home announcement band: not expired
+    /// (<c>AlertExpiresOn</c> null or in the future), newest first, capped at 3.
+    /// Anonymous and cheap; the storefront polls it and renders nothing when empty.
+    /// </summary>
+    [HttpGet("home/alerts")]
+    public async Task<ActionResult<IReadOnlyList<AlertDto>>> HomeAlerts(CancellationToken cancellationToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var items = await _db.NewsItems
+            .Where(n => n.IsPublished && !n.IsDeleted
+                && n.Categories.Any(c => c.Slug == NewsCategorySlugs.Alert)
+                && (n.AlertExpiresOn == null || n.AlertExpiresOn > now))
+            .OrderByDescending(n => n.PublishedOn)
+            .Take(3)
+            .Select(n => new AlertDto(n.Id, n.Slug, n.Name, n.ShortContent, n.AlertCtaUrl))
+            .ToListAsync(cancellationToken);
+
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.NewsItem, items.Select(i => i.Id).ToList(), cultureId, cancellationToken);
+
+        return Ok(items.Select(i => i with
+        {
+            Name = overlay.Apply(i.Id, LocalizedProperty.Name, i.Name) ?? i.Name,
+            ShortContent = overlay.Apply(i.Id, LocalizedProperty.ShortContent, i.ShortContent),
+        }).ToList());
     }
 
     // ----- Content blocks (editable static text/media, fixed design) -------------------------------

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -26,15 +27,18 @@ public sealed class AdminPagesController : ControllerBase
     private readonly TimeProvider _timeProvider;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminPagesController(
         StoreDbContext db, TimeProvider timeProvider,
-        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -45,10 +49,17 @@ public sealed class AdminPagesController : ControllerBase
             .OrderByDescending(p => p.Id)
             .ToListAsync(cancellationToken);
 
-        var overlay = await _localization.GetOverlayAsync(
-            EntityType, pages.Select(p => p.Id).ToList(), EnCulture, cancellationToken);
+        var ids = pages.Select(p => p.Id).ToList();
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
+        var stamps = await _auditStamps.ReadAsync(nameof(Page), ids, cancellationToken);
 
-        return Ok(pages.Select(p => ToDto(p, overlay)).ToList());
+        return Ok(pages
+            .Select(p => ToDto(p, overlay) with
+            {
+                CreatedBy = stamps.CreatedBy(p.Id),
+                ModifiedBy = stamps.ModifiedBy(p.Id),
+            })
+            .ToList());
     }
 
     [HttpGet("{id:long}")]

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -23,12 +24,16 @@ public sealed class AdminCustomersController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly UserManager<User> _userManager;
     private readonly TimeProvider _timeProvider;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminCustomersController(StoreDbContext db, UserManager<User> userManager, TimeProvider timeProvider)
+    public AdminCustomersController(
+        StoreDbContext db, UserManager<User> userManager, TimeProvider timeProvider,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _userManager = userManager;
         _timeProvider = timeProvider;
+        _auditStamps = auditStamps;
     }
 
     /// <summary>Customers (non-admin users) with their order count and lifetime spend.</summary>
@@ -56,6 +61,15 @@ public sealed class AdminCustomersController : ControllerBase
                 _db.Orders.Where(o => o.CustomerId == u.Id).Sum(o => (decimal?)o.OrderTotal) ?? 0m,
                 u.CustomerGroups.Select(g => g.Name).ToList()))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
+
+        var ids = result.Items.Select(c => c.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(User), ids, cancellationToken);
+        result = result with
+        {
+            Items = result.Items
+                .Select(c => c with { CreatedBy = stamps.CreatedBy(c.Id), ModifiedBy = stamps.ModifiedBy(c.Id) })
+                .ToList()
+        };
 
         return Ok(result);
     }

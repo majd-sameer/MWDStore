@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -22,11 +23,13 @@ public sealed class AdminPromotionsController : ControllerBase
 
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminPromotionsController(StoreDbContext db, TimeProvider timeProvider)
+    public AdminPromotionsController(StoreDbContext db, TimeProvider timeProvider, IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -38,6 +41,12 @@ public sealed class AdminPromotionsController : ControllerBase
                 r.Id, r.Name, r.IsActive, r.IsCouponRequired, r.RuleToApply,
                 r.DiscountAmount, r.StartOn, r.EndOn, r.Coupons.Count, r.CartRuleUsages.Count))
             .ToListAsync(cancellationToken);
+
+        var ids = rules.Select(r => r.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(CartRule), ids, cancellationToken);
+        rules = rules
+            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
+            .ToList();
 
         return Ok(rules);
     }

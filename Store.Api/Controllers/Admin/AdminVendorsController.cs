@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -25,15 +26,18 @@ public sealed class AdminVendorsController : ControllerBase
     private readonly TimeProvider _timeProvider;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminVendorsController(
         StoreDbContext db, TimeProvider timeProvider,
-        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -45,13 +49,15 @@ public sealed class AdminVendorsController : ControllerBase
             .Select(v => new { v.Id, v.Name, v.Slug, v.Email, v.Description, v.IsActive })
             .ToListAsync(cancellationToken);
 
-        var overlay = await _localization.GetOverlayAsync(
-            EntityType, vendors.Select(v => v.Id).ToList(), EnCulture, cancellationToken);
+        var ids = vendors.Select(v => v.Id).ToList();
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
+        var stamps = await _auditStamps.ReadAsync(nameof(Vendor), ids, cancellationToken);
 
         var dtos = vendors
             .Select(v => new AdminVendorDto(
                 v.Id, v.Name, overlay.Get(v.Id, LocalizedProperty.Name), v.Slug, v.Email,
-                v.Description, overlay.Get(v.Id, LocalizedProperty.Description), v.IsActive))
+                v.Description, overlay.Get(v.Id, LocalizedProperty.Description), v.IsActive,
+                stamps.CreatedBy(v.Id), stamps.ModifiedBy(v.Id)))
             .ToList();
 
         return Ok(dtos);

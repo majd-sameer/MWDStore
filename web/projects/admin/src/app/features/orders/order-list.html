@@ -77,6 +77,8 @@
                   <th scope="col">{{ 'common.status' | translate }}</th>
                   <th scope="col">{{ 'dashboard.col_items' | translate }}</th>
                   <th scope="col">{{ 'dashboard.col_total' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col"></th>
                 </tr>
               </thead>
@@ -94,6 +96,8 @@
                     </td>
                     <td class="tabular-nums">{{ o.itemCount }}</td>
                     <td class="tabular-nums">{{ o.orderTotal | money }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ o.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ o.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <a [routerLink]="['/orders', o.id]" class="action-btn" [title]="'common.view' | translate">
                         <lib-icon name="eye" [size]="15" [label]="'common.view' | translate" />
@@ -102,7 +106,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="6">
+                    <td colspan="8">
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="bag" [size]="26" /></span>
                         <div class="empty-title">

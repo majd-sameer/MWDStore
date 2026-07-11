@@ -136,6 +136,8 @@ await CatalogSeeder.SeedAsync(app.Services);
 await LocalizationSeeder.SeedAsync(app.Services);
 // Editable CMS content blocks for the storefront (insert-by-key only; additive).
 await ContentBlockSeeder.SeedAsync(app.Services);
+// The three fixed news categories (success story, activity, alert) — insert-by-slug; additive.
+await NewsCategorySeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

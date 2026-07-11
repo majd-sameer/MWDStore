@@ -72,6 +72,8 @@
                 <th>{{ 'payments.col_fee' | translate }}</th>
                 <th>{{ 'payments.col_ref' | translate }}</th>
                 <th>{{ 'common.when' | translate }}</th>
+                <th scope="col">{{ 'common.created_by' | translate }}</th>
+                <th scope="col">{{ 'common.modified_by' | translate }}</th>
               </tr>
               </thead>
               <tbody>
@@ -91,10 +93,12 @@
                       }
                     </td>
                     <td class="small">{{ t.createdOn | date: 'medium' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ t.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ t.modifiedBy ?? '—' }}</td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="7" class="text-center text-body-secondary py-4">
+                    <td colspan="9" class="text-center text-body-secondary py-4">
                       {{ 'payments.no_payments' | translate }}
                     </td>
                   </tr>

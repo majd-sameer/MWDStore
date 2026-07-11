@@ -7,12 +7,20 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LanguageService } from 'core';
 import { StorefrontFeaturesService, type NewsListItemDto } from 'data-access';
 import { Breadcrumb, type BreadcrumbItem, Tile } from 'ui';
 import { SeoService } from '../../core/seo.service';
+
+/** The four filter tabs; `slug: null` is the "All" tab. */
+const NEWS_TABS: readonly { slug: string | null; key: string }[] = [
+  { slug: null, key: 'news.tabs.all' },
+  { slug: 'success-story', key: 'news.tabs.success_story' },
+  { slug: 'activity', key: 'news.tabs.activity' },
+  { slug: 'alert', key: 'news.tabs.alert' },
+];
 
 /**
  * News listing (`/news`) — per supported-doc/SUCCESS-STORIES-PAGE.md: an ivory
@@ -35,8 +43,20 @@ export class NewsList {
   private readonly seo = inject(SeoService);
   private readonly translate = inject(TranslateService);
   private readonly language = inject(LanguageService);
+  private readonly route = inject(ActivatedRoute);
 
-  protected readonly result = this.service.newsResource();
+  protected readonly tabs = NEWS_TABS;
+
+  /** The active category slug, bound to the `?category=` query param (deep-linkable, SSR-friendly). */
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  protected readonly activeCategory = computed(() => this.queryParams().get('category'));
+
+  protected readonly result = this.service.newsResource(
+    () => 1,
+    () => this.activeCategory(),
+  );
   protected readonly items = computed(() => this.result.value() ?? []);
   protected readonly locale = computed(() => (this.language.lang() === 'ar' ? 'ar' : 'en-US'));
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -24,13 +25,16 @@ public sealed class AdminProductOptionsController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminProductOptionsController(
-        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -43,9 +47,13 @@ public sealed class AdminProductOptionsController : ControllerBase
 
         var overlay = await _localization.GetOverlayAsync(
             EntityType, options.Select(o => o.Id).ToList(), EnCulture, cancellationToken);
+        var stamps = await _auditStamps.ReadAsync(
+            nameof(ProductOption), options.Select(o => o.Id).ToList(), cancellationToken);
 
         var dtos = options
-            .Select(o => new AdminProductOptionListItem(o.Id, o.Name, overlay.Get(o.Id, LocalizedProperty.Name)))
+            .Select(o => new AdminProductOptionListItem(
+                o.Id, o.Name, overlay.Get(o.Id, LocalizedProperty.Name),
+                stamps.CreatedBy(o.Id), stamps.ModifiedBy(o.Id)))
             .ToList();
 
         return Ok(dtos);

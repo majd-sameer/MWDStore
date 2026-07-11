@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -15,10 +16,12 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminProductTemplatesController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminProductTemplatesController(StoreDbContext db)
+    public AdminProductTemplatesController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -29,7 +32,14 @@ public sealed class AdminProductTemplatesController : ControllerBase
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
 
-        return Ok(templates.Select(ToDto).ToList());
+        var stamps = await _auditStamps.ReadAsync(
+            nameof(ProductTemplate), templates.Select(t => t.Id).ToList(), cancellationToken);
+
+        var dtos = templates
+            .Select(t => ToDto(t) with { CreatedBy = stamps.CreatedBy(t.Id), ModifiedBy = stamps.ModifiedBy(t.Id) })
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpPost]

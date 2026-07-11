@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Shipping;
 using Store.Data;
 using Store.Domain;
@@ -22,10 +23,12 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminShippingController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminShippingController(StoreDbContext db)
+    public AdminShippingController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     // ----- Providers ------------------------------------------------------------------------------
@@ -126,6 +129,12 @@ public sealed class AdminShippingController : ControllerBase
                 r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
                 r.ZipCode, r.MinOrderSubtotal, r.ShippingPrice, r.Note))
             .ToListAsync(cancellationToken);
+
+        var ids = rates.Select(r => r.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(PriceAndDestination), ids, cancellationToken);
+        rates = rates
+            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
+            .ToList();
 
         return Ok(rates);
     }

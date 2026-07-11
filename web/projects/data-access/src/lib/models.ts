@@ -387,6 +387,8 @@ export interface OrderSummaryDto {
   orderStatusName: string | null;
   orderTotal: number;
   itemCount: number;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 /** A single status-change milestone for the tracking timeline. */
@@ -452,6 +454,8 @@ export interface AdminBrandDto {
   descriptionEn: string | null;
   isPublished: boolean;
   isDeleted: boolean;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface BrandUpsertRequest {
@@ -475,6 +479,8 @@ export interface AdminCategoryDto {
   includeInMenu: boolean;
   parentId: number | null;
   isDeleted: boolean;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface CategoryUpsertRequest {
@@ -514,6 +520,8 @@ export interface AdminProductListItem {
   isVisibleIndividually: boolean;
   isSignature: boolean;
   thumbnailUrl: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 /** One option value; the backend stores the list as JSON (PascalCase keys for old-data compat). */
@@ -702,6 +710,8 @@ export interface AdminProductOptionListItem {
   id: number;
   name: string | null;
   nameEn: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface ProductOptionUpsertRequest {
@@ -716,6 +726,8 @@ export interface AdminProductAttributeDto {
   groupId: number;
   groupName: string | null;
   groupNameEn: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface ProductAttributeUpsertRequest {
@@ -767,6 +779,8 @@ export interface StockAdjustmentRequest {
 export interface AdminTaxClassDto {
   id: number;
   name: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface TaxClassUpsertRequest {
@@ -783,6 +797,8 @@ export interface AdminTaxRateDto {
   stateOrProvinceName: string | null;
   zipCode: string | null;
   rate: number;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface TaxRateUpsertRequest {
@@ -798,6 +814,8 @@ export interface AdminShippingProviderDto {
   name: string | null;
   isEnabled: boolean;
   freeShippingMinimumOrderAmount: number | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface ShippingProviderUpdateRequest {
@@ -818,6 +836,8 @@ export interface AdminTableRateDto {
   minOrderSubtotal: number;
   shippingPrice: number;
   note: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface TableRateUpsertRequest {
@@ -843,6 +863,8 @@ export interface AdminWarehouseDto {
   stateOrProvinceName: string | null;
   countryId: string;
   countryName: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface WarehouseUpsertRequest {
@@ -884,6 +906,8 @@ export interface AdminCartRuleListItem {
   endOn: string | null;
   couponCount: number;
   usageCount: number;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminCartRuleDetail {
@@ -947,6 +971,8 @@ export interface AdminUserListItem {
   isDeleted: boolean;
   roles: string[];
   customerGroups: string[];
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminUserDetail {
@@ -989,6 +1015,8 @@ export interface AdminCustomerListItem {
   orderCount: number;
   totalSpent: number;
   customerGroups: string[];
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminCustomerDetail {
@@ -1038,6 +1066,8 @@ export interface AdminReviewDto {
   entityId: number;
   entityTypeId: string | null;
   productName: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminCommentDto {
@@ -1050,6 +1080,8 @@ export interface AdminCommentDto {
   entityId: number;
   entityTypeId: string | null;
   parentId: number | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 /** 1 = Pending, 5 = Approved, 8 = NotApproved (old SimplCommerce enum values). */
@@ -1077,6 +1109,8 @@ export interface AdminPageDto {
   isPublished: boolean;
   publishedOn: string | null;
   createdOn: string;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface PageUpsertRequest {
@@ -1111,6 +1145,8 @@ export interface AdminMenuDto {
   isPublished: boolean;
   isSystem: boolean;
   items: AdminMenuItemDto[];
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface MenuUpsertRequest {
@@ -1155,6 +1191,8 @@ export interface AdminNewsItemListItem {
   isPublished: boolean;
   createdOn: string;
   thumbnailUrl: string | null;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminNewsItemDetail {
@@ -1176,6 +1214,12 @@ export interface AdminNewsItemDetail {
   thumbnailImageId: number | null;
   thumbnailUrl: string | null;
   categoryIds: number[];
+  /** Success stories only: the linked product's id and name. */
+  productId: number | null;
+  productName: string | null;
+  /** Alerts only: expiry (ISO) and optional CTA link. */
+  alertExpiresOn: string | null;
+  alertCtaUrl: string | null;
 }
 
 export interface NewsItemUpsertRequest {
@@ -1195,6 +1239,11 @@ export interface NewsItemUpsertRequest {
   isPublished?: boolean;
   thumbnailImageId?: number | null;
   categoryIds?: number[];
+  /** Success stories only: linked product id (null clears it). */
+  productId?: number | null;
+  /** Alerts only: expiry (ISO 8601) and CTA link (null clears them). */
+  alertExpiresOn?: string | null;
+  alertCtaUrl?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1223,6 +1272,8 @@ export interface AdminPaymentDto {
   gatewayTransactionId: string | null;
   status: number;
   createdOn: string;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1333,6 +1384,8 @@ export interface AdminVendorDto {
   description: string | null;
   descriptionEn: string | null;
   isActive: boolean;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface VendorUpsertRequest {
@@ -1355,6 +1408,8 @@ export interface AdminContactDto {
   contactAreaId: number;
   contactAreaName: string | null;
   createdOn: string;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminContactAreaDto {
@@ -1386,6 +1441,8 @@ export interface AdminProductTemplateDto {
   id: number;
   name: string | null;
   attributes: AdminProductAttributeDto[];
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface ProductTemplateUpsertRequest {
@@ -1449,6 +1506,16 @@ export interface NewsListItemDto {
   shortContent: string | null;
   thumbnailUrl: string | null;
   publishedOn: string | null;
+  categorySlug: string | null;
+}
+
+/** Compact product summary for a success story's "Shop this story" card. */
+export interface NewsLinkedProductDto {
+  id: number;
+  name: string | null;
+  slug: string | null;
+  price: number;
+  thumbnailUrl: string | null;
 }
 
 export interface NewsDetailDto {
@@ -1462,6 +1529,17 @@ export interface NewsDetailDto {
   metaKeywords: string | null;
   metaDescription: string | null;
   publishedOn: string | null;
+  categorySlug: string | null;
+  product: NewsLinkedProductDto | null;
+}
+
+/** A published, non-expired alert for the home announcement band. */
+export interface AlertDto {
+  id: number;
+  slug: string | null;
+  name: string | null;
+  shortContent: string | null;
+  alertCtaUrl: string | null;
 }
 
 export interface ContactAreaPublicDto {

@@ -12,15 +12,36 @@
         </div>
       } @else if (item(); as n) {
         <h1 class="page-title">{{ n.name }}</h1>
-        @if (n.publishedOn) {
-          <time class="article-date" [attr.datetime]="n.publishedOn">
-            {{ n.publishedOn | date: 'mediumDate' : '' : locale() }}
-          </time>
-        }
+        <div class="article-meta">
+          @if (badgeKey(n.categorySlug); as key) {
+            <span class="cat-badge" [attr.data-cat]="n.categorySlug">{{ key | translate }}</span>
+          }
+          @if (n.publishedOn) {
+            <time class="article-date" [attr.datetime]="n.publishedOn">
+              {{ n.publishedOn | date: 'mediumDate' : '' : locale() }}
+            </time>
+          }
+        </div>
         @if (n.thumbnailUrl) {
           <img class="article-hero" [src]="n.thumbnailUrl" [alt]="n.name" />
         }
         <div class="article-body" [innerHTML]="n.fullContent"></div>
+
+        @if (n.product; as p) {
+          <aside class="shop-story">
+            <a class="ss-media" [routerLink]="['/products', p.id]" [attr.aria-label]="p.name">
+              <lib-tile [src]="p.thumbnailUrl" [seed]="p.name ?? p.id" [alt]="p.name" ratio="1x1" />
+            </a>
+            <div class="ss-body">
+              <span class="ss-eyebrow">{{ 'news.story.shop_this_story' | translate }}</span>
+              <a class="ss-name" [routerLink]="['/products', p.id]">{{ p.name }}</a>
+              <span class="ss-price tabular-nums">{{ p.price | money }}</span>
+            </div>
+            <a class="ss-cta" libButton variant="success" [routerLink]="['/products', p.id]">
+              {{ 'news.story.view_product' | translate }}
+            </a>
+          </aside>
+        }
       } @else {
         <p class="text-body-secondary text-center py-5">{{ 'common.error' | translate }}</p>
       }

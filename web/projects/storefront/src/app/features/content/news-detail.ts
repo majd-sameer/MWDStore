@@ -10,15 +10,23 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { LanguageService } from 'core';
+import { LanguageService, MoneyPipe } from 'core';
 import { StorefrontFeaturesService, type NewsDetailDto } from 'data-access';
+import { Button, Tile } from 'ui';
 import { SeoService } from '../../core/seo.service';
+
+/** Maps a category slug to its badge label key (null for uncategorised / unknown). */
+const BADGE_KEYS: Readonly<Record<string, string>> = {
+  'success-story': 'news.badge.success_story',
+  activity: 'news.badge.activity',
+  alert: 'news.badge.alert',
+};
 
 /** News article (`/news/:slug`): server-rendered; body is trusted admin-authored HTML. */
 @Component({
   selector: 'app-news-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, TranslatePipe, RouterLink],
+  imports: [DatePipe, TranslatePipe, RouterLink, Button, Tile, MoneyPipe],
   templateUrl: './news-detail.html',
   styleUrl: './news-detail.scss',
 })
@@ -35,6 +43,11 @@ export class NewsDetail {
   protected readonly item = signal<NewsDetailDto | null>(null);
   protected readonly loading = signal(true);
   protected readonly locale = computed(() => (this.language.lang() === 'ar' ? 'ar' : 'en-US'));
+
+  /** The i18n key for the category badge, or null when there's nothing to show. */
+  protected badgeKey(slug: string | null): string | null {
+    return slug ? (BADGE_KEYS[slug] ?? null) : null;
+  }
 
   constructor() {
     effect(() => {

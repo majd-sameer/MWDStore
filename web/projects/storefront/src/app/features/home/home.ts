@@ -24,6 +24,7 @@ import { MissionBand } from './sections/mission-band';
 import { StoryRail } from './sections/story-rail';
 import { ValuesRow } from './sections/values-row';
 import { CtaBand } from './sections/cta-band';
+import { AlertBand } from './sections/alert-band/alert-band';
 
 /**
  * Home page per supported-doc/HOME-PAGE.md: hero → trust strip → categories →
@@ -37,6 +38,7 @@ import { CtaBand } from './sections/cta-band';
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AlertBand,
     Hero,
     TrustStrip,
     CollectionRail,
@@ -70,7 +72,9 @@ export class Home {
     pageSize: 4,
     sort: 'newest',
   }));
-  private readonly news = this.features.newsResource();
+  /** Latest success stories drive the story rail; alerts drive the top announcement band. */
+  private readonly news = this.features.newsResource(() => 1, () => 'success-story');
+  protected readonly alerts = this.features.alertsResource();
 
   /** Hero stat: reform & rehabilitation centers (active vendors on the API). */
   protected readonly centerCount = computed(() => this.vendorCount.value() ?? null);

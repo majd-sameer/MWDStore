@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -26,13 +27,16 @@ public sealed class AdminProductAttributesController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminProductAttributesController(
-        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -47,11 +51,14 @@ public sealed class AdminProductAttributesController : ControllerBase
             AttributeType, attributes.Select(a => a.Id).ToList(), EnCulture, cancellationToken);
         var groupOverlay = await _localization.GetOverlayAsync(
             GroupType, attributes.Select(a => a.GroupId).Distinct().ToList(), EnCulture, cancellationToken);
+        var stamps = await _auditStamps.ReadAsync(
+            nameof(ProductAttribute), attributes.Select(a => a.Id).ToList(), cancellationToken);
 
         var dtos = attributes
             .Select(a => new AdminProductAttributeDto(
                 a.Id, a.Name, attrOverlay.Get(a.Id, LocalizedProperty.Name),
-                a.GroupId, a.GroupName, groupOverlay.Get(a.GroupId, LocalizedProperty.Name)))
+                a.GroupId, a.GroupName, groupOverlay.Get(a.GroupId, LocalizedProperty.Name),
+                stamps.CreatedBy(a.Id), stamps.ModifiedBy(a.Id)))
             .ToList();
 
         return Ok(dtos);

@@ -51,6 +51,8 @@
                     <th>{{ 'moderation.col_by' | translate }}</th>
                     <th>{{ 'common.status' | translate }}</th>
                     <th>{{ 'common.when' | translate }}</th>
+                    <th scope="col">{{ 'common.created_by' | translate }}</th>
+                    <th scope="col">{{ 'common.modified_by' | translate }}</th>
                     <th class="text-end">{{ 'common.actions' | translate }}</th>
                   </tr>
                 </thead>
@@ -66,6 +68,8 @@
                       <td>{{ r.reviewerName || r.userEmail }}</td>
                       <td><span class="badge" [class]="statusBadge(r.status)">{{ statusKey(r.status) | translate }}</span></td>
                       <td class="small">{{ r.createdOn | date: 'mediumDate' }}</td>
+                      <td class="small text-body-secondary text-nowrap">{{ r.createdBy ?? '—' }}</td>
+                      <td class="small text-body-secondary text-nowrap">{{ r.modifiedBy ?? '—' }}</td>
                       <td class="text-end text-nowrap">
                         @if (r.status !== 5) {
                           <button type="button" class="btn btn-sm btn-outline-success"
@@ -81,7 +85,7 @@
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="7" class="text-center text-body-secondary py-4">
+                      <td colspan="9" class="text-center text-body-secondary py-4">
                         {{ 'moderation.no_reviews' | translate }}
                       </td>
                     </tr>
@@ -132,6 +136,8 @@
                     <th>{{ 'moderation.col_by' | translate }}</th>
                     <th>{{ 'common.status' | translate }}</th>
                     <th>{{ 'common.when' | translate }}</th>
+                    <th scope="col">{{ 'common.created_by' | translate }}</th>
+                    <th scope="col">{{ 'common.modified_by' | translate }}</th>
                     <th class="text-end">{{ 'common.actions' | translate }}</th>
                   </tr>
                 </thead>
@@ -147,6 +153,8 @@
                       <td>{{ c.commenterName || c.userEmail }}</td>
                       <td><span class="badge" [class]="statusBadge(c.status)">{{ statusKey(c.status) | translate }}</span></td>
                       <td class="small">{{ c.createdOn | date: 'mediumDate' }}</td>
+                      <td class="small text-body-secondary text-nowrap">{{ c.createdBy ?? '—' }}</td>
+                      <td class="small text-body-secondary text-nowrap">{{ c.modifiedBy ?? '—' }}</td>
                       <td class="text-end text-nowrap">
                         @if (c.status !== 5) {
                           <button type="button" class="btn btn-sm btn-outline-success"
@@ -162,7 +170,7 @@
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="5" class="text-center text-body-secondary py-4">
+                      <td colspan="7" class="text-center text-body-secondary py-4">
                         {{ 'moderation.no_comments' | translate }}
                       </td>
                     </tr>

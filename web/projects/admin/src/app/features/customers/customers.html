@@ -32,6 +32,8 @@
                   <th scope="col">{{ 'nav.orders' | translate }}</th>
                   <th scope="col">{{ 'customers.col_spend' | translate }}</th>
                   <th scope="col">{{ 'customers.col_joined' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -45,6 +47,8 @@
                     <td>{{ c.orderCount }}</td>
                     <td>{{ c.totalSpent | money }}</td>
                     <td class="small">{{ c.createdOn | date: 'mediumDate' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ c.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ c.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/customers', c.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -64,7 +68,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="5" class="text-center text-body-secondary py-4">
+                    <td colspan="7" class="text-center text-body-secondary py-4">
                       {{ 'customers.empty' | translate }}
                     </td>
                   </tr>

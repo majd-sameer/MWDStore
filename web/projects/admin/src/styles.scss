@@ -148,7 +148,16 @@ h1.h3 {
 // so slide-in forms read as a clean sheet over the dimmed page.
 .offcanvas {
   --bs-offcanvas-bg: #fff;
+  // Match the audit-log drawer: a 480px sheet pinned to the trailing edge with a
+  // soft leading shadow, applied consistently to every admin offcanvas.
+  --bs-offcanvas-width: min(480px, 100vw);
   background-color: #fff;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+}
+// Header echoes the audit drawer: title on the lead, an action-btn close (with
+// the `x` icon) on the trail — no divider, just breathing room before the body.
+.offcanvas-header {
+  border-bottom: 0 !important;
 }
 // Bootstrap pulls the header close button flush with a physical negative
 // margin-right, which stays on the wrong side in RTL. Use logical margins so
@@ -156,6 +165,20 @@ h1.h3 {
 .offcanvas-header .btn-close {
   margin-inline-start: 0;
   margin-inline-end: calc(-0.5 * var(--bs-offcanvas-padding-x));
+}
+// Shipping providers config panel: a short, self-sizing list. Widen it so the
+// three columns (name / enable / free-min) breathe, and drop the body scrollbar
+// — the content never fills a viewport-height panel, so `auto` only ever showed
+// a stray track.
+.providers-panel .offcanvas-body {
+  overflow: visible;
+}
+.providers-panel .offcanvas-body .table {
+  width: 100%;
+}
+.providers-panel .offcanvas-body .table th,
+.providers-panel .offcanvas-body .table td {
+  white-space: nowrap;
 }
 
 // Toolbar helpers ---------------------------------------------------------------

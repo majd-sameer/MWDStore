@@ -140,6 +140,11 @@
                         }
                       }
                     }
+
+                    <div class="small text-body-secondary text-nowrap mt-2">
+                      {{ 'common.created_by' | translate }}: {{ block.createdBy ?? '—' }}
+                      · {{ 'common.modified_by' | translate }}: {{ block.modifiedBy ?? '—' }}
+                    </div>
                   </div>
                 </div>
               }

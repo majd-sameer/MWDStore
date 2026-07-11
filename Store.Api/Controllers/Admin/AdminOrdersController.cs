@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Orders;
 using Store.Data;
+using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
@@ -17,12 +19,15 @@ public sealed class AdminOrdersController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly IOrderService _orderService;
     private readonly TimeProvider _timeProvider;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminOrdersController(StoreDbContext db, IOrderService orderService, TimeProvider timeProvider)
+    public AdminOrdersController(
+        StoreDbContext db, IOrderService orderService, TimeProvider timeProvider, IAuditStampReader auditStamps)
     {
         _db = db;
         _orderService = orderService;
         _timeProvider = timeProvider;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -63,7 +68,13 @@ public sealed class AdminOrdersController : ControllerBase
             .OrderByDescending(o => o.CreatedOn)
             .ToPagedResultAsync(page, pageSize, o => o.ToSummary(), cancellationToken);
 
-        return Ok(result);
+        var ids = result.Items.Select(o => o.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Order), ids, cancellationToken);
+        var items = result.Items
+            .Select(o => o with { CreatedBy = stamps.CreatedBy(o.Id), ModifiedBy = stamps.ModifiedBy(o.Id) })
+            .ToList();
+
+        return Ok(result with { Items = items });
     }
 
     [HttpGet("{id:long}")]

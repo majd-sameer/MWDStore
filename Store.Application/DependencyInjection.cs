@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.TryAddSingleton(new ShippingOptions());
 
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IAuditStampReader, AuditStampReader>();
         services.AddScoped<IProductPricingService, ProductPricingService>();
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<ILocalizationService, LocalizationService>();

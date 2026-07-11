@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
+using Store.Application.Auditing;
 using Store.Application.Common;
 using Store.Application.Content;
 using Store.Application.Localization;
@@ -28,12 +29,15 @@ public sealed class ContentBlocksController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IMediaUrlBuilder _mediaUrl;
+    private readonly IAuditStampReader _auditStamps;
 
-    public ContentBlocksController(StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl)
+    public ContentBlocksController(
+        StoreDbContext db, TimeProvider timeProvider, IMediaUrlBuilder mediaUrl, IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaUrl = mediaUrl;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -67,6 +71,8 @@ public sealed class ContentBlocksController : ControllerBase
                 && ids.Contains(p.EntityId))
             .ToDictionaryAsync(p => p.EntityId, p => p.Value, cancellationToken);
 
+        var stamps = await _auditStamps.ReadAsync(nameof(ContentBlock), ids, cancellationToken);
+
         var groups = blocks
             .GroupBy(b => b.SectionKey)
             .Select(g => new AdminContentSectionDto(
@@ -75,7 +81,8 @@ public sealed class ContentBlocksController : ControllerBase
                     b.Id, b.SectionKey, b.BlockKey, b.Type,
                     b.Value, english.GetValueOrDefault(b.Id),
                     b.MediumId, _mediaUrl.GetUrl(b.MediumFileName), b.LinkUrl,
-                    b.IsActive, b.SortOrder)).ToList()))
+                    b.IsActive, b.SortOrder,
+                    stamps.CreatedBy(b.Id), stamps.ModifiedBy(b.Id))).ToList()))
             .ToList();
 
         return Ok(groups);
@@ -253,7 +260,7 @@ public sealed record AdminContentSectionDto(string SectionKey, IReadOnlyList<Adm
 public sealed record AdminContentBlockDto(
     long Id, string SectionKey, string BlockKey, string Type,
     string? ValueAr, string? ValueEn, long? MediumId, string? MediaUrl, string? LinkUrl,
-    bool IsActive, int SortOrder);
+    bool IsActive, int SortOrder, string? CreatedBy = null, string? ModifiedBy = null);
 
 /// <summary>Editable fields only — keys and Type are code-owned and cannot be changed.</summary>
 public sealed class ContentBlockUpdateRequest

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -15,10 +16,12 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminWarehousesController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminWarehousesController(StoreDbContext db)
+    public AdminWarehousesController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     private static readonly System.Linq.Expressions.Expression<Func<Warehouse, AdminWarehouseDto>> Projection =
@@ -35,7 +38,13 @@ public sealed class AdminWarehousesController : ControllerBase
             .Select(Projection)
             .ToListAsync(cancellationToken);
 
-        return Ok(warehouses);
+        var ids = warehouses.Select(w => w.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Warehouse), ids, cancellationToken);
+        var dtos = warehouses
+            .Select(w => w with { CreatedBy = stamps.CreatedBy(w.Id), ModifiedBy = stamps.ModifiedBy(w.Id) })
+            .ToList();
+
+        return Ok(dtos);
     }
 
     [HttpGet("{id:long}")]

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
 using Store.Domain;
 
@@ -15,10 +16,12 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminTaxController : ControllerBase
 {
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminTaxController(StoreDbContext db)
+    public AdminTaxController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     // ----- Tax classes ---------------------------------------------------------------------------
@@ -30,6 +33,12 @@ public sealed class AdminTaxController : ControllerBase
             .OrderBy(c => c.Name)
             .Select(c => new AdminTaxClassDto(c.Id, c.Name))
             .ToListAsync(cancellationToken);
+
+        var ids = classes.Select(c => c.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(TaxClass), ids, cancellationToken);
+        classes = classes
+            .Select(c => c with { CreatedBy = stamps.CreatedBy(c.Id), ModifiedBy = stamps.ModifiedBy(c.Id) })
+            .ToList();
 
         return Ok(classes);
     }
@@ -97,6 +106,12 @@ public sealed class AdminTaxController : ControllerBase
                 r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
                 r.ZipCode, r.Rate))
             .ToListAsync(cancellationToken);
+
+        var ids = rates.Select(r => r.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(TaxRate), ids, cancellationToken);
+        rates = rates
+            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
+            .ToList();
 
         return Ok(rates);
     }

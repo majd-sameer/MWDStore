@@ -53,19 +53,62 @@
                 <input id="nw-thumb" type="file" class="file-field mb-3" accept="image/*"
                   [disabled]="uploading()" (change)="onThumbnailSelected($event)" />
 
-                <div class="form-label">{{ 'nav.categories' | translate }}</div>
-                <div class="border rounded p-2 mb-3">
-                  @for (c of categories.value() ?? []; track c.id) {
-                    <div class="form-check">
-                      <input type="checkbox" class="form-check-input" id="nw-cat-{{ c.id }}"
-                        [checked]="categoryIds().includes(c.id)"
-                        (change)="toggleCategory(c.id)" />
-                      <label class="form-check-label" for="nw-cat-{{ c.id }}">{{ c.name }}</label>
+                <lib-form-field [label]="'news.category_label' | translate" controlId="nw-cat">
+                  <select id="nw-cat" class="form-select" (change)="onCategoryChange($event)">
+                    <option value="" [selected]="categoryId() === null">
+                      {{ 'news.category_none' | translate }}
+                    </option>
+                    @for (c of categories.value() ?? []; track c.id) {
+                      <option [value]="c.id" [selected]="c.id === categoryId()">{{ categoryLabel(c) }}</option>
+                    }
+                  </select>
+                </lib-form-field>
+
+                <!-- Success story → link the product whose story this tells. -->
+                @if (isSuccessStory()) {
+                  <lib-form-field [label]="'news.story.linked_product' | translate" controlId="nw-prod">
+                    @if (productId() !== null) {
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge text-bg-light border fs-6">{{ productName() }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearProduct()">
+                          {{ 'common.remove' | translate }}
+                        </button>
+                      </div>
+                    } @else {
+                      <input id="nw-prod" type="text" class="form-control"
+                        [placeholder]="'news.story.search_ph' | translate"
+                        (input)="searchProducts($any($event.target).value)" />
+                      @if (searchResults().length) {
+                        <div class="list-group mt-1">
+                          @for (r of searchResults(); track r.id) {
+                            <button type="button" class="list-group-item list-group-item-action"
+                              (click)="selectProduct(r)">{{ r.name }}</button>
+                          }
+                        </div>
+                      }
+                    }
+                  </lib-form-field>
+                }
+
+                <!-- Alert → home-band expiry + optional CTA link. -->
+                @if (isAlert()) {
+                  <div class="alert alert-info py-2 small">{{ 'news.alert.hint' | translate }}</div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <lib-form-field [label]="'news.alert.expires_on' | translate" controlId="nw-exp"
+                        [hint]="'news.alert.expires_hint' | translate">
+                        <input id="nw-exp" type="datetime-local" class="form-control" [formField]="f.alertExpiresOn" />
+                      </lib-form-field>
                     </div>
-                  } @empty {
-                    <span class="text-body-secondary small">{{ 'news.no_categories_defined' | translate }}</span>
-                  }
-                </div>
+                    <div class="col-md-6">
+                      <lib-form-field [label]="'news.alert.cta_url' | translate" controlId="nw-cta"
+                        [hint]="'news.alert.cta_hint' | translate">
+                        <input id="nw-cta" type="url" class="form-control" placeholder="https://…"
+                          [formField]="f.alertCtaUrl" />
+                      </lib-form-field>
+                    </div>
+                  </div>
+                }
 
                 <div class="form-check form-switch mb-3">
                   <input id="nw-pub" type="checkbox" class="form-check-input" [formField]="f.isPublished" />

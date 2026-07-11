@@ -12,7 +12,7 @@ import {
   type AdminProductTemplateDto,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Button, ToastService } from 'ui';
+import { Button, Icon, ToastService } from 'ui';
 
 /**
  * Create / edit a product template (a named attribute set) inside an offcanvas
@@ -24,7 +24,7 @@ import { Button, ToastService } from 'ui';
 @Component({
   selector: 'app-admin-product-template-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TranslatePipe],
+  imports: [Button, Icon, TranslatePipe],
   templateUrl: './product-template-form.html',
 })
 export class AdminProductTemplateForm {

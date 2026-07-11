@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Data;
+using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
@@ -19,10 +21,12 @@ public sealed class AdminCommentsController : ControllerBase
     private static readonly int[] ValidStatuses = [1, 5, 8];
 
     private readonly StoreDbContext _db;
+    private readonly IAuditStampReader _auditStamps;
 
-    public AdminCommentsController(StoreDbContext db)
+    public AdminCommentsController(StoreDbContext db, IAuditStampReader auditStamps)
     {
         _db = db;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -42,6 +46,15 @@ public sealed class AdminCommentsController : ControllerBase
                 c.Id, c.CommentText, c.CommenterName, c.User.Email,
                 c.Status, c.CreatedOn, c.EntityId, c.EntityTypeId, c.ParentId))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
+
+        var ids = result.Items.Select(x => x.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Comment), ids, cancellationToken);
+        result = result with
+        {
+            Items = result.Items
+                .Select(x => x with { CreatedBy = stamps.CreatedBy(x.Id), ModifiedBy = stamps.ModifiedBy(x.Id) })
+                .ToList(),
+        };
 
         return Ok(result);
     }

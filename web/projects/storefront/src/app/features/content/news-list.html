@@ -4,6 +4,19 @@
         <lib-breadcrumb [items]="crumbs()" />
         <h1 class="ph-title">{{ 'news.title' | translate }}</h1>
         <p class="ph-sub">{{ 'news.subtitle' | translate }}</p>
+
+        <nav class="tabs" [attr.aria-label]="'news.title' | translate">
+          @for (t of tabs; track t.key) {
+            <a
+              class="tab"
+              [class.is-active]="activeCategory() === t.slug"
+              routerLink="/news"
+              [queryParams]="{ category: t.slug }"
+            >
+              {{ t.key | translate }}
+            </a>
+          }
+        </nav>
       </div>
     </div>
 
@@ -19,7 +32,7 @@
       } @else if (items().length) {
         <div class="stories">
           @for (n of items(); track n.id) {
-            <article class="story">
+            <article class="story" [attr.data-cat]="n.categorySlug">
               <a class="story-media" [routerLink]="['/news', n.slug]" [attr.aria-label]="n.name">
                 <lib-tile
                   [src]="n.thumbnailUrl"

@@ -40,11 +40,21 @@ public sealed record PublicPageDto(
     string Name, string Slug, string? Body, string? MetaTitle, string? MetaKeywords, string? MetaDescription);
 
 public sealed record NewsListItemDto(
-    long Id, string Name, string Slug, string? ShortContent, string? ThumbnailUrl, DateTimeOffset? PublishedOn);
+    long Id, string Name, string Slug, string? ShortContent, string? ThumbnailUrl, DateTimeOffset? PublishedOn,
+    string? CategorySlug = null);
 
 public sealed record NewsDetailDto(
     long Id, string Name, string Slug, string? ShortContent, string? FullContent, string? ThumbnailUrl,
-    string? MetaTitle, string? MetaKeywords, string? MetaDescription, DateTimeOffset? PublishedOn);
+    string? MetaTitle, string? MetaKeywords, string? MetaDescription, DateTimeOffset? PublishedOn,
+    string? CategorySlug = null, NewsLinkedProductDto? Product = null);
+
+/// <summary>Compact product summary for a success story's "Shop this story" card.</summary>
+public sealed record NewsLinkedProductDto(
+    long Id, string Name, string Slug, decimal Price, string? ThumbnailUrl);
+
+/// <summary>A published, non-expired alert for the home announcement band.</summary>
+public sealed record AlertDto(
+    long Id, string Slug, string Name, string? ShortContent, string? AlertCtaUrl);
 
 // ----- Contact -----------------------------------------------------------------------------------------
 

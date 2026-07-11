@@ -16,6 +16,8 @@ export interface AdminContentBlock {
   linkUrl: string | null;
   isActive: boolean;
   sortOrder: number;
+  createdBy: string | null;
+  modifiedBy: string | null;
 }
 
 export interface AdminContentSection {

@@ -4,8 +4,10 @@ import {
   computed,
   inject,
   signal,
+  type TemplateRef,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import {
   AdminShippingService,
   type AdminShippingProviderDto,
@@ -35,6 +37,7 @@ const DEFAULT_PAGE_SIZE = 10;
 })
 export class AdminShipping {
   private readonly service = inject(AdminShippingService);
+  private readonly offcanvas = inject(NgbOffcanvas);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
@@ -73,6 +76,15 @@ export class AdminShipping {
     const page = Math.min(this.page(), lastPage);
     return this.filtered().slice((page - 1) * size, page * size);
   });
+
+  /** Slide the shipping-providers config panel in from the end. */
+  protected openProviders(content: TemplateRef<unknown>): void {
+    this.offcanvas.open(content, {
+      position: 'end',
+      panelClass: 'providers-panel',
+      ariaLabelledBy: 'providers-panel-title',
+    });
+  }
 
   protected setSearch(value: string): void {
     this.search.set(value);

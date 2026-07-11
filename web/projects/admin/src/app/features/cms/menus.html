@@ -22,6 +22,8 @@
                   <th scope="col">{{ 'menus.col_menu' | translate }}</th>
                   <th scope="col" >{{ 'menus.col_items' | translate }}</th>
                   <th scope="col">{{ 'common.published' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -45,6 +47,8 @@
                         </label>
                       </div>
                     </td>
+                    <td class="small text-body-secondary text-nowrap">{{ m.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ m.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/menus', m.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -66,7 +70,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="4">
+                    <td colspan="6">
                       <div class="empty-state">
                         <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                         <div class="empty-title">{{ 'menus.empty' | translate }}</div>

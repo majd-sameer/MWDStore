@@ -54,6 +54,8 @@
                   <th scope="col">{{ 'vendors.col_vendor' | translate }}</th>
                   <th scope="col">{{ 'common.email' | translate }}</th>
                   <th scope="col">{{ 'common.status' | translate }}</th>
+                  <th scope="col">{{ 'common.created_by' | translate }}</th>
+                  <th scope="col">{{ 'common.modified_by' | translate }}</th>
                   <th scope="col" class="text-end">{{ 'common.actions' | translate }}</th>
                 </tr>
               </thead>
@@ -72,6 +74,8 @@
                         <span class="badge text-bg-secondary">{{ 'common.inactive' | translate }}</span>
                       }
                     </td>
+                    <td class="small text-body-secondary text-nowrap">{{ v.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ v.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/vendors', v.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -91,7 +95,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="4">
+                    <td colspan="6">
                       @if (hasFilters()) {
                         <div class="text-center text-body-secondary py-4">
                           {{ 'vendors.no_matches' | translate }}

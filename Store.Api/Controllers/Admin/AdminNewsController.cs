@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -26,16 +27,19 @@ public sealed class AdminNewsController : ControllerBase
     private readonly IMediaStorage _mediaStorage;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminNewsController(
         StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage,
-        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaStorage = mediaStorage;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     // ----- Categories -----------------------------------------------------------------------------
@@ -140,7 +144,17 @@ public sealed class AdminNewsController : ControllerBase
                 n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null))
             .ToListAsync(cancellationToken);
 
-        return Ok(items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList());
+        var ids = items.Select(i => i.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(NewsItem), ids, cancellationToken);
+
+        return Ok(items
+            .Select(i => i with
+            {
+                ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl),
+                CreatedBy = stamps.CreatedBy(i.Id),
+                ModifiedBy = stamps.ModifiedBy(i.Id),
+            })
+            .ToList());
     }
 
     [HttpGet("items/{id:long}")]
@@ -149,6 +163,7 @@ public sealed class AdminNewsController : ControllerBase
         var item = await _db.NewsItems
             .Include(n => n.Categories)
             .Include(n => n.ThumbnailImage)
+            .Include(n => n.Product)
             .FirstOrDefaultAsync(n => n.Id == id && !n.IsDeleted, cancellationToken);
         if (item == null)
         {
@@ -192,6 +207,7 @@ public sealed class AdminNewsController : ControllerBase
         var item = await _db.NewsItems
             .Include(n => n.Categories)
             .Include(n => n.ThumbnailImage)
+            .Include(n => n.Product)
             .FirstOrDefaultAsync(n => n.Id == id && !n.IsDeleted, cancellationToken);
         if (item == null)
         {
@@ -239,6 +255,9 @@ public sealed class AdminNewsController : ControllerBase
         item.IsPublished = request.IsPublished;
         item.PublishedOn ??= request.IsPublished ? now : null;
         item.ThumbnailImageId = request.ThumbnailImageId;
+        item.ProductId = request.ProductId;
+        item.AlertExpiresOn = request.AlertExpiresOn;
+        item.AlertCtaUrl = string.IsNullOrWhiteSpace(request.AlertCtaUrl) ? null : request.AlertCtaUrl.Trim();
     }
 
     private async Task WriteItemEnglishAsync(long id, NewsItemUpsertRequest request, CancellationToken cancellationToken)
@@ -275,7 +294,8 @@ public sealed class AdminNewsController : ControllerBase
         n.MetaKeywords, overlay.Get(n.Id, LocalizedProperty.MetaKeywords),
         n.MetaDescription, overlay.Get(n.Id, LocalizedProperty.MetaDescription),
         n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
-        n.Categories.Select(c => c.Id).ToList());
+        n.Categories.Select(c => c.Id).ToList(),
+        n.ProductId, n.Product?.Name, n.AlertExpiresOn, n.AlertCtaUrl);
 
     /// <summary>Builds the detail straight from a just-saved request (English values echoed back).</summary>
     private AdminNewsItemDetail ToDetail(NewsItem n, NewsItemUpsertRequest request) => new(
@@ -286,5 +306,6 @@ public sealed class AdminNewsController : ControllerBase
         n.MetaKeywords, Normalize(request.MetaKeywordsEn),
         n.MetaDescription, Normalize(request.MetaDescriptionEn),
         n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
-        n.Categories.Select(c => c.Id).ToList());
+        n.Categories.Select(c => c.Id).ToList(),
+        n.ProductId, n.Product?.Name, n.AlertExpiresOn, n.AlertCtaUrl);
 }

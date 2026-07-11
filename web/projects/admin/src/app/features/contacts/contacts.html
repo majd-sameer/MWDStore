@@ -28,6 +28,12 @@
                     </div>
                     <div class="text-end">
                       <div class="small text-body-secondary">{{ c.createdOn | date: 'medium' }}</div>
+                      <div class="small text-body-secondary text-nowrap">
+                        {{ 'common.created_by' | translate }}: {{ c.createdBy ?? '—' }}
+                      </div>
+                      <div class="small text-body-secondary text-nowrap">
+                        {{ 'common.modified_by' | translate }}: {{ c.modifiedBy ?? '—' }}
+                      </div>
                       <button type="button" class="btn btn-sm btn-outline-danger mt-1"
                         (click)="remove(c)">{{ 'common.delete' | translate }}</button>
                     </div>

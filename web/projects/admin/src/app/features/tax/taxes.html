@@ -53,6 +53,8 @@
                       <th>{{ 'common.state' | translate }}</th>
                       <th>{{ 'common.zip' | translate }}</th>
                       <th >{{ 'taxes.col_rate' | translate }}</th>
+                      <th scope="col">{{ 'common.created_by' | translate }}</th>
+                      <th scope="col">{{ 'common.modified_by' | translate }}</th>
                       <th class="text-end">{{ 'common.actions' | translate }}</th>
                     </tr>
                   </thead>
@@ -66,6 +68,8 @@
                         <td>{{ r.stateOrProvinceName ?? ('common.any' | translate) }}</td>
                         <td>{{ r.zipCode ?? ('common.any' | translate) }}</td>
                         <td >{{ r.rate }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ r.createdBy ?? '—' }}</td>
+                        <td class="small text-body-secondary text-nowrap">{{ r.modifiedBy ?? '—' }}</td>
                         <td class="text-end">
                           <span class="d-inline-flex gap-1">
                             <a [routerLink]="['/taxes', r.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -85,7 +89,7 @@
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="6">
+                        <td colspan="8">
                           <div class="empty-state">
                             <span class="empty-icon"><lib-icon name="box" [size]="26" /></span>
                             <div class="empty-title">{{ 'taxes.empty' | translate }}</div>

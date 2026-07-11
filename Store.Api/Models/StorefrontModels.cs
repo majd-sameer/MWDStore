@@ -159,7 +159,7 @@ public sealed record OrderAddressDto(
 
 public sealed record OrderSummaryDto(
     long Id, string? TrackingNumber, DateTimeOffset CreatedOn, int OrderStatus, string OrderStatusName,
-    decimal OrderTotal, int ItemCount);
+    decimal OrderTotal, int ItemCount, string? CreatedBy = null, string? ModifiedBy = null);
 
 /// <summary>
 /// Public order-status view returned by the anonymous tracking lookup. The email match guarding the

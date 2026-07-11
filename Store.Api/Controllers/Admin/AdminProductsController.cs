@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Catalog;
 using Store.Application.Localization;
 using Store.Data;
@@ -33,16 +34,19 @@ public sealed class AdminProductsController : ControllerBase
     private readonly IMediaStorage _mediaStorage;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminProductsController(
         StoreDbContext db, TimeProvider timeProvider, IMediaStorage mediaStorage,
-        ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _timeProvider = timeProvider;
         _mediaStorage = mediaStorage;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     /// <summary>Lists products (paged), optionally filtered by name, brand, category and publish state.
@@ -114,7 +118,18 @@ public sealed class AdminProductsController : ControllerBase
                 p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        return Ok(result with { Items = result.Items.Select(i => i with { ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl) }).ToList() });
+        var ids = result.Items.Select(i => i.Id).ToList();
+        var stamps = await _auditStamps.ReadAsync(nameof(Product), ids, cancellationToken);
+
+        return Ok(result with
+        {
+            Items = result.Items.Select(i => i with
+            {
+                ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl),
+                CreatedBy = stamps.CreatedBy(i.Id),
+                ModifiedBy = stamps.ModifiedBy(i.Id)
+            }).ToList()
+        });
     }
 
     /// <summary>Name search for the related/cross-sell product pickers (simple products only).</summary>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
+using Store.Application.Auditing;
 using Store.Application.Localization;
 using Store.Data;
 using Store.Domain;
@@ -24,13 +25,16 @@ public sealed class AdminCategoriesController : ControllerBase
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
     private readonly ILocalizedContentWriter _localizedWriter;
+    private readonly IAuditStampReader _auditStamps;
 
     public AdminCategoriesController(
-        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter)
+        StoreDbContext db, ILocalizationService localization, ILocalizedContentWriter localizedWriter,
+        IAuditStampReader auditStamps)
     {
         _db = db;
         _localization = localization;
         _localizedWriter = localizedWriter;
+        _auditStamps = auditStamps;
     }
 
     [HttpGet]
@@ -55,11 +59,15 @@ public sealed class AdminCategoriesController : ControllerBase
         var overlay = await _localization.GetOverlayAsync(
             EntityType, items.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
 
+        var stamps = await _auditStamps.ReadAsync(
+            nameof(Category), items.Select(c => c.Id).ToList(), cancellationToken);
+
         var dtos = items
             .Select(c => new AdminCategoryDto(
                 c.Id, c.Name, overlay.Get(c.Id, LocalizedProperty.Name), c.Slug,
                 c.Description, overlay.Get(c.Id, LocalizedProperty.Description),
-                c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted))
+                c.DisplayOrder, c.IsPublished, c.IncludeInMenu, c.ParentId, c.IsDeleted,
+                stamps.CreatedBy(c.Id), stamps.ModifiedBy(c.Id)))
             .ToList();
 
         return Ok(dtos);

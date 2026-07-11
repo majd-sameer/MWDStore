@@ -2,14 +2,21 @@
   [title]="'shipping.title' | translate"
   [subtitle]="'shipping.subtitle' | translate"
 >
-  <a routerLink="/shipping/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
-    <lib-icon name="plus" [size]="18"/>
-    {{ 'shipping.new' | translate }}
-  </a>
+  <div class="d-inline-flex align-items-center gap-2">
+    <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1"
+      (click)="openProviders(providersPanel)">
+      <lib-icon name="truck" [size]="18"/>
+      {{ 'shipping.providers_title' | translate }}
+    </button>
+    <a routerLink="/shipping/new" class="btn btn-primary d-inline-flex align-items-center gap-1">
+      <lib-icon name="plus" [size]="18"/>
+      {{ 'shipping.new' | translate }}
+    </a>
+  </div>
 </app-page-header>
 <div class="row">
 
-  <div class="col-sm-12 col-md-6 col-lg-7">
+  <div class="col-sm-12">
     <div class="card border-0 shadow-sm">
       <div class="card-header fw-semibold">{{ 'shipping.rates_title' | translate }}</div>
       <div class="card-body">
@@ -37,6 +44,8 @@
                 <th>{{ 'common.zip' | translate }}</th>
                 <th>{{ 'shipping.col_min_subtotal' | translate }}</th>
                 <th>{{ 'shipping.col_price' | translate }}</th>
+                <th scope="col">{{ 'common.created_by' | translate }}</th>
+                <th scope="col">{{ 'common.modified_by' | translate }}</th>
                 <th class="text-end">{{ 'common.actions' | translate }}</th>
               </tr>
               </thead>
@@ -53,6 +62,8 @@
                     <td>{{ r.zipCode ?? ('common.any' | translate) }}</td>
                     <td>{{ r.minOrderSubtotal }}</td>
                     <td>{{ r.shippingPrice }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ r.createdBy ?? '—' }}</td>
+                    <td class="small text-body-secondary text-nowrap">{{ r.modifiedBy ?? '—' }}</td>
                     <td class="text-end">
                       <span class="d-inline-flex gap-1">
                         <a [routerLink]="['/shipping', r.id]" class="action-btn" [title]="'common.edit' | translate">
@@ -72,7 +83,7 @@
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="7">
+                    <td colspan="9">
                       @if ((tableRates.value() ?? []).length === 0) {
                         <div class="empty-state">
                           <span class="empty-icon"><lib-icon name="box" [size]="26"/></span>
@@ -107,53 +118,62 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-12 col-md-6 col-lg-5">
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header fw-semibold">{{ 'shipping.providers_title' | translate }}</div>
-      <div class="card-body">
-        @if (providers.isLoading()) {
-          <app-table-skeleton [rows]="6" [columns]="[3, 1, 2]"/>
-        } @else {
-          <table class="table align-middle mb-0">
-            <thead>
-            <tr>
-              <th>{{ 'shipping.col_provider' | translate }}</th>
-              <th>{{ 'common.enabled' | translate }}</th>
-              <th>{{ 'shipping.col_free_min' | translate }}</th>
-            </tr>
-            </thead>
-            <tbody>
-              @for (p of providers.value() ?? []; track p.id) {
-                <tr>
-                  <td class="fw-medium">{{ p.name }}</td>
-                  <td>
-                    <div class="form-check form-switch">
-                      <input type="checkbox" class="form-check-input" id="prov-{{ p.id }}"
-                             [checked]="p.isEnabled"
-                             (change)="toggleProvider(p, $any($event.target).checked)"/>
-                      <label class="form-check-label visually-hidden" for="prov-{{ p.id }}">
-                        {{ 'shipping.enable_label' | translate: {name: p.name} }}
-                      </label>
-                    </div>
-                  </td>
-                  <td>
-                    @if (p.id === 'Free') {
-                      <input type="number" step="0.01" class="form-control form-control-sm w-auto"
-                             [value]="p.freeShippingMinimumOrderAmount ?? 0"
-                             (change)="setFreeMinimum(p, $any($event.target).valueAsNumber || 0)"/>
-                    } @else {
-                      <span class="text-body-secondary small">—</span>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
-      </div>
-    </div>
-  </div>
 </div>
+
+<ng-template #providersPanel let-offcanvas>
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 mb-0" id="providers-panel-title">{{ 'shipping.providers_title' | translate }}</h2>
+    <button
+      type="button"
+      class="action-btn"
+      [title]="'common.close' | translate"
+      (click)="offcanvas.dismiss()"
+    >
+      <lib-icon name="x" [size]="16" [label]="'common.close' | translate" />
+    </button>
+  </div>
+  <div class="offcanvas-body">
+    @if (providers.isLoading()) {
+      <app-table-skeleton [rows]="6" [columns]="[3, 1, 2]"/>
+    } @else {
+      <table class="table align-middle mb-0">
+        <thead>
+        <tr>
+          <th>{{ 'shipping.col_provider' | translate }}</th>
+          <th>{{ 'common.enabled' | translate }}</th>
+          <th>{{ 'shipping.col_free_min' | translate }}</th>
+        </tr>
+        </thead>
+        <tbody>
+          @for (p of providers.value() ?? []; track p.id) {
+            <tr>
+              <td class="fw-medium">{{ p.name }}</td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" class="form-check-input" id="prov-{{ p.id }}"
+                         [checked]="p.isEnabled"
+                         (change)="toggleProvider(p, $any($event.target).checked)"/>
+                  <label class="form-check-label visually-hidden" for="prov-{{ p.id }}">
+                    {{ 'shipping.enable_label' | translate: {name: p.name} }}
+                  </label>
+                </div>
+              </td>
+              <td>
+                @if (p.id === 'Free') {
+                  <input type="number" step="0.01" class="form-control form-control-sm w-auto"
+                         [value]="p.freeShippingMinimumOrderAmount ?? 0"
+                         (change)="setFreeMinimum(p, $any($event.target).valueAsNumber || 0)"/>
+                } @else {
+                  <span class="text-body-secondary small">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</ng-template>
 
 
 
