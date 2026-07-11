@@ -1,0 +1,90 @@
+// Rich-text editor: a Bootstrap-styled toolbar sitting on top of a contenteditable
+// area that reads as one control. Logical properties keep it correct under RTL.
+.rte {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.375rem;
+  overflow: hidden;
+
+  &--invalid {
+    border-color: var(--bs-form-invalid-border-color, #dc3545);
+  }
+
+  &--disabled {
+    opacity: 0.65;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border-block-end: 1px solid var(--bs-border-color, #dee2e6);
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: var(--bs-body-color, #212529);
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      color: var(--bs-primary, #0d6efd);
+      background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.06));
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .bi {
+      font-size: 1rem;
+    }
+  }
+
+  // The editable surface. Drop the field border/radius since `.rte` supplies them.
+  &__area {
+    border: 0;
+    border-radius: 0;
+    min-height: 12rem;
+    max-height: 32rem;
+    overflow-y: auto;
+
+    &:focus {
+      box-shadow: none;
+      outline: 0;
+    }
+
+    // Placeholder shown only while empty (the model normalises `<br>`-only to '').
+    &:empty::before {
+      content: attr(data-placeholder);
+      color: var(--bs-secondary-color, #6c757d);
+      pointer-events: none;
+    }
+
+    // Tame the HTML that shows up inside the article body.
+    :where(ul, ol) {
+      padding-inline-start: 1.5rem;
+      margin-block: 0.5rem;
+    }
+
+    :where(p) {
+      margin-block: 0.5rem;
+    }
+
+    :where(a) {
+      color: var(--bs-primary, #0d6efd);
+    }
+  }
+}

@@ -1,0 +1,130 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  effect,
+  input,
+  model,
+  viewChild,
+} from '@angular/core';
+import type { FormValueControl } from '@angular/forms/signals';
+import { TranslatePipe } from '@ngx-translate/core';
+
+/** One toolbar button: the `execCommand` name, its icon and its label i18n key. */
+interface ToolbarButton {
+  command: string;
+  icon: string;
+  label: string;
+}
+
+const TOOLBAR: readonly ToolbarButton[] = [
+  { command: 'bold', icon: 'bi-type-bold', label: 'editor.bold' },
+  { command: 'italic', icon: 'bi-type-italic', label: 'editor.italic' },
+  { command: 'underline', icon: 'bi-type-underline', label: 'editor.underline' },
+  { command: 'insertUnorderedList', icon: 'bi-list-ul', label: 'editor.bullet_list' },
+  { command: 'insertOrderedList', icon: 'bi-list-ol', label: 'editor.numbered_list' },
+];
+
+/** `innerHTML` values a "cleared" contenteditable leaves behind — treated as empty. */
+const EMPTY_HTML = new Set(['', '<br>', '<div><br></div>', '<p><br></p>']);
+
+/**
+ * Lightweight rich-text editor — a **Signal Forms custom control**
+ * ({@link FormValueControl}) that binds to a plain HTML `string` field exactly like
+ * a native input, so it drops into a form with `[formField]`:
+ *
+ * ```html
+ * <rich-text-editor [formField]="f.body" dir="rtl" />
+ * ```
+ *
+ * It edits one language at a time (pair two of them for bilingual copy). The value
+ * is HTML produced by `document.execCommand`; the storefront renders it through
+ * Angular's `[innerHTML]`, which sanitizes it, so no scripts survive. There is no
+ * editor dependency — this is the admin app (never server-rendered), so the browser
+ * `contenteditable`/`execCommand` APIs are always available.
+ */
+@Component({
+  selector: 'rich-text-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
+  templateUrl: './rich-text-editor.html',
+  styleUrl: './rich-text-editor.scss',
+})
+export class RichTextEditor implements FormValueControl<string> {
+  /** The bound HTML string. Kept in sync by the `[formField]` directive, or `[(value)]`. */
+  readonly value = model<string>('');
+
+  /** Disabled state — bound automatically from the field when used with `[formField]`. */
+  readonly disabled = input(false);
+  /** Validity + touched companion inputs (populated by the `Field` directive). */
+  readonly invalid = input(false);
+  readonly touched = input(false);
+
+  /** Writing direction of the editable area (`rtl` for Arabic copy). */
+  readonly dir = input<'ltr' | 'rtl'>('ltr');
+  /** Placeholder shown while the area is empty. */
+  readonly placeholder = input('');
+  /** `id` for the editable area, so an outer `<label for>` can target it. */
+  readonly controlId = input<string | null>(null);
+
+  protected readonly toolbar = TOOLBAR;
+
+  private readonly area = viewChild<ElementRef<HTMLElement>>('area');
+
+  constructor() {
+    // Push external value changes into the DOM, but never while the caret is inside:
+    // only overwrite when the incoming HTML actually differs from what's shown, so
+    // typing (which already updates `value` via onInput) doesn't reset the cursor.
+    effect(() => {
+      const ref = this.area();
+      if (!ref) {
+        return;
+      }
+      const incoming = this.value() ?? '';
+      if (ref.nativeElement.innerHTML !== incoming) {
+        ref.nativeElement.innerHTML = incoming;
+      }
+    });
+  }
+
+  /** Read the edited HTML back into the model, normalising the "empty" shapes to ''. */
+  protected onInput(): void {
+    const html = this.area()?.nativeElement.innerHTML ?? '';
+    this.value.set(EMPTY_HTML.has(html) ? '' : html);
+  }
+
+  /** Run a formatting command on the current selection, then sync the model. */
+  protected exec(command: string): void {
+    if (this.disabled()) {
+      return;
+    }
+    this.area()?.nativeElement.focus();
+    document.execCommand(command, false);
+    this.onInput();
+  }
+
+  /** Wrap the selection in a link (prompts for the URL); a blank prompt is a no-op. */
+  protected addLink(): void {
+    if (this.disabled()) {
+      return;
+    }
+    const url = prompt(this.placeholder() || 'https://');
+    if (!url) {
+      return;
+    }
+    this.area()?.nativeElement.focus();
+    document.execCommand('createLink', false, url);
+    this.onInput();
+  }
+
+  /** Strip inline formatting (and any link) from the selection. */
+  protected clearFormat(): void {
+    if (this.disabled()) {
+      return;
+    }
+    this.area()?.nativeElement.focus();
+    document.execCommand('removeFormat', false);
+    document.execCommand('unlink', false);
+    this.onInput();
+  }
+}

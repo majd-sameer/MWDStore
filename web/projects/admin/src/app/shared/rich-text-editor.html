@@ -1,0 +1,51 @@
+
+    <div class="rte" [class.rte--invalid]="invalid() && touched()" [class.rte--disabled]="disabled()">
+      <div class="rte__toolbar" role="toolbar">
+        @for (b of toolbar; track b.command) {
+          <button
+            type="button"
+            class="rte__btn"
+            [attr.aria-label]="b.label | translate"
+            [title]="b.label | translate"
+            [disabled]="disabled()"
+            (mousedown)="$event.preventDefault()"
+            (click)="exec(b.command)"
+          >
+            <i class="bi" [class]="b.icon" aria-hidden="true"></i>
+          </button>
+        }
+        <button
+          type="button"
+          class="rte__btn"
+          [attr.aria-label]="'editor.link' | translate"
+          [title]="'editor.link' | translate"
+          [disabled]="disabled()"
+          (mousedown)="$event.preventDefault()"
+          (click)="addLink()"
+        >
+          <i class="bi bi-link-45deg" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="rte__btn"
+          [attr.aria-label]="'editor.clear' | translate"
+          [title]="'editor.clear' | translate"
+          [disabled]="disabled()"
+          (mousedown)="$event.preventDefault()"
+          (click)="clearFormat()"
+        >
+          <i class="bi bi-eraser" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div
+        #area
+        class="rte__area form-control"
+        [id]="controlId()"
+        [attr.dir]="dir()"
+        [attr.data-placeholder]="placeholder()"
+        [attr.contenteditable]="!disabled()"
+        role="textbox"
+        aria-multiline="true"
+        (input)="onInput()"
+      ></div>
+    </div>
