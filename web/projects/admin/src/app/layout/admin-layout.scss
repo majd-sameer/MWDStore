@@ -129,23 +129,88 @@
         font-size: 0.85rem;
         font-weight: 700;
       }
+
+      /* Topbar hamburger — only shown below `lg` (via `d-lg-none`); opens the
+         nav drawer. Square, quiet control that echoes the icon row-actions. */
+      .nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 40px;
+        block-size: 40px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-sm);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 1.15rem;
+        cursor: pointer;
+      }
+      .nav-toggle:hover {
+        background: var(--surface-2);
+      }
+
+      /* Close (×) button inside the drawer header — mobile only. */
+      .drawer-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 34px;
+        block-size: 34px;
+        flex-shrink: 0;
+        border: 0;
+        border-radius: var(--r-sm);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.85);
+        cursor: pointer;
+      }
+      .drawer-close:hover {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+
+      /* Dim layer behind the open drawer. */
+      .nav-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1040;
+        background: rgba(20, 25, 26, 0.5);
+        backdrop-filter: blur(1px);
+        animation: nav-backdrop-in 0.2s ease;
+      }
+      @keyframes nav-backdrop-in {
+        from {
+          opacity: 0;
+        }
+      }
+
+      /* ---- Mobile: the sidebar becomes an off-canvas drawer ------------------
+         Below `lg` the fixed rail no longer steals horizontal space — content
+         runs full width and the nav slides in over it from the leading edge.
+         Positioning uses the logical `inset-inline-start` so the drawer opens
+         from the right and slides left in RTL with no extra rules. */
       @media (max-width: 991.98px) {
         .admin-sidebar {
-          inline-size: 64px;
+          z-index: 1045;
+          inline-size: min(280px, 84vw);
+          inset-inline-start: calc(-1 * min(280px, 84vw) - 12px);
+          box-shadow: none;
+          transition:
+            inset-inline-start 0.28s ease,
+            box-shadow 0.28s ease;
+        }
+        .admin-sidebar.open {
+          inset-inline-start: 0;
+          box-shadow: var(--shadow-lg);
         }
         .admin-main {
-          margin-inline-start: 64px;
+          margin-inline-start: 0;
         }
-        .admin-nav .nav-link .label,
-        .nav-section-label,
-        .brand-text,
-        .user-chip .user-name {
-          display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .admin-sidebar {
+          transition: none;
         }
-        .admin-nav .nav-link {
-          justify-content: center;
-        }
-        .admin-nav .nav-link .bi {
-          margin-inline-end: 0;
+        .nav-backdrop {
+          animation: none;
         }
       }

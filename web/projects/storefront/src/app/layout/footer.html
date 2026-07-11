@@ -53,7 +53,7 @@
           </ul>
         </div>
         <div class="footer-col">
-          <h2 class="footer-h">{{ content.block('footer-care', 'heading')?.value || ('footer.care' | translate) }}</h2>
+          <h2 class="footer-h">{{ content.block('footer-follow-us', 'heading')?.value || ('footer.follow_us' | translate) }}</h2>
           @if (hasSocial()) {
             <ul class="footer-social">
               @for (s of socials; track s.key) {

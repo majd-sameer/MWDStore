@@ -104,12 +104,14 @@
       "mission-band": "Mission band",
       "cta-band": "Call-to-action band",
       "about-hero": "About — hero",
+      "about-video": "About — story video",
       "about-how": "About — how we work",
       "about-values": "About — our values",
       "footer-brand": "Footer — brand & newsletter",
       "footer-shop": "Footer — shop column",
       "footer-company": "Footer — company column",
       "footer-care": "Footer — care column",
+      "footer-follow-us": "Footer — follow us column",
       "footer-social": "Footer — social links",
       "footer-location": "Footer — location",
       "faq-hero": "FAQ — heading",
@@ -140,7 +142,8 @@
       "link_faq": "Link — FAQ",
       "address": "Address",
       "map": "Map link",
-      "subtitle": "Subtitle"
+      "subtitle": "Subtitle",
+      "youtube": "YouTube link"
     }
   },
   "audit": {
@@ -273,6 +276,7 @@
     "view": "View",
     "cancel": "Cancel",
     "close": "Close",
+    "menu": "Menu",
     "optional": "optional",
     "previous": "Previous",
     "next": "Next",

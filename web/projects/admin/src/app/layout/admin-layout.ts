@@ -1,10 +1,22 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  NavigationEnd,
+  Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { filter } from 'rxjs';
 import { AuthService, LanguageService } from 'core';
 import { AREA } from '../core/roles';
 
@@ -44,6 +56,38 @@ interface NavSection {
 export class AdminLayout {
   protected readonly auth = inject(AuthService);
   protected readonly language = inject(LanguageService);
+
+  /**
+   * Below the `lg` breakpoint the sidebar is an off-canvas drawer (see the
+   * layout SCSS), hidden until the topbar hamburger opens it. Open state is
+   * tracked here so the template can slide the drawer in, dim the page with a
+   * backdrop and lock body scroll. Navigating to a new page or pressing Escape
+   * closes it, so the drawer never lingers over the content the user picked.
+   */
+  protected readonly mobileNavOpen = signal(false);
+
+  constructor() {
+    const router = inject(Router);
+    router.events
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(inject(DestroyRef)),
+      )
+      .subscribe(() => this.mobileNavOpen.set(false));
+  }
+
+  protected toggleMobileNav(): void {
+    this.mobileNavOpen.update((open) => !open);
+  }
+
+  protected closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.mobileNavOpen.set(false);
+  }
 
   protected readonly initials = computed(() => {
     const source = this.auth.fullName() || this.auth.email() || '';

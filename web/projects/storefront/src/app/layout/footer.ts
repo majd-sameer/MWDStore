@@ -82,7 +82,7 @@ export class Footer {
       .map((c) => ({ name: c.name as string, category: c.slug as string })),
   );
 
-  /** Site navigation for the brand column — mirrors the header nav bar. */
+  /** Site naviga0tion for the brand column — mirrors the header nav bar. */
   protected readonly navLinks: readonly NavLink[] = [
     { key: 'home', link: '/' },
     { key: 'sections', link: '/categories' },
@@ -92,7 +92,6 @@ export class Footer {
   ];
 
   protected readonly careLinks: readonly FooterLink[] = [
-    { key: 'delivery_returns', link: '/' },
     { key: 'track', link: '/track-order' },
     { key: 'contact', link: '/contact' },
     { key: 'faq', link: '/pages/faq' },

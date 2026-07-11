@@ -22,7 +22,27 @@
       </div>
     </section>
 
-    <!-- Section 2 — how we work -->
+    <!-- Section 2 — story video (only when an admin has set a valid YouTube link) -->
+    @if (videoEmbed(); as embed) {
+      <section class="sec sec-video">
+        <div class="sec-head">
+          <span class="eyebrow">{{ content.block('about-video', 'eyebrow')?.value || ('about.video_eyebrow' | translate) }}</span>
+          <h2 class="sec-title">{{ content.block('about-video', 'title')?.value || ('about.video_title' | translate) }}</h2>
+        </div>
+        <div class="video-frame">
+          <iframe
+            [src]="embed"
+            [title]="content.block('about-video', 'title')?.value || ('about.video_title' | translate)"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    }
+
+    <!-- Section 3 — how we work -->
     <section class="sec">
       <div class="sec-head">
         <span class="eyebrow">{{ content.block('about-how', 'eyebrow')?.value || ('about.how_eyebrow' | translate) }}</span>

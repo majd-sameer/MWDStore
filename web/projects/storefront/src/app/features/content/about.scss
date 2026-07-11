@@ -113,6 +113,25 @@
       line-height: 1.2;
     }
 
+    /* ----- Story video ---------------------------------------------------- */
+    .video-frame {
+      position: relative;
+      max-inline-size: 900px;
+      margin-inline: auto;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      background: var(--navy);
+      box-shadow: var(--shadow-md);
+    }
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      border: 0;
+    }
+
     .steps {
       display: grid;
       grid-template-columns: repeat(4, 1fr);

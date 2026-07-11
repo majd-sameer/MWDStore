@@ -50,6 +50,14 @@ public static class ContentBlockSeeder
             + "society.", Sort: 2),
         new("about", "about-hero", "cta-label", "text", "تصفّح المنتجات", "Browse products", Sort: 3),
 
+        // Story video — editable heading + a YouTube watch/share URL. The storefront turns the link
+        // into an embed and hides the whole section when an admin clears it.
+        new("about", "about-video", "eyebrow", "text", "شاهد قصتنا", "Watch our story", Sort: 0),
+        new("about", "about-video", "title", "text",
+            "من داخل المراكز… حكاية إرادة", "From inside the centers… a story of will", Sort: 1),
+        new("about", "about-video", "youtube", "link", null, null,
+            LinkUrl: "https://www.youtube.com/watch?v=DLS0Ic3wrj0&t=31s", Sort: 2),
+
         new("about", "about-how", "eyebrow", "text", "كيف نعمل", "How we work", Sort: 0),
         new("about", "about-how", "title", "text",
             "من المهارة إلى يديك في أربع خطوات", "From skill to your hands in four steps", Sort: 1),
@@ -122,6 +130,9 @@ public static class ContentBlockSeeder
         new("footer", "footer-care", "track", "text", "تتبّع طلبًا", "Track an order", Sort: 2),
         new("footer", "footer-care", "contact", "text", "تواصل معنا", "Contact", Sort: 3),
         new("footer", "footer-care", "faq", "text", "الأسئلة الشائعة", "FAQ", Sort: 4),
+
+        // Follow-us column — heading over the social links + location.
+        new("footer", "footer-follow-us", "heading", "text", "تابعنا", "Follow us", Sort: 0),
 
         // Social links — icon is code-owned (by BlockKey); admins set the URL and toggle visibility.
         // Seeded with an empty URL so nothing shows until configured in the Site Content editor.

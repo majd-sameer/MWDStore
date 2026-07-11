@@ -42,6 +42,7 @@ const KEY_LABELS: Record<string, string> = {
   // About page — shared generic slots; the step/value item keys read fine raw.
   eyebrow: 'cms.keys.eyebrow',
   title: 'cms.keys.title',
+  youtube: 'cms.keys.youtube',
   body: 'cms.keys.body',
   'cta-label': 'cms.keys.cta_label',
   // Footer — the social platform keys (facebook, instagram, …) read fine raw.
