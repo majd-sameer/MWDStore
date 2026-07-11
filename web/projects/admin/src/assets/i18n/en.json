@@ -7,6 +7,15 @@
     "edit_translations": "Edit translations",
     "save": "Save"
   },
+  "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "bullet_list": "Bulleted list",
+    "numbered_list": "Numbered list",
+    "link": "Insert link",
+    "clear": "Clear formatting"
+  },
   "nav": {
     "sections": {
       "stock": "Stock management",

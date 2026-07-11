@@ -21,24 +21,51 @@
                 <div class="alert alert-danger" role="alert">{{ message }}</div>
               }
               <form (submit)="onSubmit($event)" novalidate>
-                <div class="row">
-                  <div class="col-md-6">
-                    <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name" [required]="true" [error]="err(f.name.ar())">
-                      <multi-lang-input controlId="nw-name" [formField]="f.name" />
-                    </lib-form-field>
+                <lib-form-field [label]="'common.slug' | translate" controlId="nw-slug" [hint]="'common.slug_hint' | translate">
+                  <input id="nw-slug" type="text" class="form-control" [formField]="f.slug" />
+                </lib-form-field>
+
+                <!-- Copy is authored per language: an Arabic block and an English block,
+                     side by side, each with its own rich-text body. -->
+                <div class="row g-4 lang-grid">
+                  <div class="col-lg-6">
+                    <div class="lang-block" dir="rtl" lang="ar">
+                      <div class="lang-block__head">
+                        <i class="bi bi-translate" aria-hidden="true"></i>
+                        {{ 'multilang.arabic' | translate }}
+                      </div>
+                      <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name-ar"
+                        [required]="true" [error]="err(f.name.ar())">
+                        <input id="nw-name-ar" type="text" class="form-control" dir="rtl" [formField]="f.name.ar" />
+                      </lib-form-field>
+                      <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short-ar">
+                        <textarea id="nw-short-ar" class="form-control" rows="2" dir="rtl"
+                          [formField]="f.shortContent.ar"></textarea>
+                      </lib-form-field>
+                      <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full-ar">
+                        <rich-text-editor controlId="nw-full-ar" dir="rtl" [formField]="f.fullContent.ar" />
+                      </lib-form-field>
+                    </div>
                   </div>
-                  <div class="col-md-6">
-                    <lib-form-field [label]="'common.slug' | translate" controlId="nw-slug" [hint]="'common.slug_hint' | translate">
-                      <input id="nw-slug" type="text" class="form-control" [formField]="f.slug" />
-                    </lib-form-field>
+                  <div class="col-lg-6">
+                    <div class="lang-block" dir="ltr" lang="en">
+                      <div class="lang-block__head">
+                        <i class="bi bi-translate" aria-hidden="true"></i>
+                        {{ 'multilang.english' | translate }}
+                      </div>
+                      <lib-form-field [label]="'news.title_label' | translate" controlId="nw-name-en">
+                        <input id="nw-name-en" type="text" class="form-control" dir="ltr" [formField]="f.name.en" />
+                      </lib-form-field>
+                      <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short-en">
+                        <textarea id="nw-short-en" class="form-control" rows="2" dir="ltr"
+                          [formField]="f.shortContent.en"></textarea>
+                      </lib-form-field>
+                      <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full-en">
+                        <rich-text-editor controlId="nw-full-en" dir="ltr" [formField]="f.fullContent.en" />
+                      </lib-form-field>
+                    </div>
                   </div>
                 </div>
-                <lib-form-field [label]="'news.short_content' | translate" controlId="nw-short">
-                  <multi-lang-input type="textarea" [rows]="2" controlId="nw-short" [formField]="f.shortContent" />
-                </lib-form-field>
-                <lib-form-field [label]="'news.full_content' | translate" controlId="nw-full">
-                  <multi-lang-input type="textarea" [rows]="10" controlId="nw-full" [formField]="f.fullContent" />
-                </lib-form-field>
 
                 <label class="form-label" for="nw-thumb">{{ 'news.thumbnail' | translate }}</label>
                 <div class="d-flex align-items-center gap-3 mb-2">

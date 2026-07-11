@@ -157,7 +157,9 @@ h1.h3 {
 // Header echoes the audit drawer: title on the lead, an action-btn close (with
 // the `x` icon) on the trail — no divider, just breathing room before the body.
 .offcanvas-header {
-  border-bottom: 0 !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 // Bootstrap pulls the header close button flush with a physical negative
 // margin-right, which stays on the wrong side in RTL. Use logical margins so
@@ -1183,6 +1185,25 @@ h1.h3 {
       right: auto !important;
       left: $v !important;
     }
+  }
+
+  // Offcanvas — every admin panel opens with ng-bootstrap `position: 'end'`,
+  // which Bootstrap's LTR build pins to the physical right and slides in from
+  // there. Flip it to the trailing (left) edge in RTL: reposition to the left,
+  // move the border + drop-shadow to the leading side, and slide in from the
+  // left. The shown state is `transform: none` in both directions, so only the
+  // offscreen (hidden) transform needs flipping.
+  .offcanvas-end {
+    right: auto;
+    left: 0;
+    border-left: 0;
+    border-right: var(--bs-offcanvas-border-width) solid var(--bs-offcanvas-border-color);
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.12);
+    transform: translateX(-100%);
+  }
+  .offcanvas-end.showing,
+  .offcanvas-end.show:not(.hiding) {
+    transform: none;
   }
 
   // Owl date-time picker — flip the prev/next month arrows so they point the

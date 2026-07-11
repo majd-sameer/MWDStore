@@ -27,7 +27,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button, FormField, ToastService } from 'ui';
 import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
-import { MultiLangInput, type MultiLangValue } from '../../shared/multi-lang-input';
+import { type MultiLangValue } from '../../shared/multi-lang-input';
+import { RichTextEditor } from '../../shared/rich-text-editor';
 
 /** Fixed, code-known category slugs (mirror the backend seeder). */
 const SLUG_SUCCESS_STORY = 'success-story';
@@ -89,8 +90,9 @@ function fromDateTimeLocal(value: string): string | null {
 @Component({
   selector: 'app-admin-news-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, MultiLangInput],
+  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, RichTextEditor],
   templateUrl: './news-form.html',
+  styleUrl: './news-form.scss',
 })
 export class AdminNewsForm {
   private readonly route = inject(ActivatedRoute);

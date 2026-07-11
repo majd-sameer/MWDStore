@@ -7,6 +7,15 @@
     "edit_translations": "تعديل الترجمات",
     "save": "حفظ"
   },
+  "editor": {
+    "bold": "عريض",
+    "italic": "مائل",
+    "underline": "تسطير",
+    "bullet_list": "قائمة نقطية",
+    "numbered_list": "قائمة مرقّمة",
+    "link": "إدراج رابط",
+    "clear": "مسح التنسيق"
+  },
   "nav": {
     "sections": {
       "stock": "إدارة المخزون",
