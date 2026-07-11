@@ -25,7 +25,19 @@
         @if (n.thumbnailUrl) {
           <img class="article-hero" [src]="n.thumbnailUrl" [alt]="n.name" />
         }
-        <div class="article-body" [innerHTML]="n.fullContent"></div>
+        @if (isFullDocument()) {
+          <!-- Full HTML document: sandboxed iframe keeps its own <head>/<style> design
+               isolated from the site. No allow-scripts, so embedded JS never runs. -->
+          <iframe
+            class="article-frame"
+            [srcdoc]="bodyHtml()"
+            [title]="n.name"
+            sandbox="allow-same-origin allow-popups allow-top-navigation-by-user-activation"
+            (load)="resizeFrame($event)"
+          ></iframe>
+        } @else {
+          <div class="article-body" [innerHTML]="bodyHtml()"></div>
+        }
 
         @if (n.product; as p) {
           <aside class="shop-story">

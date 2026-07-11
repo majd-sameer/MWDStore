@@ -25,6 +25,24 @@
                   <input id="nw-slug" type="text" class="form-control" [formField]="f.slug" />
                 </lib-form-field>
 
+                <!-- Ready-made layouts per article type: applying one fills both language
+                     bodies with a structure whose design the storefront controls. -->
+                <div class="tpl-picker">
+                  <div class="tpl-picker__head">
+                    <i class="bi bi-layout-text-window-reverse" aria-hidden="true"></i>
+                    {{ 'news.template.title' | translate }}
+                  </div>
+                  <p class="tpl-picker__hint">{{ 'news.template.hint' | translate }}</p>
+                  <div class="tpl-picker__btns">
+                    @for (t of templates; track t.key) {
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyTemplate(t)">
+                        <i class="bi {{ t.icon }}" aria-hidden="true"></i>
+                        {{ t.labelKey | translate }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
                 <!-- Copy is authored per language: an Arabic block and an English block,
                      side by side, each with its own rich-text body. -->
                 <div class="row g-4 lang-grid">

@@ -1,0 +1,76 @@
+@if (current(); as a) {
+  <div
+    class="card"
+    role="status"
+    aria-live="polite"
+    [attr.aria-label]="'alerts.label' | translate"
+  >
+    <div class="head">
+      <span class="app-icon" aria-hidden="true">
+        <lib-icon name="spark" [size]="15" />
+      </span>
+      <span class="app-name">{{ 'alerts.badge' | translate }}</span>
+      @if (count() > 1) {
+        <span class="counter tabular-nums" aria-hidden="true">
+          {{ safeIndex() + 1 }} / {{ count() }}
+        </span>
+      }
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="close(a)"
+        [attr.aria-label]="'alerts.dismiss' | translate"
+      >
+        <lib-icon name="x" [size]="16" />
+      </button>
+    </div>
+
+    <div class="body">
+      <p class="title">{{ a.name }}</p>
+      @if (a.shortContent) {
+        <p class="sub">{{ a.shortContent }}</p>
+      }
+    </div>
+
+    <div class="foot">
+      @if (a.alertCtaUrl && isExternal(a.alertCtaUrl)) {
+        <a
+          class="view"
+          [href]="a.alertCtaUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          (click)="view(a)"
+        >
+          {{ 'alerts.view' | translate }}
+        </a>
+      } @else {
+        <a class="view" [routerLink]="routeTarget(a)" (click)="view(a)">
+          {{ 'alerts.view' | translate }}
+        </a>
+      }
+
+      @if (count() > 1) {
+        <div class="pager" role="group" [attr.aria-label]="'alerts.label' | translate">
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="prev()"
+            [disabled]="safeIndex() === 0"
+            [attr.aria-label]="'alerts.prev' | translate"
+          >
+            <lib-icon name="chevStart" [size]="18" />
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="next()"
+            [disabled]="safeIndex() === count() - 1"
+            [attr.aria-label]="'alerts.next' | translate"
+          >
+            <lib-icon name="chevEnd" [size]="18" />
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -7,7 +7,7 @@
             class="rte__btn"
             [attr.aria-label]="b.label | translate"
             [title]="b.label | translate"
-            [disabled]="disabled()"
+            [disabled]="disabled() || sourceMode()"
             (mousedown)="$event.preventDefault()"
             (click)="exec(b.command)"
           >
@@ -19,7 +19,7 @@
           class="rte__btn"
           [attr.aria-label]="'editor.link' | translate"
           [title]="'editor.link' | translate"
-          [disabled]="disabled()"
+          [disabled]="disabled() || sourceMode()"
           (mousedown)="$event.preventDefault()"
           (click)="addLink()"
         >
@@ -30,22 +30,47 @@
           class="rte__btn"
           [attr.aria-label]="'editor.clear' | translate"
           [title]="'editor.clear' | translate"
-          [disabled]="disabled()"
+          [disabled]="disabled() || sourceMode()"
           (mousedown)="$event.preventDefault()"
           (click)="clearFormat()"
         >
           <i class="bi bi-eraser" aria-hidden="true"></i>
         </button>
+        <button
+          type="button"
+          class="rte__btn"
+          [class.rte__btn--active]="sourceMode()"
+          [attr.aria-label]="'editor.source' | translate"
+          [attr.aria-pressed]="sourceMode()"
+          [title]="(fullDocument() ? 'editor.source_locked' : 'editor.source') | translate"
+          [disabled]="disabled() || fullDocument()"
+          (mousedown)="$event.preventDefault()"
+          (click)="toggleSource()"
+        >
+          <i class="bi bi-code-slash" aria-hidden="true"></i>
+        </button>
       </div>
-      <div
-        #area
-        class="rte__area form-control"
-        [id]="controlId()"
-        [attr.dir]="dir()"
-        [attr.data-placeholder]="placeholder()"
-        [attr.contenteditable]="!disabled()"
-        role="textbox"
-        aria-multiline="true"
-        (input)="onInput()"
-      ></div>
+      @if (sourceMode()) {
+        <textarea
+          class="rte__source form-control"
+          [id]="controlId()"
+          dir="ltr"
+          [attr.placeholder]="placeholder()"
+          [disabled]="disabled()"
+          [value]="value()"
+          (input)="onSourceInput($event)"
+        ></textarea>
+      } @else {
+        <div
+          #area
+          class="rte__area form-control"
+          [id]="controlId()"
+          [attr.dir]="dir()"
+          [attr.data-placeholder]="placeholder()"
+          [attr.contenteditable]="!disabled()"
+          role="textbox"
+          aria-multiline="true"
+          (input)="onInput()"
+        ></div>
+      }
     </div>

@@ -46,6 +46,181 @@
       margin-block-end: 1.25rem;
     }
 
+    /* ---- Article body (admin-authored HTML) ---- */
+    .article-body {
+      line-height: 1.8;
+      overflow-wrap: break-word;
+    }
+    /* Full-document bodies render in a sandboxed frame; height is set on load. */
+    .article-frame {
+      display: block;
+      inline-size: 100%;
+      min-block-size: 50vh;
+      border: 0;
+    }
+    /* The HTML is injected via [innerHTML], so it bypasses view encapsulation —
+       these blog-typography rules must be pierced through with ::ng-deep. */
+    :host ::ng-deep .article-body {
+      p {
+        margin-block-end: 1rem;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 700;
+        line-height: 1.3;
+        margin-block: 1.5rem 0.6rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+      }
+      h3 {
+        font-size: 1.1rem;
+      }
+      h4 {
+        font-size: 1rem;
+      }
+      ul,
+      ol {
+        padding-inline-start: 1.5rem;
+        margin-block-end: 1rem;
+      }
+      li {
+        margin-block-end: 0.35rem;
+      }
+      a {
+        color: var(--accent, #0d6efd);
+      }
+      img {
+        max-inline-size: 100%;
+        block-size: auto;
+        border-radius: 0.5rem;
+        margin-block: 0.5rem;
+      }
+      blockquote {
+        margin-block: 1rem;
+        padding-inline-start: 1rem;
+        border-inline-start: 3px solid var(--accent, #0d6efd);
+        color: var(--ink-2, #555);
+      }
+      table {
+        inline-size: 100%;
+        border-collapse: collapse;
+        margin-block-end: 1rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--line, #ddd);
+        padding: 0.5rem;
+      }
+
+      /* ---- Predefined template blocks (nb-*), inserted by the admin's
+             "start from a template" picker. The design is owned here, so every
+             success story / activity / alert renders consistently. ---- */
+      .nb-lead {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        color: var(--ink-2, #555);
+        margin-block-end: 1.25rem;
+      }
+
+      .nb-quote cite {
+        display: block;
+        margin-block-start: 0.35rem;
+        font-size: 0.85rem;
+        font-style: normal;
+        font-weight: 600;
+        color: var(--ink-3, #888);
+      }
+
+      .nb-highlight {
+        margin-block: 1.5rem;
+        padding: 1.25rem 1.5rem;
+        border-radius: var(--r-lg, 0.75rem);
+        background: var(--accent-soft, #eef4ff);
+
+        > :first-child {
+          margin-block-start: 0;
+        }
+        > :last-child {
+          margin-block-end: 0;
+        }
+        h3 {
+          color: var(--accent, #0d6efd);
+        }
+      }
+
+      .nb-facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: 0.75rem;
+        margin-block: 1.25rem;
+      }
+
+      .nb-fact {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--line, #ddd);
+        border-radius: var(--r-sm, 0.5rem);
+        background: var(--surface, #fff);
+        box-shadow: var(--shadow-sm, none);
+      }
+
+      .nb-fact__label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ink-3, #888);
+      }
+
+      .nb-fact__value {
+        font-weight: 600;
+        color: var(--ink, #222);
+      }
+
+      .nb-alert {
+        margin-block: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        border-inline-start: 4px solid var(--navy, #1f2a44);
+        border-radius: var(--r-lg, 0.75rem);
+        background: var(--surface-2, #f6f7f9);
+
+        > :first-child {
+          margin-block-start: 0;
+        }
+        > :last-child {
+          margin-block-end: 0;
+        }
+        h2 {
+          color: var(--navy, #1f2a44);
+          font-size: 1.15rem;
+        }
+      }
+
+      .nb-note {
+        margin-block: 1.25rem;
+        padding: 0.75rem 1rem;
+        border: 1px dashed var(--line, #ddd);
+        border-radius: var(--r-sm, 0.5rem);
+        font-size: 0.9rem;
+        color: var(--ink-2, #555);
+
+        > :first-child {
+          margin-block-start: 0;
+        }
+        > :last-child {
+          margin-block-end: 0;
+        }
+      }
+    }
+
     /* ---- "Shop this story" card (success stories with a linked product) ---- */
     .shop-story {
       display: flex;

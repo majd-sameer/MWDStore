@@ -14,7 +14,9 @@
     "bullet_list": "Bulleted list",
     "numbered_list": "Numbered list",
     "link": "Insert link",
-    "clear": "Clear formatting"
+    "clear": "Clear formatting",
+    "source": "HTML source",
+    "source_locked": "Full HTML documents can only be edited as source"
   },
   "nav": {
     "sections": {
@@ -784,6 +786,14 @@
       "expires_hint": "Leave empty to show until unpublished.",
       "cta_url": "Button link (CTA)",
       "cta_hint": "Optional. Leave empty to link to the article."
+    },
+    "template": {
+      "title": "Start from a template",
+      "hint": "Inserts a ready-made layout for this article type in both languages — just replace the placeholder text. The store controls the final design.",
+      "success_story": "Success story",
+      "activity": "Activity",
+      "alert": "Alert",
+      "confirm_replace": "Replace the current article body (both languages) with the template?"
     }
   },
   "menus": {

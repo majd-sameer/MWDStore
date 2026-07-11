@@ -25,7 +25,7 @@ export class TrustStrip {
   protected readonly items: readonly TrustItem[] = [
     { icon: 'shield', key: 'trust1' },
     { icon: 'truck', key: 'trust2' },
-    { icon: 'return', key: 'trust3' },
+  /*  { icon: 'return', key: 'trust3' },*/
     { icon: 'lock', key: 'trust4' },
   ];
 }

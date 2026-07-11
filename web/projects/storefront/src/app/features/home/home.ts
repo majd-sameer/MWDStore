@@ -24,21 +24,20 @@ import { MissionBand } from './sections/mission-band';
 import { StoryRail } from './sections/story-rail';
 import { ValuesRow } from './sections/values-row';
 import { CtaBand } from './sections/cta-band';
-import { AlertBand } from './sections/alert-band/alert-band';
 
 /**
  * Home page per supported-doc/HOME-PAGE.md: hero → trust strip → categories →
- * best sellers → mission band → new arrivals → success stories → values → CTA
- * band. Everything dynamic comes from the API via httpResources (SSR-rendered
+ * best sellers → mission band → new arrivals → news → values → CTA band.
+ * Everything dynamic comes from the API via httpResources (SSR-rendered
  * and transfer-cached): categories + per-category counts (catalog search
- * facet), best sellers (top rated), new arrivals (newest), stories (news), and
+ * facet), best sellers (top rated), new arrivals (newest), the news rail
+ * (all categories except alerts, which feed the notification toast), and
  * the hero stats (centers = active vendors, total product count).
  */
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    AlertBand,
     Hero,
     TrustStrip,
     CollectionRail,
@@ -72,9 +71,8 @@ export class Home {
     pageSize: 4,
     sort: 'newest',
   }));
-  /** Latest success stories drive the story rail; alerts drive the top announcement band. */
-  private readonly news = this.features.newsResource(() => 1, () => 'success-story');
-  protected readonly alerts = this.features.alertsResource();
+  /** Latest news drives the story rail (alerts are excluded — those feed the toast). */
+  private readonly news = this.features.newsResource();
 
   /** Hero stat: reform & rehabilitation centers (active vendors on the API). */
   protected readonly centerCount = computed(() => this.vendorCount.value() ?? null);
@@ -92,8 +90,12 @@ export class Home {
     },
   );
 
-  /** First three published articles as the success-story cards. */
-  protected readonly stories = computed(() => (this.news.value() ?? []).slice(0, 3));
+  /** First three published non-alert articles as the news cards. */
+  protected readonly stories = computed(() =>
+    (this.news.value() ?? [])
+      .filter((n) => n.categorySlug !== 'alert')
+      .slice(0, 3),
+  );
 
   // `stream` re-emits on language switch, so the SEO tags follow the active
   // language (instant() would freeze the first language's strings).

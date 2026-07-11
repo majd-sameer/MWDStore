@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  computed,
   effect,
   input,
   model,
+  signal,
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
@@ -29,6 +31,16 @@ const TOOLBAR: readonly ToolbarButton[] = [
 const EMPTY_HTML = new Set(['', '<br>', '<div><br></div>', '<p><br></p>']);
 
 /**
+ * True when the value is a complete HTML document (`<!DOCTYPE …>` / `<html>`) rather
+ * than a fragment. A contenteditable cannot hold one faithfully (the browser strips
+ * `<html>`/`<head>` on parse), so such values are locked to the source view.
+ */
+export function isFullHtmlDocument(html: string): boolean {
+  const head = html.trimStart().slice(0, 15).toLowerCase();
+  return head.startsWith('<!doctype') || head.startsWith('<html');
+}
+
+/**
  * Lightweight rich-text editor — a **Signal Forms custom control**
  * ({@link FormValueControl}) that binds to a plain HTML `string` field exactly like
  * a native input, so it drops into a form with `[formField]`:
@@ -38,10 +50,14 @@ const EMPTY_HTML = new Set(['', '<br>', '<div><br></div>', '<p><br></p>']);
  * ```
  *
  * It edits one language at a time (pair two of them for bilingual copy). The value
- * is HTML produced by `document.execCommand`; the storefront renders it through
- * Angular's `[innerHTML]`, which sanitizes it, so no scripts survive. There is no
- * editor dependency — this is the admin app (never server-rendered), so the browser
- * `contenteditable`/`execCommand` APIs are always available.
+ * is HTML produced by `document.execCommand`, or — via the `</>` toolbar toggle — raw
+ * HTML typed/pasted into a source textarea (for authors bringing pre-made article
+ * markup; pasting HTML source into the WYSIWYG area would store it escaped). Complete
+ * HTML documents (`<!DOCTYPE …>`) are accepted too and stay locked to the source view;
+ * the storefront renders those in a sandboxed iframe and everything else as trusted
+ * inline HTML. There is no editor dependency — this is the admin app (never
+ * server-rendered), so the browser `contenteditable`/`execCommand` APIs are always
+ * available.
  */
 @Component({
   selector: 'rich-text-editor',
@@ -69,9 +85,22 @@ export class RichTextEditor implements FormValueControl<string> {
 
   protected readonly toolbar = TOOLBAR;
 
+  /** When true the raw-HTML source textarea replaces the WYSIWYG area. */
+  protected readonly sourceMode = signal(false);
+
+  /** Full HTML documents can only be edited as source — the toggle is locked. */
+  protected readonly fullDocument = computed(() => isFullHtmlDocument(this.value() ?? ''));
+
   private readonly area = viewChild<ElementRef<HTMLElement>>('area');
 
   constructor() {
+    // A full-document value cannot round-trip through contenteditable — force the
+    // source view whenever one is loaded (e.g. editing an article saved as full HTML).
+    effect(() => {
+      if (this.fullDocument()) {
+        this.sourceMode.set(true);
+      }
+    });
     // Push external value changes into the DOM, but never while the caret is inside:
     // only overwrite when the incoming HTML actually differs from what's shown, so
     // typing (which already updates `value` via onInput) doesn't reset the cursor.
@@ -91,6 +120,23 @@ export class RichTextEditor implements FormValueControl<string> {
   protected onInput(): void {
     const html = this.area()?.nativeElement.innerHTML ?? '';
     this.value.set(EMPTY_HTML.has(html) ? '' : html);
+  }
+
+  /** Flip between the WYSIWYG area and the raw-HTML source textarea. */
+  protected toggleSource(): void {
+    // A full document must stay in source view — the WYSIWYG area would mangle it.
+    if (this.disabled() || this.fullDocument()) {
+      return;
+    }
+    // Leaving source mode re-creates the contenteditable; the constructor effect
+    // then pushes the (possibly edited) value into it.
+    this.sourceMode.update((v) => !v);
+  }
+
+  /** Read the source textarea back into the model. */
+  protected onSourceInput(event: Event): void {
+    const raw = (event.target as HTMLTextAreaElement).value;
+    this.value.set(EMPTY_HTML.has(raw.trim()) ? '' : raw);
   }
 
   /** Run a formatting command on the current selection, then sync the model. */

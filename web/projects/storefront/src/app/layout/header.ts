@@ -63,6 +63,7 @@ export class Header {
    * shop sorted newest-first.
    */
   protected readonly mainLinks: readonly MainLink[] = [
+    { key: 'home', link: '/' },
     { key: 'sections', link: '/categories' },
     { key: 'news', link: '/news' },
     { key: 'about_us', link: '/pages/about-us' },

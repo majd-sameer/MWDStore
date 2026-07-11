@@ -121,13 +121,17 @@ export class ProductList {
 
   protected readonly totalProduct = computed(() => this.data()?.totalProduct ?? 0);
 
-  /** Current page's products reordered so available items come first; the sort
-   *  is stable, so the API order is preserved within the in-stock / sold-out
-   *  groups. Call-for-pricing items count as available (they stay up top). */
+  /** Current page's products reordered by a three-level key: curated Signature
+   *  pieces first, then available items before sold-out, and finally by date —
+   *  the sort is stable, so the API's default (newest-first) order is preserved
+   *  as the tie-breaker within each Signature / availability group. Call-for-
+   *  pricing items count as available (they stay up top). */
   protected readonly products = computed<ProductListItem[]>(() => {
     const items = this.data()?.products ?? [];
     return [...items].sort(
-      (a, b) => Number(this.isOutOfStock(a)) - Number(this.isOutOfStock(b)),
+      (a, b) =>
+        Number(b.isSignature) - Number(a.isSignature) ||
+        Number(this.isOutOfStock(a)) - Number(this.isOutOfStock(b)),
     );
   });
 

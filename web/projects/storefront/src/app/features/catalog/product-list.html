@@ -268,25 +268,6 @@
           </div>
         }
 
-        @if (brands().length) {
-          <div class="fgroup">
-            <h4>{{ 'shop.center' | translate }}</h4>
-            <div class="frows">
-              @for (b of brands(); track b.id) {
-                <label class="frow" [class.is-on]="selectedBrands().includes(b.slug ?? '')">
-                  <input
-                    type="checkbox"
-                    [checked]="selectedBrands().includes(b.slug ?? '')"
-                    (change)="toggleBrand(b.slug)"
-                  />
-                  <span class="frow-name">{{ b.name }}</span>
-                  <span class="frow-n tabular-nums">{{ b.count }}</span>
-                </label>
-              }
-            </div>
-          </div>
-        }
-
         <div class="fgroup">
           <h4>{{ 'shop.rating' | translate }}</h4>
           <div class="frows">

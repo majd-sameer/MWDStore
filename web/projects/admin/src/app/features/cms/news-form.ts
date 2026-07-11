@@ -29,6 +29,7 @@ import { firstError } from '../../shared/field-error';
 import { PageHeader } from '../../shared/page-header';
 import { type MultiLangValue } from '../../shared/multi-lang-input';
 import { RichTextEditor } from '../../shared/rich-text-editor';
+import { NEWS_TEMPLATES, type NewsTemplate } from './news-templates';
 
 /** Fixed, code-known category slugs (mirror the backend seeder). */
 const SLUG_SUCCESS_STORY = 'success-story';
@@ -135,6 +136,9 @@ export class AdminNewsForm {
   protected readonly isSuccessStory = computed(() => this.selectedSlug() === SLUG_SUCCESS_STORY);
   protected readonly isAlert = computed(() => this.selectedSlug() === SLUG_ALERT);
 
+  /** Ready-made article layouts (one per category) offered above the body editors. */
+  protected readonly templates = NEWS_TEMPLATES;
+
   protected readonly model = signal<NewsModel>(emptyModel());
   protected readonly f = form(this.model, (path) => {
     required(path.name.ar, { message: 'Title is required' });
@@ -180,6 +184,28 @@ export class AdminNewsForm {
   protected onCategoryChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.categoryId.set(value ? Number(value) : null);
+  }
+
+  /**
+   * Replace both language bodies with the template's ready-made layout (after a
+   * confirm when either body already has content), and pre-select the matching
+   * category when the admin hasn't picked one yet.
+   */
+  protected applyTemplate(t: NewsTemplate): void {
+    const { ar, en } = this.model().fullContent;
+    if (
+      (ar.trim() || en.trim()) &&
+      !confirm(this.translate.instant('news.template.confirm_replace'))
+    ) {
+      return;
+    }
+    this.model.update((m) => ({ ...m, fullContent: { ar: t.ar, en: t.en } }));
+    if (this.categoryId() === null) {
+      const match = (this.categories.value() ?? []).find((c) => c.slug === t.key);
+      if (match) {
+        this.categoryId.set(match.id);
+      }
+    }
   }
 
   // ----- Success-story product picker -----------------------------------------

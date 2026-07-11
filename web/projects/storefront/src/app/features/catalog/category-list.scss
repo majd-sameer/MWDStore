@@ -69,6 +69,11 @@
       transform: translateY(-3px);
       box-shadow: var(--shadow-md);
     }
+    /* "All Products" card — accented so it reads as the catch-all entry. */
+    .scard-all {
+      border-color: var(--accent);
+      background: var(--surface-2);
+    }
     .scard-ic {
       display: inline-flex;
       align-items: center;

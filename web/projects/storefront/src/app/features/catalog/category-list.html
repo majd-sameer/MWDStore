@@ -18,6 +18,14 @@
         </div>
       } @else if (categories().length) {
         <div class="sections">
+          <a class="scard scard-all" [routerLink]="['/shop']">
+            <span class="scard-ic"><lib-icon name="grid" [size]="28" /></span>
+            <b class="scard-name">{{ 'sections.all' | translate }}</b>
+            <span class="scard-go">
+              {{ 'sections.browse_all' | translate }}
+              <lib-icon name="arrowEnd" [size]="16" />
+            </span>
+          </a>
           @for (cat of categories(); track cat.id; let i = $index) {
             <a
               class="scard"

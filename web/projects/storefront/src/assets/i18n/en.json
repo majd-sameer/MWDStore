@@ -19,6 +19,14 @@
     "signout": "Sign out"
   },
   "announce": "Every purchase supports the rehabilitation and reintegration of inmates",
+  "alerts": {
+    "label": "Announcements",
+    "badge": "Notice",
+    "dismiss": "Dismiss",
+    "view": "Read more",
+    "prev": "Previous announcement",
+    "next": "Next announcement"
+  },
   "auth": {
     "login_title": "Welcome back",
     "login_subtitle": "Sign in to continue to your account.",
@@ -48,6 +56,8 @@
     "subtitle": "Browse our handmade crafts by section, then explore its products",
     "count": "{{count}} products",
     "browse": "Browse section",
+    "all": "All Products",
+    "browse_all": "Browse all",
     "empty": "No sections are available yet."
   },
   "categories": {
@@ -102,15 +112,10 @@
     "mission_title": "Behind every piece… a person reclaiming their dignity",
     "mission_body": "“Made with Determination” is a Public Security Directorate initiative that lets inmates of the Reform & Rehabilitation Centers showcase and sell their handmade work online — turning skill into a dignified livelihood and a path back into society.",
     "mission_cta": "Read more",
-    "stories_eyebrow": "From the heart",
-    "stories_title": "Success stories",
-    "stories_sub": "Real voices of people whose lives were changed by craft.",
-    "stories_all": "All stories",
-    "alerts": {
-      "label": "Announcements",
-      "badge": "Notice",
-      "dismiss": "Dismiss"
-    },
+    "stories_eyebrow": "Stay updated",
+    "stories_title": "Our news",
+    "stories_sub": "News, activities and success stories from our community.",
+    "stories_all": "All news",
     "cta_eyebrow": "Join us",
     "cta_title": "Be the first to know about new products",
     "cta_sub": "Subscribe for new crafts, success stories and exclusive offers that support our mission.",
