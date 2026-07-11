@@ -13,6 +13,7 @@
               id="loc-culture"
               [items]="cultures.value() ?? []"
               bindValue="id"
+              bindLabel="name"
               [ngModel]="cultureId() || null"
               (ngModelChange)="cultureId.set($event ?? '')"
               [placeholder]="'common.choose' | translate"

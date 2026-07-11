@@ -221,6 +221,10 @@ export class AdminStockOut {
       position: 'end',
       panelClass: 'stock-out-panel',
       ariaLabelledBy: 'stock-out-panel-title',
+      // Only the Cancel/Save actions close the panel — ignore backdrop clicks
+      // and the Esc key so an accidental click can't discard an in-progress form.
+      backdrop: 'static',
+      keyboard: false,
     });
   }
 

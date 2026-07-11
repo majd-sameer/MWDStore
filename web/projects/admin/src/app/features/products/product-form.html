@@ -21,6 +21,7 @@
         <div class="row g-4">
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm mb-4">
+              <div class="card-header fw-semibold">{{ 'product_form.basic_info' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'common.name' | translate" controlId="name" [required]="true" [error]="err(f.name.ar())">
                   <multi-lang-input controlId="name" [formField]="f.name" />
@@ -58,7 +59,7 @@
               </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4">
+           <!-- <div class="card border-0 shadow-sm mb-4">
               <div class="card-header fw-semibold">{{ 'product_form.seo' | translate }}</div>
               <div class="card-body">
                 <lib-form-field [label]="'pages.meta_title' | translate" controlId="metaTitle">
@@ -71,7 +72,7 @@
                   <multi-lang-input type="textarea" [rows]="2" controlId="metaDescription" [formField]="f.metaDescription" />
                 </lib-form-field>
               </div>
-            </div>
+            </div>-->
 
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-header fw-semibold">{{ 'nav.attributes' | translate }}</div>

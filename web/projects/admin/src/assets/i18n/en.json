@@ -389,6 +389,7 @@
     "delete_failed": "Could not delete the product."
   },
   "product_form": {
+    "basic_info" : "Basic information",
     "new_title": "New product",
     "edit_title": "Edit product",
     "load_one_failed": "Couldn't load this product.",

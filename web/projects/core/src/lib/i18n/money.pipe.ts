@@ -27,7 +27,7 @@ export class MoneyPipe implements PipeTransform {
     if (Number.isNaN(amount)) {
       return '';
     }
-    const symbol = this.language.lang() === 'ar' ? 'أ.د' : 'JOD';
+    const symbol = this.language.lang() === 'ar' ? 'د.أ' : 'JOD';
     return formatCurrency(amount, this.locale, symbol, 'JOD', digitsInfo);
   }
 }

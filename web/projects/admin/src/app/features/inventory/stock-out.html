@@ -133,12 +133,6 @@
             </div>
           }
         </div>
-        <button
-          type="button"
-          class="btn-close"
-          [attr.aria-label]="'common.close' | translate"
-          (click)="closePanel()"
-        ></button>
       </div>
       <div class="offcanvas-body">
         @if (stock.isLoading()) {
@@ -165,6 +159,7 @@
               id="so-wh"
               [items]="stock.value()?.warehouses ?? []"
               bindValue="warehouseId"
+              bindLabel="warehouseName"
               [ngModel]="selectedWarehouse()"
               (ngModelChange)="setWarehouse($event)"
               [clearable]="false"
@@ -197,6 +192,7 @@
                 id="so-reason"
                 [items]="reasons"
                 bindValue="value"
+                bindLabel="key"
                 [ngModel]="reason()"
                 (ngModelChange)="setReason($event)"
                 [clearable]="false"
@@ -218,6 +214,7 @@
                   id="so-channel"
                   [items]="channels"
                   bindValue="value"
+                  bindLabel="key"
                   [ngModel]="channel()"
                   (ngModelChange)="setChannel($event)"
                   [clearable]="!channelRequired()"

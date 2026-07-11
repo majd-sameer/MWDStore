@@ -144,6 +144,20 @@ h1.h3 {
   font-size: 0.8rem;
 }
 
+// Offcanvas panels keep a plain white surface (rather than the themed body bg)
+// so slide-in forms read as a clean sheet over the dimmed page.
+.offcanvas {
+  --bs-offcanvas-bg: #fff;
+  background-color: #fff;
+}
+// Bootstrap pulls the header close button flush with a physical negative
+// margin-right, which stays on the wrong side in RTL. Use logical margins so
+// the button hugs the trailing padding edge in both LTR and RTL.
+.offcanvas-header .btn-close {
+  margin-inline-start: 0;
+  margin-inline-end: calc(-0.5 * var(--bs-offcanvas-padding-x));
+}
+
 // Toolbar helpers ---------------------------------------------------------------
 // One tidy filter bar above a list: search, dropdowns and status chips sit on a
 // single wrapping row with even spacing, so every list page lines its controls
@@ -197,9 +211,11 @@ h1.h3 {
 // calm bar; they light to white on focus like the search box.
 .form-select.w-auto {
   border-radius: 999px;
-  background-color: var(--surface-2);
+  background-color: var(--bs-gray-200);
   border-color: transparent;
   padding-inline: 0.95rem 2.2rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .form-select.w-auto:focus {
   background-color: var(--surface);
@@ -568,8 +584,19 @@ h1.h3 {
   display: inline-flex;
   position: relative;
 }
+// The date input carries the same soft filled look as the search box so an
+// OWL date filter reads flush with the other toolbar controls; it lights to
+// white on focus like the rest.
 .date-field > .form-control {
   cursor: pointer;
+  background-color: var(--bs-gray-200);
+  border-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.date-field > .form-control:focus {
+  background-color: var(--surface);
+  border-color: var(--green);
 }
 
 // =============================================================================
@@ -781,43 +808,47 @@ h1.h3 {
   text-align: center;
 }
 
-// --- FilterDropdown: ghost trigger + count badge + checkbox popover ----------
+// --- FilterDropdown: form-input trigger + count badge + checkbox popover -----
+// The trigger mirrors .form-control / .form-select so a filter sits flush beside
+// native inputs in a form or toolbar row: same radius, border, surface and green
+// focus ring. The chevron is pushed to the trailing edge like a select caret.
 .filter-trigger {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--ink-2);
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.35;
-  padding: 0.4rem 0.85rem;
+  min-inline-size: 190px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background-color: var(--bs-gray-200);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 0.375rem 0.75rem;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease;
 }
-.filter-trigger:hover {
-  background: var(--surface-2);
-  border-color: var(--line-strong);
+.filter-trigger .filter-trigger-label {
+  color: var(--ink-2);
+}
+.filter-trigger.has-selection .filter-trigger-label {
   color: var(--ink);
 }
-.filter-trigger.has-selection {
-  border-color: color-mix(in srgb, var(--green) 45%, var(--line-strong));
-  color: var(--ink);
-}
-.filter-trigger.open {
-  background: var(--surface-2);
-  border-color: var(--green);
-}
+// Lights to white with a green ring on focus/open, like the search box.
+.filter-trigger.open,
 .filter-trigger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 22%, transparent);
+  background-color: var(--surface);
+  border-color: var(--green);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--green) 18%, transparent);
 }
 .filter-trigger .filter-selected-word {
   color: var(--ink-3);
 }
+// Caret hugs the trailing edge like a form-select chevron.
 .filter-trigger .filter-chevron {
+  margin-inline-start: auto;
   color: var(--ink-3);
   transition: transform 0.18s ease;
 }
