@@ -28,7 +28,7 @@ interface CategoryLink {
 
 /**
  * Storefront chrome: announce bar, wordmark, a hardcoded primary nav
- * (Store Sections / Our News / About Us / New Arrivals), a secondary sub-nav of
+ * (Store Sections / Our News / About Us), a secondary sub-nav of
  * the backend categories, and the search / account / cart icon actions (with a live
  * cart-count badge). On small screens both navs collapse into a logical-side
  * drawer. All copy is keyed through ngx-translate.
@@ -59,15 +59,13 @@ export class Header {
 
   /**
    * Hardcoded primary nav. "Store Sections" opens the category hub (/categories)
-   * so shoppers pick a section before seeing products; "New Arrivals" jumps to the
-   * shop sorted newest-first.
+   * so shoppers pick a section before seeing products.
    */
   protected readonly mainLinks: readonly MainLink[] = [
     { key: 'home', link: '/' },
     { key: 'sections', link: '/categories' },
     { key: 'news', link: '/news' },
     { key: 'about_us', link: '/pages/about-us' },
-    { key: 'new_arrivals', link: '/shop', queryParams: { sort: 'newest' } },
   ];
 
   /**
