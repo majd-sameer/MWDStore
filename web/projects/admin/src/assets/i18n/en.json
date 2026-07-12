@@ -773,6 +773,7 @@
     "short_content": "Short content",
     "full_content": "Full content (HTML)",
     "thumbnail": "Thumbnail",
+    "setup_title": "Article setup",
     "category_label": "Category",
     "category_none": "— Select a category —",
     "upload_failed": "Could not upload the image.",

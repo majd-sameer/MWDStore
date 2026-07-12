@@ -773,6 +773,7 @@
     "short_content": "محتوى مختصر",
     "full_content": "المحتوى الكامل (HTML)",
     "thumbnail": "الصورة المصغّرة",
+    "setup_title": "إعداد المقال",
     "category_label": "الفئة",
     "category_none": "— اختر الفئة —",
     "upload_failed": "تعذّر رفع الصورة.",
