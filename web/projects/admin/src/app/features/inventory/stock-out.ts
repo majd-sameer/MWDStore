@@ -33,27 +33,15 @@ const DEFAULT_PAGE_SIZE = 10;
 const REASONS = [
   { value: STOCK_OUT_REASON.Sale, key: 'sale' },
   { value: STOCK_OUT_REASON.Gift, key: 'gift' },
-  { value: STOCK_OUT_REASON.Matched, key: 'matched' },
-  { value: STOCK_OUT_REASON.ThirdParty, key: 'thirdParty' },
-  { value: STOCK_OUT_REASON.ExternalEvent, key: 'externalEvent' },
-  { value: STOCK_OUT_REASON.Reserved, key: 'reserved' },
-  { value: STOCK_OUT_REASON.DisplayOnly, key: 'displayOnly' },
 ];
 
 const CHANNELS = [
   { value: SALES_CHANNEL.Showroom, key: 'showroom' },
-  { value: SALES_CHANNEL.ExternalExhibition, key: 'externalExhibition' },
-  { value: SALES_CHANNEL.ExternalBroker, key: 'externalBroker' },
-  { value: SALES_CHANNEL.LocalBroker, key: 'localBroker' },
   { value: SALES_CHANNEL.OnlineStore, key: 'onlineStore' },
 ];
 
-/** Reasons that show the channel select (Sale requires it; the others are optional). */
-const CHANNEL_REASONS: number[] = [
-  STOCK_OUT_REASON.Sale,
-  STOCK_OUT_REASON.ExternalEvent,
-  STOCK_OUT_REASON.ThirdParty,
-];
+/** Reasons that show the channel select (Sale requires it). */
+const CHANNEL_REASONS: number[] = [STOCK_OUT_REASON.Sale];
 
 /**
  * Stock-out browser: the paged product list (`GET /api/admin/products`) with a

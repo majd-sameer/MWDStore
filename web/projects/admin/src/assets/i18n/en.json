@@ -1043,6 +1043,13 @@
       "payment_fee": "Payment fee (%)"
     }
   },
+  "payment_methods": {
+    "CoD": "Cash on delivery",
+    "Stripe": "Card (Stripe)",
+    "MEPS": "Card (MEPS)",
+    "PaypalExpress": "PayPal",
+    "none": "Not specified"
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Application configuration keys.",

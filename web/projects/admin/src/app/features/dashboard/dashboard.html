@@ -226,7 +226,7 @@
                           <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">#{{ o.id }}</a>
                         </td>
                         <td class="small">{{ o.createdOn | date: 'mediumDate' }}</td>
-                        <td><span class="badge" [class]="badge(o.orderStatus)">{{ o.orderStatusName }}</span></td>
+                        <td><span class="badge" [class]="badge(o.orderStatus)">{{ 'orders.status_' + o.orderStatus | translate }}</span></td>
                         <td class="text-end">{{ o.orderTotal | money }}</td>
                       </tr>
                     }

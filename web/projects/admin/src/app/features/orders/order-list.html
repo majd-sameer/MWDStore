@@ -92,7 +92,7 @@
                     </td>
                     <td>{{ o.createdOn | date: 'medium' }}</td>
                     <td>
-                      <app-status-pill [tone]="tone(o.orderStatus)">{{ o.orderStatusName }}</app-status-pill>
+                      <app-status-pill [tone]="tone(o.orderStatus)">{{ 'orders.status_' + o.orderStatus | translate }}</app-status-pill>
                     </td>
                     <td class="tabular-nums">{{ o.itemCount }}</td>
                     <td class="tabular-nums">{{ o.orderTotal | money }}</td>

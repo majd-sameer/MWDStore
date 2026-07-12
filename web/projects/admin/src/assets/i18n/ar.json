@@ -1043,6 +1043,13 @@
       "payment_fee": "رسوم الدفع (٪)"
     }
   },
+  "payment_methods": {
+    "CoD": "الدفع عند الاستلام",
+    "Stripe": "بطاقة (Stripe)",
+    "MEPS": "بطاقة (MEPS)",
+    "PaypalExpress": "PayPal",
+    "none": "غير محدد"
+  },
   "settings": {
     "title": "الإعدادات",
     "subtitle": "مفاتيح إعدادات التطبيق.",

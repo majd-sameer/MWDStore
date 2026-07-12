@@ -69,6 +69,16 @@ export class Dashboard {
     return this.translate.instant(key);
   }
 
+  /**
+   * Human label for a payment-method id (`CoD`, `Stripe`, `(none)`, …).
+   * Falls back to the raw id when no `payment_methods.*` key exists for it.
+   */
+  private paymentLabel(name: string): string {
+    const key = 'payment_methods.' + (name === '(none)' ? 'none' : name);
+    const label = this.t(key);
+    return label === key ? name : label;
+  }
+
   // ----- Revenue & orders trend (combo: revenue line + orders bars) -----
   protected readonly trendData = computed<ChartData<'bar'>>(() => {
     const points = this.stats.value()?.revenueTrend ?? [];
@@ -121,7 +131,7 @@ export class Dashboard {
   protected readonly statusData = computed<ChartData<'bar'>>(() => {
     const slices = this.stats.value()?.statusFunnel ?? [];
     return {
-      labels: slices.map((s) => s.statusName),
+      labels: slices.map((s) => this.t('orders.status_' + s.status)),
       datasets: [
         {
           label: this.t('dashboard.series_orders'),
@@ -161,7 +171,7 @@ export class Dashboard {
   protected readonly paymentData = computed<ChartData<'doughnut'>>(() => {
     const mix = this.stats.value()?.paymentMix ?? [];
     return {
-      labels: mix.map((m) => m.name),
+      labels: mix.map((m) => this.paymentLabel(m.name)),
       datasets: [
         { data: mix.map((m) => m.count), backgroundColor: mix.map((_, i) => PALETTE[i % PALETTE.length]) },
       ],
