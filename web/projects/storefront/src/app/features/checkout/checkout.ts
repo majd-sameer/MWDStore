@@ -7,11 +7,12 @@ import {
   inject,
   PLATFORM_ID,
   signal,
+  untracked,
 } from '@angular/core';
 import { form, FormField as Control, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { AuthService, MoneyPipe } from 'core';
+import { AuthService, LanguageService, MoneyPipe } from 'core';
 import {
   AccountService,
   type AddressDto,
@@ -102,6 +103,7 @@ export class Checkout {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   protected readonly stage = signal<Stage>('cart');
@@ -292,6 +294,16 @@ export class Checkout {
       }
     });
 
+    // Re-fetch the governorates when the language toggles: the API localizes the
+    // names per request (Accept-Language), so the loaded list goes stale in place.
+    effect(() => {
+      this.language.lang();
+      const countryId = untracked(() => this.model().countryId);
+      if (countryId) {
+        this.loadStates(countryId);
+      }
+    });
+
     // Scroll to top whenever the stage changes (browser only).
     effect(() => {
       this.stage();
@@ -312,7 +324,8 @@ export class Checkout {
   }
 
   private loadStates(countryId: string): void {
-    this.locations.states(countryId).subscribe({
+    // Only governorates with a configured shipping table rate are offered.
+    this.locations.states(countryId, true).subscribe({
       next: (states) => this.states.set(states),
       error: () => this.states.set([]),
     });

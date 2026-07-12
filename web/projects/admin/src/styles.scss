@@ -310,6 +310,45 @@ h1.h3 {
   pointer-events: none;
 }
 
+// Labeled row action buttons (stock In / Out): tinted at rest like the status
+// pills, filling solid on hover. Sized to line up with the 32px action-btns.
+.btn-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  block-size: 32px;
+  padding-inline: 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn-soft:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.btn-soft-success {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  border-color: color-mix(in srgb, var(--green) 32%, transparent);
+  color: var(--green-strong);
+}
+.btn-soft-success:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.btn-soft-danger {
+  background: color-mix(in srgb, #d6455d 12%, transparent);
+  border-color: color-mix(in srgb, #d6455d 32%, transparent);
+  color: #b62f45;
+}
+.btn-soft-danger:hover {
+  background: #d6455d;
+  border-color: #d6455d;
+  color: #fff;
+}
+
 // List pager (prev / page chip / next) — a quiet footer row, split off from the
 // table by a hairline, with pill prev/next buttons that echo the filter chips.
 .list-pager {

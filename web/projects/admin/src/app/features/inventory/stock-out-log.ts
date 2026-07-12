@@ -14,6 +14,8 @@ import {
 } from '@danielmoncada/angular-datetime-picker';
 import {
   AdminInventoryService,
+  SALES_CHANNEL,
+  STOCK_OUT_REASON,
   type AdminStockOutQuery,
 } from 'data-access';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -42,6 +44,21 @@ const CHANNEL_KEYS: Record<number, string> = {
   4: 'localBroker',
   5: 'onlineStore',
 };
+
+// Filter dropdowns only offer the values the stock-out form can still record;
+// the full key maps above stay intact so historical rows keep their labels.
+const REASON_FILTER_OPTIONS = [
+  { value: STOCK_OUT_REASON.Sale, key: REASON_KEYS[STOCK_OUT_REASON.Sale] },
+  { value: STOCK_OUT_REASON.Gift, key: REASON_KEYS[STOCK_OUT_REASON.Gift] },
+];
+
+const CHANNEL_FILTER_OPTIONS = [
+  { value: SALES_CHANNEL.Showroom, key: CHANNEL_KEYS[SALES_CHANNEL.Showroom] },
+  {
+    value: SALES_CHANNEL.OnlineStore,
+    key: CHANNEL_KEYS[SALES_CHANNEL.OnlineStore],
+  },
+];
 
 /**
  * Stock-out log: paged, filterable view of tracked stock removals (StockHistory rows carrying a
@@ -82,8 +99,8 @@ export class AdminStockOutLog {
 
   protected readonly reasonKeys = REASON_KEYS;
   protected readonly channelKeys = CHANNEL_KEYS;
-  protected readonly reasonOptions = Object.entries(REASON_KEYS).map(([v, k]) => ({ value: +v, key: k }));
-  protected readonly channelOptions = Object.entries(CHANNEL_KEYS).map(([v, k]) => ({ value: +v, key: k }));
+  protected readonly reasonOptions = REASON_FILTER_OPTIONS;
+  protected readonly channelOptions = CHANNEL_FILTER_OPTIONS;
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 

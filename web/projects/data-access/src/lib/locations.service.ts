@@ -20,10 +20,16 @@ export class LocationsService {
     );
   }
 
-  /** GET /api/locations/countries/{countryId}/states */
-  states(countryId: string): Observable<StateOrProvinceLookupDto[]> {
+  /**
+   * GET /api/locations/countries/{countryId}/states
+   *
+   * `withRatesOnly` limits the list to states an enabled shipping provider has a
+   * table-rate row for (used by the checkout so only shippable governorates show).
+   */
+  states(countryId: string, withRatesOnly = false): Observable<StateOrProvinceLookupDto[]> {
     return this.http.get<StateOrProvinceLookupDto[]>(
       `${API_ROOT}/locations/countries/${encodeURIComponent(countryId)}/states`,
+      { params: withRatesOnly ? { withRatesOnly: true } : {} },
     );
   }
 }

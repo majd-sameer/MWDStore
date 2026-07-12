@@ -53,12 +53,32 @@ public sealed class LocationsController : ControllerBase
         return Ok(countries);
     }
 
+    /// <param name="countryId">ISO code of the country whose states are listed.</param>
+    /// <param name="withRatesOnly">When true, only states an enabled shipping provider has a
+    /// table-rate (<see cref="Store.Domain.PriceAndDestination"/>) row for — the checkout uses this so
+    /// shoppers can only pick a governorate that can actually be shipped to. A state-wildcard rate row
+    /// (null <c>StateOrProvinceId</c>) covers every state, so no filtering happens then.</param>
+    /// <param name="cancellationToken">Aborts the lookups when the request is cancelled.</param>
     [HttpGet("countries/{countryId}/states")]
     public async Task<ActionResult<IReadOnlyList<StateOrProvinceLookupDto>>> States(
-        string countryId, CancellationToken cancellationToken)
+        string countryId, [FromQuery] bool withRatesOnly, CancellationToken cancellationToken)
     {
-        var states = await _db.StateOrProvinces
-            .Where(s => s.CountryId == countryId)
+        var statesQuery = _db.StateOrProvinces.Where(s => s.CountryId == countryId);
+
+        if (withRatesOnly)
+        {
+            var rateRows = _db.PriceAndDestinations.Where(r =>
+                (r.CountryId == null || r.CountryId == countryId)
+                && _db.ShippingProviders.Any(p => p.IsEnabled && p.Id == r.ShippingProviderId));
+
+            var hasWildcard = await rateRows.AnyAsync(r => r.StateOrProvinceId == null, cancellationToken);
+            if (!hasWildcard)
+            {
+                statesQuery = statesQuery.Where(s => rateRows.Any(r => r.StateOrProvinceId == s.Id));
+            }
+        }
+
+        var states = await statesQuery
             .OrderBy(s => s.Name)
             .Select(s => new StateOrProvinceLookupDto(s.Id, s.Name, null, s.CountryId!))
             .ToListAsync(cancellationToken);
@@ -70,8 +90,10 @@ public sealed class LocationsController : ControllerBase
                 LocalizedEntity.StateOrProvince, states.Select(s => s.Id).ToList(), cultureId, cancellationToken);
             if (!overlay.IsEmpty)
             {
+                // Re-sort after overlaying so the English list is alphabetical too (base sort is Arabic).
                 states = states
                     .Select(s => s with { Name = overlay.Apply(s.Id, LocalizedProperty.Name, s.Name)! })
+                    .OrderBy(s => s.Name, StringComparer.Ordinal)
                     .ToList();
             }
         }

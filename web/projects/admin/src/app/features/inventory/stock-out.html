@@ -71,7 +71,7 @@
                       <span class="d-inline-flex gap-1">
                         <button
                           type="button"
-                          class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1"
+                          class="btn-soft btn-soft-success"
                           [title]="'stockout.in_action' | translate"
                           (click)="openStockIn(p)"
                         >
@@ -80,7 +80,7 @@
                         </button>
                         <button
                           type="button"
-                          class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                          class="btn-soft btn-soft-danger"
                           [disabled]="p.stockQuantity <= 0"
                           [title]="'stockout.out_action' | translate"
                           (click)="openStockOut(p)"
