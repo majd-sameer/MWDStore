@@ -31,31 +31,73 @@
           }
         </div>
 
-        <div class="card-surface mt-3">
-          <a class="quick-link" routerLink="/account/wishlist">
-            ♡ {{ 'wishlist.title' | translate }}
-          </a>
-        </div>
+        <!-- Wishlist card -->
+        @if (wishlist().length) {
+          <div class="card-surface mt-3 rail-block" aria-labelledby="wl-title">
+            <div class="rail-head">
+              <h2 id="wl-title" class="block-title mb-0">♡ {{ 'wishlist.title' | translate }}</h2>
+              <div class="rail-nav">
+                <button type="button" class="rail-btn" (click)="scrollRail(wlRail, -1)"
+                  [attr.aria-label]="'common.prev' | translate">
+                  <lib-icon name="arrowStart" [size]="15" />
+                </button>
+                <button type="button" class="rail-btn" (click)="scrollRail(wlRail, 1)"
+                  [attr.aria-label]="'common.next' | translate">
+                  <lib-icon name="arrowEnd" [size]="15" />
+                </button>
+              </div>
+            </div>
+            <div #wlRail class="rail">
+              @for (item of wishlist(); track item.id) {
+                <a class="rail-card" [routerLink]="['/products', item.productId]">
+                  <lib-tile [src]="item.thumbnailUrl" [seed]="item.productName ?? item.productId"
+                    [alt]="item.productName" ratio="1x1" />
+                  <span class="rail-name">{{ item.productName }}</span>
+                  <span class="rail-price tabular-nums">{{ item.price | money }}</span>
+                </a>
+              }
+            </div>
+            <a class="rail-all" routerLink="/account/wishlist">
+              {{ 'home.view_all' | translate }} <lib-icon name="arrowEnd" [size]="14" />
+            </a>
+          </div>
+        }
 
-        <button libButton variant="danger" [outline]="true" class="logout-btn mt-3"
-          type="button" (click)="onLogout()">
-          ⏻ {{ 'account.logout' | translate }}
-        </button>
-
+        <!-- Recently-viewed card -->
         @if (recentlyViewed().length) {
-          <div class="card-surface mt-3">
-            <h2 class="block-title">{{ 'recently.title' | translate }}</h2>
-            <div class="rv-list">
+          <div class="card-surface mt-3 rail-block" aria-labelledby="rv-title">
+            <div class="rail-head">
+              <h2 id="rv-title" class="block-title mb-0">{{ 'recently.title' | translate }}</h2>
+              <div class="rail-nav">
+                <button type="button" class="rail-btn" (click)="scrollRail(rvRail, -1)"
+                  [attr.aria-label]="'common.prev' | translate">
+                  <lib-icon name="arrowStart" [size]="15" />
+                </button>
+                <button type="button" class="rail-btn" (click)="scrollRail(rvRail, 1)"
+                  [attr.aria-label]="'common.next' | translate">
+                  <lib-icon name="arrowEnd" [size]="15" />
+                </button>
+              </div>
+            </div>
+            <div #rvRail class="rail">
               @for (rv of recentlyViewed(); track rv.productId) {
-                <a class="rv-item" [routerLink]="['/products', rv.productId]">
+                <a class="rail-card" [routerLink]="['/products', rv.productId]">
                   <lib-tile [src]="rv.thumbnailUrl" [seed]="rv.name ?? rv.productId"
                     [alt]="rv.name" ratio="1x1" />
-                  <span class="rv-name">{{ rv.name }}</span>
+                  <span class="rail-name">{{ rv.name }}</span>
                 </a>
               }
             </div>
           </div>
         }
+
+        <!-- Sign out — always the column's last card -->
+        <div class="card-surface mt-3 signout-block">
+          <button libButton variant="danger" [outline]="true" class="logout-btn"
+            type="button" (click)="onLogout()">
+            ⏻ {{ 'account.logout' | translate }}
+          </button>
+        </div>
       </section>
 
       <section class="orders-col">
@@ -88,4 +130,3 @@
         }
       </section>
     </div>
-  

@@ -87,7 +87,7 @@
                   <tr>
                     <td>
                       <a [routerLink]="['/orders', o.id]" class="text-decoration-none fw-medium">
-                        #{{ o.id }}
+                        #{{ o.trackingNumber ?? o.id }}
                       </a>
                     </td>
                     <td>{{ o.createdOn | date: 'medium' }}</td>

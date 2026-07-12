@@ -43,6 +43,17 @@
                   </div>
                 </div>
 
+                <lib-form-field [label]="'news.category_label' | translate" controlId="nw-cat">
+                  <select id="nw-cat" class="form-select" (change)="onCategoryChange($event)">
+                    <option value="" [selected]="categoryId() === null">
+                      {{ 'news.category_none' | translate }}
+                    </option>
+                    @for (c of categories.value() ?? []; track c.id) {
+                      <option [value]="c.id" [selected]="c.id === categoryId()">{{ categoryLabel(c) }}</option>
+                    }
+                  </select>
+                </lib-form-field>
+
                 <!-- Copy is authored per language: an Arabic block and an English block,
                      side by side, each with its own rich-text body. -->
                 <div class="row g-4 lang-grid">
@@ -98,17 +109,6 @@
                 <input id="nw-thumb" type="file" class="file-field mb-3" accept="image/*"
                   [disabled]="uploading()" (change)="onThumbnailSelected($event)" />
 
-                <lib-form-field [label]="'news.category_label' | translate" controlId="nw-cat">
-                  <select id="nw-cat" class="form-select" (change)="onCategoryChange($event)">
-                    <option value="" [selected]="categoryId() === null">
-                      {{ 'news.category_none' | translate }}
-                    </option>
-                    @for (c of categories.value() ?? []; track c.id) {
-                      <option [value]="c.id" [selected]="c.id === categoryId()">{{ categoryLabel(c) }}</option>
-                    }
-                  </select>
-                </lib-form-field>
-
                 <!-- Success story → link the product whose story this tells. -->
                 @if (isSuccessStory()) {
                   <lib-form-field [label]="'news.story.linked_product' | translate" controlId="nw-prod">
@@ -142,7 +142,11 @@
                     <div class="col-md-6">
                       <lib-form-field [label]="'news.alert.expires_on' | translate" controlId="nw-exp"
                         [hint]="'news.alert.expires_hint' | translate">
-                        <input id="nw-exp" type="datetime-local" class="form-control" [formField]="f.alertExpiresOn" />
+                        <div class="date-field">
+                          <input id="nw-exp" class="form-control" [owlDateTime]="dtExp"
+                            [owlDateTimeTrigger]="dtExp" [formField]="f.alertExpiresOn" readonly />
+                          <owl-date-time #dtExp />
+                        </div>
                       </lib-form-field>
                     </div>
                     <div class="col-md-6">

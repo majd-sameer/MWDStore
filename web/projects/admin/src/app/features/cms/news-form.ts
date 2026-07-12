@@ -14,6 +14,10 @@ import {
 } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
+  OwlDateTimeModule,
+  OwlNativeDateTimeModule,
+} from '@danielmoncada/angular-datetime-picker';
+import {
   AdminCmsService,
   AdminMediaService,
   AdminProductsService,
@@ -41,8 +45,8 @@ interface NewsModel {
   shortContent: MultiLangValue;
   fullContent: MultiLangValue;
   isPublished: boolean;
-  /** Alerts only — a `datetime-local` string (empty when unset). */
-  alertExpiresOn: string;
+  /** Alerts only — the home-band expiry (null when unset). */
+  alertExpiresOn: Date | null;
   /** Alerts only — the CTA link (empty when unset). */
   alertCtaUrl: string;
 }
@@ -54,31 +58,9 @@ function emptyModel(): NewsModel {
     shortContent: { ar: '', en: '' },
     fullContent: { ar: '', en: '' },
     isPublished: true,
-    alertExpiresOn: '',
+    alertExpiresOn: null,
     alertCtaUrl: '',
   };
-}
-
-/** ISO 8601 → `yyyy-MM-ddTHH:mm` in local time, for a `datetime-local` input. */
-function toDateTimeLocal(iso: string | null | undefined): string {
-  if (!iso) {
-    return '';
-  }
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) {
-    return '';
-  }
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/** `datetime-local` string → ISO 8601 (UTC), or null when empty/invalid. */
-function fromDateTimeLocal(value: string): string | null {
-  if (!value) {
-    return null;
-  }
-  const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 /**
@@ -91,7 +73,17 @@ function fromDateTimeLocal(value: string): string | null {
 @Component({
   selector: 'app-admin-news-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Control, FormField, Button, RouterLink, TranslatePipe, PageHeader, RichTextEditor],
+  imports: [
+    Control,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    FormField,
+    Button,
+    RouterLink,
+    TranslatePipe,
+    PageHeader,
+    RichTextEditor,
+  ],
   templateUrl: './news-form.html',
   styleUrl: './news-form.scss',
 })
@@ -156,7 +148,7 @@ export class AdminNewsForm {
             shortContent: { ar: detail.shortContent ?? '', en: detail.shortContentEn ?? '' },
             fullContent: { ar: detail.fullContent ?? '', en: detail.fullContentEn ?? '' },
             isPublished: detail.isPublished,
-            alertExpiresOn: toDateTimeLocal(detail.alertExpiresOn),
+            alertExpiresOn: detail.alertExpiresOn ? new Date(detail.alertExpiresOn) : null,
             alertCtaUrl: detail.alertCtaUrl ?? '',
           });
           this.categoryId.set(detail.categoryIds[0] ?? null);
@@ -188,8 +180,8 @@ export class AdminNewsForm {
 
   /**
    * Replace both language bodies with the template's ready-made layout (after a
-   * confirm when either body already has content), and pre-select the matching
-   * category when the admin hasn't picked one yet.
+   * confirm when either body already has content), and switch the category to the
+   * one the template belongs to.
    */
   protected applyTemplate(t: NewsTemplate): void {
     const { ar, en } = this.model().fullContent;
@@ -200,11 +192,9 @@ export class AdminNewsForm {
       return;
     }
     this.model.update((m) => ({ ...m, fullContent: { ar: t.ar, en: t.en } }));
-    if (this.categoryId() === null) {
-      const match = (this.categories.value() ?? []).find((c) => c.slug === t.key);
-      if (match) {
-        this.categoryId.set(match.id);
-      }
+    const match = (this.categories.value() ?? []).find((c) => c.slug === t.key);
+    if (match) {
+      this.categoryId.set(match.id);
     }
   }
 
@@ -279,7 +269,8 @@ export class AdminNewsForm {
         categoryIds: categoryId ? [categoryId] : [],
         // Category-specific fields are only sent for the category they belong to.
         productId: this.isSuccessStory() ? this.productId() : null,
-        alertExpiresOn: this.isAlert() ? fromDateTimeLocal(m.alertExpiresOn) : null,
+        alertExpiresOn:
+          this.isAlert() && m.alertExpiresOn ? m.alertExpiresOn.toISOString() : null,
         alertCtaUrl: this.isAlert() ? m.alertCtaUrl || null : null,
       };
       try {

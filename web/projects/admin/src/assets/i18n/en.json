@@ -469,7 +469,7 @@
     "empty_all": "No orders yet",
     "empty_status": "No orders with this status",
     "show_all": "Show all orders",
-    "search_number_ph": "Order number…",
+    "search_number_ph": "Tracking number…",
     "date_from": "From",
     "date_to": "To",
     "status_1": "New",

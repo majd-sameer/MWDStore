@@ -12,7 +12,7 @@
   <div class="alert alert-danger">{{ 'order_detail.load_failed' | translate }}</div>
 } @else if (order.value(); as o) {
   <app-page-header
-    [title]="'order_detail.title' | translate: { id: o.id }"
+    [title]="'order_detail.title' | translate: { id: o.trackingNumber ?? o.id }"
     [subtitle]="o.createdOn | date: 'medium'"
   >
         <span class="badge fs-6" [class]="badge(o.orderStatus)">

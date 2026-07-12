@@ -77,34 +77,103 @@
       text-align: center;
       padding-block: 2.5rem;
     }
-    .quick-link {
-      display: block;
-      padding-block: 0.4rem;
-      font-weight: 600;
-      text-decoration: none;
-      color: var(--ink, inherit);
+    /* ----- Product rail cards (wishlist / recently viewed) ----- */
+    .rail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-block-end: 0.9rem;
     }
-    .quick-link:hover {
+    .rail-head .block-title {
+      font-size: 1rem;
+    }
+    .rail-nav {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .rail-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 1.9rem;
+      block-size: 1.9rem;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink-2);
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .rail-btn:hover {
       color: var(--accent);
+      border-color: var(--accent);
     }
-    .logout-btn {
-      width: 100%;
+    /* Touch devices scroll the rail directly — the buttons are just noise there. */
+    @media (hover: none) {
+      .rail-nav {
+        display: none;
+      }
     }
-    .rv-list {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.6rem;
+    .rail {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-block-end: 0.25rem;
+      scrollbar-width: none;
     }
-    .rv-item {
+    .rail::-webkit-scrollbar {
+      display: none;
+    }
+    /* ~2.5 cards per view: the clipped card signals there's more to scroll. */
+    .rail-card {
+      flex: 0 0 38%;
+      scroll-snap-align: start;
       text-decoration: none;
       color: var(--ink, inherit);
     }
-    .rv-name {
+    .rail-card lib-tile {
       display: block;
-      font-size: 0.75rem;
-      margin-block-start: 0.25rem;
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+    .rail-name {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-block-start: 0.4rem;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .rail-card:hover .rail-name {
+      color: var(--accent);
+    }
+    .rail-price {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--ink-2);
+      margin-block-start: 0.1rem;
+    }
+    .rail-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-block-start: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ink-2);
+      text-decoration: none;
+    }
+    .rail-all:hover {
+      color: var(--accent);
+    }
+
+    /* ----- Sign out, always the column's last card ----- */
+    .signout-block {
+      padding: 1rem 1.5rem;
+    }
+    .logout-btn {
+      width: 100%;
     }
   

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,10 @@ public sealed class AdminOrdersController : ControllerBase
 
         if (orderNumber.HasValue)
         {
-            orders = orders.Where(o => o.Id == orderNumber.Value);
+            // The console lists orders by their public tracking number, so match it
+            // first; falling back to the internal id keeps old deep links working.
+            var tracking = orderNumber.Value.ToString(CultureInfo.InvariantCulture);
+            orders = orders.Where(o => o.TrackingNumber == tracking || o.Id == orderNumber.Value);
         }
 
         if (from.HasValue)
