@@ -1,3 +1,15 @@
+// The global .date-field skin is the gray toolbar-filter pill (see styles.scss);
+// inside this form the owl date input should read like every other input:
+// full width, white surface, hairline border, green focus ring.
+.date-field {
+  display: flex;
+
+  > .form-control {
+    background-color: var(--surface);
+    border-color: var(--line-strong);
+  }
+}
+
 // Article setup panel: category, thumbnail and the category-specific fields
 // (alert expiry/CTA, success-story product) framed as one group above the
 // template picker. Same visual language as .lang-block.
