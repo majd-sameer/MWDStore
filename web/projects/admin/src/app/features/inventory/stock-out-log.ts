@@ -242,7 +242,8 @@ export class AdminStockOutLog {
         .join(','),
     );
     const csv = [header.join(','), ...body].join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // UTF-8 BOM so Excel decodes Arabic text correctly instead of assuming ANSI
+    const blob = new Blob(['\u{FEFF}', csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

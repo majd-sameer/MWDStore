@@ -47,8 +47,9 @@ function toNumber(value: string | null): number | undefined {
  * 2-column layout — sticky filter sidebar (category radios with counts, max
  * price slider, producing-center checkboxes, rating radios, reset) and the
  * product area with a toolbar (result count, grid/list view toggle, sort) over
- * a card grid or horizontal rows. Below 980px the sidebar folds into a slide-in
- * sheet. Filter state lives entirely in the URL query params (shareable and
+ * a card grid or horizontal rows. Layout uses the Bootstrap grid: sidebar
+ * col-lg-3 / products col-lg-9, cards in row-cols (1 / sm:2 / xl:3); below the
+ * lg breakpoint the sidebar folds into a slide-in sheet. Filter state lives entirely in the URL query params (shareable and
  * SSR-safe); the API does the filtering and returns the facets the sidebar
  * renders from. Copy is keyed; layout uses logical properties so RTL mirrors.
  */
@@ -85,8 +86,9 @@ export class ProductList {
   protected readonly view = signal<'grid' | 'list'>('grid');
   protected readonly sheetOpen = signal(false);
 
-  // The grid/list toggle is hidden ≤542px (always card view on mobile). Force the
-  // grid renderer there too, so resizing down from a list selection still shows cards.
+  // The grid/list toggle is hidden below Bootstrap's sm breakpoint (576px) —
+  // always card view on mobile. Force the grid renderer there too, so resizing
+  // down from a list selection still shows cards.
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly isNarrow = signal(false);
   protected readonly effectiveView = computed<'grid' | 'list'>(() =>
@@ -217,7 +219,7 @@ export class ProductList {
 
   constructor() {
     if (this.isBrowser) {
-      const mq = window.matchMedia('(max-width: 542px)');
+      const mq = window.matchMedia('(max-width: 575.98px)');
       this.isNarrow.set(mq.matches);
       mq.addEventListener('change', (event) => this.isNarrow.set(event.matches));
     }
@@ -275,6 +277,9 @@ export class ProductList {
       queryParams: { page: page > 1 ? page : null },
       queryParamsHandling: 'merge',
     });
+    if (this.isBrowser) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   protected clear(): void {

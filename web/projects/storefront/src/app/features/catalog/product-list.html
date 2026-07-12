@@ -9,16 +9,16 @@
       </div>
     </div>
 
-    <div class="listing">
-      <aside class="listing-side">
+    <div class="listing row g-4">
+      <aside class="listing-side col-lg-3 d-none d-lg-block">
         <ng-container *ngTemplateOutlet="filtersTpl; context: { ns: 'side' }" />
       </aside>
 
-      <div class="listing-main">
-        <div class="toolbar">
+      <div class="listing-main col-12 col-lg-9">
+        <div class="toolbar d-flex flex-wrap align-items-center gap-3 mb-4">
           <button
             type="button"
-            class="btn btn-outline-secondary btn-sm filter-toggle"
+            class="btn btn-outline-secondary btn-sm filter-toggle d-inline-flex d-lg-none align-items-center gap-2"
             (click)="sheetOpen.set(true)"
           >
             <lib-icon name="filter" [size]="18" />
@@ -32,8 +32,12 @@
             }}
           </span>
 
-          <div class="toolbar-right">
-            <div class="viewtoggle" role="group" [attr.aria-label]="'shop.view' | translate">
+          <div class="toolbar-right d-flex align-items-center gap-3 ms-auto">
+            <div
+              class="viewtoggle d-none d-sm-inline-flex"
+              role="group"
+              [attr.aria-label]="'shop.view' | translate"
+            >
               <button
                 type="button"
                 [class.is-on]="view() === 'grid'"
@@ -81,32 +85,35 @@
           <div [class.is-refreshing]="result.isLoading()">
             @if (r.products?.length) {
               @if (effectiveView() === 'grid') {
-                <div class="pgrid">
+                <div class="pgrid row g-3 g-md-4 row-cols-1 row-cols-sm-2 row-cols-xl-3">
                   @for (product of products(); track product.id) {
-                    @if (product.isSignature) {
-                      <app-product-card-signature [product]="product" (addToCart)="add($event)" />
-                    } @else {
-                      <app-product-card [product]="product" (addToCart)="add($event)" />
-                    }
+                    <div class="col">
+                      @if (product.isSignature) {
+                        <app-product-card-signature [product]="product" (addToCart)="add($event)" />
+                      } @else {
+                        <app-product-card [product]="product" (addToCart)="add($event)" />
+                      }
+                    </div>
                   }
                 </div>
               } @else {
                 <div class="listcol">
                   @for (p of products(); track p.id) {
                     <article class="lrow">
-                      <a
-                        class="lrow-media"
-                        [routerLink]="['/products', p.id]"
-                        [attr.aria-label]="p.name"
-                      >
-                        <lib-tile
-                          [src]="p.thumbnailImageUrl"
-                          [seed]="p.name ?? p.id"
-                          [alt]="p.name"
-                          ratio="4x3"
-                        />
-                      </a>
-                      <div class="lrow-body">
+                      <div class="row g-3">
+                        <a
+                          class="lrow-media col-12 col-sm-4 col-md-3"
+                          [routerLink]="['/products', p.id]"
+                          [attr.aria-label]="p.name"
+                        >
+                          <lib-tile
+                            [src]="p.thumbnailImageUrl"
+                            [seed]="p.name ?? p.id"
+                            [alt]="p.name"
+                            ratio="4x3"
+                          />
+                        </a>
+                        <div class="lrow-body col-12 col-sm-8 col-md">
                         @if (p.categoryName) {
                           <span class="lrow-cat">{{ p.categorySlug | categoryLabel: p.categoryName }}</span>
                         }
@@ -116,12 +123,14 @@
                         @if (p.shortDescription) {
                           <p class="lrow-desc">{{ p.shortDescription }}</p>
                         }
-                        @if (p.ratingAverage; as rating) {
-                          <lib-stars [rating]="rating" [count]="p.reviewsCount" />
-                        }
-                      </div>
-                      <div class="lrow-buy">
-                        <div class="lrow-price">
+                          @if (p.ratingAverage; as rating) {
+                            <lib-stars [rating]="rating" [count]="p.reviewsCount" />
+                          }
+                        </div>
+                        <div
+                          class="lrow-buy col-12 col-md-auto d-flex flex-row flex-md-column align-items-center align-items-md-end justify-content-between gap-3"
+                        >
+                          <div class="lrow-price">
                           @if (p.isCallForPricing) {
                             <span class="lrow-call">
                               {{ 'product.call_for_pricing' | translate }}
@@ -146,6 +155,7 @@
                             {{ 'shop.add_to_cart' | translate }}
                           </button>
                         }
+                        </div>
                       </div>
                     </article>
                   }
@@ -175,7 +185,7 @@
       </div>
     </div>
 
-    <!-- Mobile filter sheet (same filters markup, slides in below 980px) -->
+    <!-- Mobile filter sheet (same filters markup, slides in below the lg breakpoint) -->
     <div class="filtersheet" [class.is-open]="sheetOpen()">
       <button
         type="button"

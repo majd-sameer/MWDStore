@@ -27,17 +27,16 @@
       margin-block: 0.35rem 0;
     }
 
-    /* ---- 2-column listing: sidebar inline-start (right in RTL), products fill ---- */
+    /* ---- 2-column listing (Bootstrap grid): sidebar col-lg-3 (right in RTL),
+       products col-lg-9. Below lg the sidebar col is d-none and the filter
+       sheet takes over. ---- */
     .listing {
-      display: grid;
-      grid-template-columns: 268px 1fr;
-      gap: 34px;
-      align-items: start;
       padding-block: 2rem 3rem;
     }
     .listing-side {
       position: sticky;
       inset-block-start: 90px;
+      align-self: start; /* don't stretch to row height, or sticky can't travel */
     }
 
     /* ---- Filters card ---- */
@@ -136,39 +135,14 @@
       font-size: 0.85rem;
     }
 
-    /* ---- Toolbar ---- */
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 1rem;
-      margin-block-end: 1.4rem;
-    }
-    .filter-toggle {
-      display: none;
-      align-items: center;
-      gap: 0.4rem;
-    }
+    /* ---- Toolbar (layout via Bootstrap flex/display utilities) ---- */
     .result-n {
       color: var(--ink-2);
     }
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-inline-start: auto;
-    }
     .viewtoggle {
-      display: inline-flex;
       border: 1px solid var(--line);
       border-radius: var(--r-sm);
       overflow: hidden;
-    }
-    /* Always card view on mobile — drop the grid/list toggle. */
-    @media (max-width: 542px) {
-      .viewtoggle {
-        display: none;
-      }
     }
     .viewtoggle button {
       display: inline-flex;
@@ -200,12 +174,7 @@
       inline-size: auto;
     }
 
-    /* ---- Grid view ---- */
-    .pgrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 22px;
-    }
+    /* ---- Grid view: Bootstrap row-cols (1 / sm:2 / xl:3) — no extra CSS ---- */
 
     /* ---- List view ---- */
     .listcol {
@@ -214,9 +183,6 @@
       gap: 16px;
     }
     .lrow {
-      display: grid;
-      grid-template-columns: 170px 1fr auto;
-      gap: 16px;
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--r-lg);
@@ -264,13 +230,7 @@
       -webkit-line-clamp: 2;
       overflow: hidden;
     }
-    .lrow-buy {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 0.75rem;
-    }
+    /* .lrow-buy is laid out with Bootstrap utilities (row below md, column at md+) */
     .lrow-price {
       display: flex;
       flex-direction: column;
@@ -394,26 +354,6 @@
       margin-block-start: auto;
     }
 
-    /* ---- Responsive ---- */
-    @media (max-width: 979.98px) {
-      .listing {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-      .listing-side {
-        display: none;
-      }
-      .filter-toggle {
-        display: inline-flex;
-      }
-    }
-    @media (max-width: 599.98px) {
-      .lrow {
-        grid-template-columns: 1fr;
-      }
-      .lrow-buy {
-        flex-direction: row;
-        align-items: center;
-      }
-    }
+    /* Responsive behavior is handled by Bootstrap grid + display utilities in
+       the template (col-lg-*, row-cols-*, d-none/d-lg-*, flex-md-column). */
   
