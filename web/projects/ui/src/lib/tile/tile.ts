@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 import { Icon, type IconName } from '../icon/icon';
 
-/** Gradient tones available as the art fallback (mirror `dt-*` in tokens). */
 export type TileTone =
   | 'sand'
   | 'sage'
@@ -27,16 +26,7 @@ const TONES: readonly TileTone[] = [
   'indigo',
 ];
 
-/**
- * Product / category art. Renders the API image when `src` is present; when it
- * is missing or fails to load it falls back to a brand gradient tile with a
- * line-art glyph (or an initial). The fallback tone is derived deterministically
- * from `seed` so the same product always gets the same color.
- *
- * @example
- * <lib-tile [src]="product().imageUrl" [alt]="product().name" glyph="leaf"
- *           [seed]="product().id" ratio="1x1" />
- */
+
 @Component({
   selector: 'lib-tile',
   changeDetection: ChangeDetectionStrategy.OnPush,

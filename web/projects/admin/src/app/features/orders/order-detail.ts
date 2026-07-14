@@ -30,11 +30,7 @@ import {
   orderStatusBadge,
 } from '../../shared/order-status';
 
-/**
- * Order detail: line items, addresses and totals, plus admin actions to change
- * the status (`PUT /status`) or cancel the order (`POST /cancel`, which restocks
- * server-side).
- */
+
 @Component({
   selector: 'app-admin-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,

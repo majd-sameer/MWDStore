@@ -1,9 +1,4 @@
-/**
- * Minimal, dependency-free JWT helpers. We never trust these claims for
- * authorization decisions on the server — they're only used client-side to
- * shape the UI (show/hide admin links, route guards). The API re-validates the
- * signed token on every call.
- */
+
 export interface JwtClaims {
   exp?: number;
   iat?: number;
@@ -11,7 +6,6 @@ export interface JwtClaims {
   [claim: string]: unknown;
 }
 
-/** Claim types ASP.NET Core may use to carry roles. */
 const ROLE_CLAIM_TYPES = [
   'role',
   'roles',
@@ -32,7 +26,6 @@ function base64UrlDecode(segment: string): string | null {
   return decodeURIComponent(utf8);
 }
 
-/** Decodes a JWT payload, or returns `null` if the token is malformed. */
 export function decodeJwt(token: string): JwtClaims | null {
   const parts = token.split('.');
   if (parts.length !== 3) {
@@ -46,7 +39,6 @@ export function decodeJwt(token: string): JwtClaims | null {
   }
 }
 
-/** Extracts role strings from claims, handling single-value and array forms. */
 export function extractRoles(claims: JwtClaims): string[] {
   for (const claimType of ROLE_CLAIM_TYPES) {
     const value = claims[claimType];
@@ -60,7 +52,6 @@ export function extractRoles(claims: JwtClaims): string[] {
   return [];
 }
 
-/** True when `exp` has passed (optionally with a clock-skew allowance). */
 export function isJwtExpired(claims: JwtClaims, skewSeconds = 0): boolean {
   if (typeof claims.exp !== 'number') {
     return false;

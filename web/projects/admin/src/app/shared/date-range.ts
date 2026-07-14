@@ -1,9 +1,4 @@
-/**
- * Local-day boundary ISO string (no timezone shift) for admin date-range
- * filters backed by the owl date-time picker, which hands back a `Date`.
- * `end` widens to the last second of the day so an inclusive "to" filter
- * covers the whole selected date.
- */
+
 export function dayBoundary(date: Date | null, end: boolean): string | undefined {
   if (!date) {
     return undefined;

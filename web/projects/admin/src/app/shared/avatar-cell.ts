@@ -1,14 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
-/**
- * Avatar + label table cell — a small circular avatar (image, or initials
- * fallback) followed by an entity label and optional sub-label. Used where an
- * owner / customer / company appears in a list row.
- *
- * @example
- * <app-avatar-cell [name]="row.customerName" [imageUrl]="row.avatarUrl"
- *                  [sublabel]="row.email" />
- */
+
 @Component({
   selector: 'app-avatar-cell',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,7 +28,6 @@ export class AvatarCell {
 
   protected readonly failed = signal(false);
 
-  /** Up to two initials from the name (first + last word). */
   protected readonly initials = computed(() => {
     const parts = (this.name() ?? '').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) {
@@ -47,7 +38,6 @@ export class AvatarCell {
     return (first + last).toUpperCase();
   });
 
-  /** Stable hue derived from the name so each avatar keeps a consistent tint. */
   protected readonly hue = computed(() => {
     const name = this.name() ?? '';
     let hash = 0;

@@ -1,13 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/**
- * Loading placeholder for a data table — shimmer bars laid out in rows, sized
- * per column so it echoes the table it stands in for. Drop it into the
- * `@if (isLoading())` branch instead of a spinner.
- *
- * @example
- * <app-table-skeleton [rows]="8" [columns]="[3, 2, 1, 1, 2]" />
- */
+
 @Component({
   selector: 'app-table-skeleton',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,9 +17,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   `,
 })
 export class TableSkeleton {
-  /** Number of placeholder rows. */
   readonly rows = input(6);
-  /** Relative width weight per column (bars flex-grow by these). */
   readonly columns = input<number[]>([3, 2, 1, 1, 2]);
   readonly ariaLabel = input('Loading');
 

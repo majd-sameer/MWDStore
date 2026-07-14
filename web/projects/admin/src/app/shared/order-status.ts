@@ -1,8 +1,4 @@
-/**
- * SimplCommerce order-status codes (the API stores status as an int). Mirrors
- * `Store.Application.Orders.OrderStatus`. Used for the status dropdown on the
- * order-detail page and for colour-coding status badges.
- */
+
 export const ORDER_STATUS = {
   New: 1,
   OnHold: 10,
@@ -23,7 +19,6 @@ export interface OrderStatusOption {
   label: string;
 }
 
-/** Ordered options for the status `<select>`, labelled for humans. */
 export const ORDER_STATUS_OPTIONS: readonly OrderStatusOption[] = [
   { value: ORDER_STATUS.New, label: 'New' },
   { value: ORDER_STATUS.OnHold, label: 'On hold' },
@@ -39,7 +34,6 @@ export const ORDER_STATUS_OPTIONS: readonly OrderStatusOption[] = [
   { value: ORDER_STATUS.Closed, label: 'Closed' },
 ];
 
-/** Semantic {@link StatusTone} for an order-status code (StatusPill variant). */
 export function orderStatusTone(status: number): import('./status-pill').StatusTone {
   switch (status) {
     case ORDER_STATUS.Complete:
@@ -59,7 +53,6 @@ export function orderStatusTone(status: number): import('./status-pill').StatusT
   }
 }
 
-/** Bootstrap badge contextual class for a status code. */
 export function orderStatusBadge(status: number): string {
   switch (status) {
     case ORDER_STATUS.Complete:

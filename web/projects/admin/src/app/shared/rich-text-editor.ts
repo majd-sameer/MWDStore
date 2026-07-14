@@ -12,7 +12,6 @@ import {
 import type { FormValueControl } from '@angular/forms/signals';
 import { TranslatePipe } from '@ngx-translate/core';
 
-/** One toolbar button: the `execCommand` name, its icon and its label i18n key. */
 interface ToolbarButton {
   command: string;
   icon: string;
@@ -27,14 +26,9 @@ const TOOLBAR: readonly ToolbarButton[] = [
   { command: 'insertOrderedList', icon: 'bi-list-ol', label: 'editor.numbered_list' },
 ];
 
-/** `innerHTML` values a "cleared" contenteditable leaves behind — treated as empty. */
 const EMPTY_HTML = new Set(['', '<br>', '<div><br></div>', '<p><br></p>']);
 
-/**
- * True when the value is a complete HTML document (`<!DOCTYPE …>` / `<html>`) rather
- * than a fragment. A contenteditable cannot hold one faithfully (the browser strips
- * `<html>`/`<head>` on parse), so such values are locked to the source view.
- */
+
 export function isFullHtmlDocument(html: string): boolean {
   const head = html.trimStart().slice(0, 15).toLowerCase();
   return head.startsWith('<!doctype') || head.startsWith('<html');
@@ -163,7 +157,6 @@ export class RichTextEditor implements FormValueControl<string> {
     this.onInput();
   }
 
-  /** Strip inline formatting (and any link) from the selection. */
   protected clearFormat(): void {
     if (this.disabled()) {
       return;

@@ -4,7 +4,6 @@ export interface Toast {
   readonly id: number;
   readonly text: string;
   readonly header?: string;
-  /** Extra classes for the toast, e.g. `'bg-success text-light'`. */
   readonly classname?: string;
   readonly autohide: boolean;
   readonly delay: number;
@@ -12,11 +11,7 @@ export interface Toast {
 
 export type ToastOptions = Partial<Omit<Toast, 'id' | 'text'>>;
 
-/**
- * App-wide toast store. Components/services push toasts here; a single
- * `<lib-toast-host />` renders them. State is a signal so it works under
- * zoneless change detection.
- */
+
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private sequence = 0;

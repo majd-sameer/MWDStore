@@ -16,20 +16,7 @@ import { baseUrlInterceptor } from './interceptors/base-url.interceptor';
 import { correlationIdInterceptor } from './interceptors/correlation-id.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
 
-/**
- * One-call setup for the shared security layer. Each app invokes this in its
- * `app.config.ts`, passing its environment:
- *
- * ```ts
- * providers: [provideCore({ apiBaseUrl: environment.apiBaseUrl })]
- * ```
- *
- * It wires `HttpClient` with (in order) the correlation-id, base-URL, bearer
- * and error interceptors, plus Angular's built-in XSRF protection
- * (`withXsrfConfiguration`) so `HttpClient` reads the `XSRF-TOKEN` cookie and
- * echoes it back in `X-XSRF-TOKEN` on mutating requests. `withFetch()` is used
- * for clean SSR. Apps must NOT also call `provideHttpClient`.
- */
+
 export function provideCore(config: CoreConfig = {}): EnvironmentProviders {
   const resolved = { ...CORE_CONFIG_DEFAULTS, ...config };
 

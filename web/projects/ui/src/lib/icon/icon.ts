@@ -1,11 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/**
- * The storefront icon vocabulary. Directional names (arrows / chevrons that
- * point "forward") are flagged so they mirror under `dir="rtl"` via the
- * `.icon-directional` class; non-directional glyphs (bag, user, truck, leaf…)
- * never flip.
- */
+
 export type IconName =
   | 'menu'
   | 'search'
@@ -49,9 +44,7 @@ export type IconName =
 
 interface IconDef {
   readonly d: string;
-  /** Points "forward" — must mirror in RTL. */
   readonly directional?: boolean;
-  /** Solid glyph (filled) rather than stroked line-art. */
   readonly fill?: boolean;
 }
 
@@ -116,15 +109,7 @@ const ICONS: Record<IconName, IconDef> = {
   },
 };
 
-/**
- * Inline-SVG icon. Renders from the shared {@link IconName} set at the given
- * pixel size, inheriting `currentColor`. Decorative by default (`aria-hidden`);
- * pass `label` to expose it as an image to assistive tech.
- *
- * @example
- * <lib-icon name="bag" [size]="22" />
- * <lib-icon name="arrowEnd" label="Next" />
- */
+
 @Component({
   selector: 'lib-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -134,7 +119,6 @@ const ICONS: Record<IconName, IconDef> = {
 export class Icon {
   readonly name = input.required<IconName>();
   readonly size = input(20);
-  /** Optional accessible label; when omitted the icon is decorative. */
   readonly label = input<string | null>(null);
 
   protected readonly def = computed<IconDef>(() => ICONS[this.name()]);

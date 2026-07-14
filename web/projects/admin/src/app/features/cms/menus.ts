@@ -11,11 +11,7 @@ import { Icon, ToastService } from 'ui';
 import { PageHeader } from '../../shared/page-header';
 import { TableSkeleton } from '../../shared/table-skeleton';
 
-/**
- * Menu browser: a full-width list of navigation menus. Creating and editing a
- * menu (and its items) happen on their own page (`/menus/new`, `/menus/:id`),
- * mirroring the product list/form split.
- */
+
 @Component({
   selector: 'app-admin-menus',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -7,7 +7,6 @@ interface VisibleSection {
   items: readonly { path: string }[];
 }
 
-/** Builds an AdminLayout with a fake auth granting exactly `roles` — no template render needed. */
 function layoutForRoles(roles: readonly string[]): AdminLayout {
   TestBed.configureTestingModule({
     providers: [

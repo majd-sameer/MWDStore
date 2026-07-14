@@ -1,14 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/**
- * Bootstrap card wrapper. Body content is projected; an optional `header` and
- * `footer` string render the matching Bootstrap cap sections.
- *
- * @example
- * <lib-card header="Order #1024" footer="Updated just now">
- *   <p class="mb-0">3 items · $129.00</p>
- * </lib-card>
- */
+
 @Component({
   selector: 'lib-card',
   changeDetection: ChangeDetectionStrategy.OnPush,

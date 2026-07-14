@@ -7,17 +7,7 @@ import {
 } from '@angular/core';
 import { Icon } from '../icon/icon';
 
-/**
- * Single collapsible panel (title + projected body). Stack several to form an
- * accordion group — e.g. product Description / Specification. Open state is
- * two-way bound through `open`. The chevron is non-directional (rotates), so it
- * reads correctly in both LTR and RTL.
- *
- * @example
- * <lib-accordion [title]="'product.description' | translate" [open]="true">
- *   <p>{{ product().description }}</p>
- * </lib-accordion>
- */
+
 @Component({
   selector: 'lib-accordion',
   changeDetection: ChangeDetectionStrategy.OnPush,

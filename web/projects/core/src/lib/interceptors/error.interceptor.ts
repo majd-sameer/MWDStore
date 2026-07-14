@@ -14,21 +14,7 @@ function urlContains(req: HttpRequest<unknown>, path: string): boolean {
   return req.url.includes(path);
 }
 
-/**
- * Centralizes HTTP failure handling:
- *
- * - **401** on a protected resource → silent refresh once (rotating the
- *   refresh cookie), then retry the original request with the new bearer. If
- *   the refresh or the retry fails, clear the session and redirect to login.
- *   Failures on the auth endpoints themselves are passed through (login errors)
- *   or treated as a dead session (refresh endpoint).
- * - **403** → redirect to the forbidden route.
- * - **5xx** → logged with the correlation id for tracing, then re-thrown.
- *
- * Because this interceptor is registered last, its `next()` is the backend
- * handler — the retried request bypasses the chain (so there's no refresh
- * loop), which is why the new bearer is re-attached here explicitly.
- */
+
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);

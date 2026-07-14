@@ -8,15 +8,7 @@ import {
 
 type PageItem = number | 'ellipsis';
 
-/**
- * Bootstrap pagination control. Purely presentational: it owns no page state —
- * it renders from `page` / `pageSize` / `collectionSize` and emits the
- * requested page through `pageChange`.
- *
- * @example
- * <lib-pagination [page]="page()" [pageSize]="20" [collectionSize]="total()"
- *                 (pageChange)="page.set($event)" />
- */
+
 @Component({
   selector: 'lib-pagination',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +18,6 @@ export class Pagination {
   readonly page = input(1);
   readonly pageSize = input(10);
   readonly collectionSize = input(0);
-  /** Maximum number of numbered page links to show before collapsing with ellipses. */
   readonly maxSize = input(5);
   readonly size = input<'sm' | 'lg' | null>(null);
 

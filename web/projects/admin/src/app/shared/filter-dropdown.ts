@@ -5,21 +5,12 @@ import { Icon } from 'ui';
 
 export type FilterValue = string | number;
 
-/** One selectable row in a {@link FilterDropdown}. */
 export interface FilterOption {
   value: FilterValue;
   label: string;
 }
 
-/**
- * Multi-select filter dropdown from the list spec: a ghost trigger that shows a
- * primary count badge + "Selected" once picks exist, opening a checkbox popover
- * (outside-click / Esc to close). Presentational — emits `selectedChange`.
- *
- * @example
- * <app-filter-dropdown label="Bid Status" [options]="statusOptions"
- *   [selected]="status()" (selectedChange)="status.set($event)" />
- */
+
 @Component({
   selector: 'app-filter-dropdown',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -19,14 +19,7 @@ export type ButtonVariant =
 
 export type ButtonSize = 'sm' | 'lg';
 
-/**
- * Bootstrap-styled button. Applied as an attribute on a native `<button>` or
- * `<a>` so consumers keep full control of native semantics (type, href, click).
- *
- * @example
- * <button libButton variant="success" size="lg">Save</button>
- * <a libButton variant="link" [outline]="true" href="/cart">Cart</a>
- */
+
 @Component({
   selector: 'button[libButton], a[libButton]',
   changeDetection: ChangeDetectionStrategy.OnPush,

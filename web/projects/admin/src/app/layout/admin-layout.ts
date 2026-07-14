@@ -22,30 +22,18 @@ import { AREA } from '../core/roles';
 
 interface NavItem {
   readonly path: string;
-  /** Translation key under `nav.` (also used as the track id). */
   readonly key: string;
-  /** Bootstrap Icons class, e.g. `bi-box-seam`. */
   readonly icon: string;
-  /** Roles allowed to see this link (mirrors the route's `roleGuard`). */
   readonly roles: readonly string[];
-  /** `true` to highlight only on the exact path (the dashboard root). */
   readonly exact?: boolean;
 }
 
 interface NavSection {
-  /** Translation key under `nav.` for the section label; null = no label. */
   readonly key: string | null;
   readonly items: readonly NavItem[];
 }
 
-/**
- * Authenticated admin chrome: a fixed navy sidebar with the feature links
- * grouped into the business sections (Stock management / Content management
- * / Sales / System) plus a
- * topbar with a language toggle (en ⇄ ar via the shared core LanguageService),
- * the signed-in user and a sign-out action. All copy keyed through
- * ngx-translate; positioning uses logical properties so RTL mirrors cleanly.
- */
+
 @Component({
   selector: 'app-admin-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,13 +45,7 @@ export class AdminLayout {
   protected readonly auth = inject(AuthService);
   protected readonly language = inject(LanguageService);
 
-  /**
-   * Below the `lg` breakpoint the sidebar is an off-canvas drawer (see the
-   * layout SCSS), hidden until the topbar hamburger opens it. Open state is
-   * tracked here so the template can slide the drawer in, dim the page with a
-   * backdrop and lock body scroll. Navigating to a new page or pressing Escape
-   * closes it, so the drawer never lingers over the content the user picked.
-   */
+
   protected readonly mobileNavOpen = signal(false);
 
   constructor() {
@@ -159,7 +141,6 @@ export class AdminLayout {
     },
   ];
 
-  /** Section keys the user has collapsed in the sidebar (all expanded by default). */
   private readonly collapsedSections = signal<ReadonlySet<string>>(new Set());
 
   protected isCollapsed(key: string): boolean {
@@ -178,11 +159,7 @@ export class AdminLayout {
     });
   }
 
-  /**
-   * Sections/items the signed-in user may reach, recomputed from their roles.
-   * Items they can't access are dropped, and a section with no visible items
-   * disappears entirely — so the sidebar only ever shows reachable links.
-   */
+
   protected readonly visibleSections = computed(() =>
     this.sections
       .map((section) => ({

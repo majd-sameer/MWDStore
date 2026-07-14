@@ -8,13 +8,6 @@ import {
 } from '@angular/core';
 import { Icon } from '../icon/icon';
 
-/**
- * Quantity stepper (−/value/+). Two-way bound through `value`; clamps to
- * `min`/`max`. Uses logical layout so the −/+ order mirrors in RTL.
- *
- * @example
- * <lib-stepper [(value)]="qty" [min]="1" [max]="stock()" />
- */
 @Component({
   selector: 'lib-stepper',
   changeDetection: ChangeDetectionStrategy.OnPush,

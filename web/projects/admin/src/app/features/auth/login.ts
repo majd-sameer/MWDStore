@@ -26,13 +26,7 @@ interface LoginModel {
   password: string;
 }
 
-/**
- * Admin sign-in. Authenticates via core's `AuthService` (JWT held in memory),
- * then verifies the account holds at least one staff role before entering the
- * console — a customer who authenticates is signed back out with a clear
- * message rather than being bounced by the route guard. Includes a language
- * toggle since the authenticated topbar isn't available yet.
- */
+
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,7 +48,6 @@ export class Login {
     required(path.password, { message: () => this.translate.instant('login.password_required') });
   });
 
-  /** Holds a translation key (resolved in the template) so it re-renders on language change. */
   protected readonly serverError = signal<string | null>(null);
 
   protected readonly emailError = computed(() => firstError(this.f.email()));
