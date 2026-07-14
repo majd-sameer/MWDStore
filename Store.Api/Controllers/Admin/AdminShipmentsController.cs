@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,11 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/shipments")]
 public sealed class AdminShipmentsController : ControllerBase
 {
+    private static readonly Expression<Func<Shipment, AdminShipmentDto>> ToShipmentDto = s => new AdminShipmentDto(
+        s.Id, s.OrderId, s.TrackingNumber, s.WarehouseId, s.Warehouse.Name, s.CreatedOn,
+        s.ShipmentItems.Select(i => new AdminShipmentItemDto(
+            i.Id, i.OrderItemId, i.ProductId, i.Product.Name, i.Quantity)).ToList());
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
 
@@ -44,10 +50,7 @@ public sealed class AdminShipmentsController : ControllerBase
         var items = await shipments
             .OrderByDescending(s => s.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(s => new AdminShipmentDto(
-                s.Id, s.OrderId, s.TrackingNumber, s.WarehouseId, s.Warehouse.Name, s.CreatedOn,
-                s.ShipmentItems.Select(i => new AdminShipmentItemDto(
-                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name, i.Quantity)).ToList()))
+            .Select(ToShipmentDto)
             .ToListAsync(cancellationToken);
 
         return Ok(items);
@@ -163,10 +166,7 @@ public sealed class AdminShipmentsController : ControllerBase
 
         var created = await _db.Shipments
             .Where(s => s.Id == shipment.Id)
-            .Select(s => new AdminShipmentDto(
-                s.Id, s.OrderId, s.TrackingNumber, s.WarehouseId, s.Warehouse.Name, s.CreatedOn,
-                s.ShipmentItems.Select(i => new AdminShipmentItemDto(
-                    i.Id, i.OrderItemId, i.ProductId, i.Product.Name, i.Quantity)).ToList()))
+            .Select(ToShipmentDto)
             .FirstAsync(cancellationToken);
 
         return Ok(created);

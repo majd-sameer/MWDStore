@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Store.Domain;
 
-public class Product
+public class Product : ISeoEntity, ISoftDeletable, IAuditedEntity
 {
     public long Id { get; set; }
 

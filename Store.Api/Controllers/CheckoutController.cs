@@ -57,13 +57,7 @@ public sealed class CheckoutController : ControllerBase
         }
 
         var orderAmount = cart.Items.Sum(i => i.ProductPrice * i.Quantity);
-        var prices = await _shippingPriceService.GetApplicableShippingPricesAsync(new GetShippingPriceRequest
-        {
-            OrderAmount = orderAmount,
-            ShippingAddress = request.ShippingAddress.ToOrderAddressInfo()
-        }, cancellationToken);
-
-        return Ok(prices.Select(p => new ShippingOptionDto(p.ProviderId, p.Name, p.Price)).ToList());
+        return await ShippingOptionsCoreAsync(orderAmount, request.ShippingAddress, cancellationToken);
     }
 
     /// <summary>Places the order and clears the cart. Returns the created order.</summary>
@@ -81,21 +75,9 @@ public sealed class CheckoutController : ControllerBase
             return BadRequest(new { error = "Your cart is empty." });
         }
 
-        var now = _timeProvider.GetUtcNow();
-        var checkout = new Checkout
-        {
-            Id = Guid.NewGuid(),
-            CustomerId = customerId,
-            CreatedById = customerId,
-            CreatedOn = now,
-            LatestUpdatedOn = now,
-            CouponCode = request.CouponCode,
-            IsProductPriceIncludeTax = request.IsProductPriceIncludeTax,
-            OrderNote = request.OrderNote,
-            CheckoutItems = cartItems
-                .Select(x => new CheckoutItem { ProductId = x.ProductId, Quantity = x.Quantity, CreatedOn = now })
-                .ToList()
-        };
+        var checkout = BuildCheckout(
+            customerId, cartItems.Select(x => (x.ProductId, x.Quantity)),
+            request.CouponCode, request.OrderNote, request.IsProductPriceIncludeTax);
 
         _db.Checkouts.Add(checkout);
         await _db.SaveChangesAsync(cancellationToken);
@@ -140,13 +122,7 @@ public sealed class CheckoutController : ControllerBase
         }
 
         var orderAmount = await GuestOrderAmountAsync(request.Items, cancellationToken);
-        var prices = await _shippingPriceService.GetApplicableShippingPricesAsync(new GetShippingPriceRequest
-        {
-            OrderAmount = orderAmount,
-            ShippingAddress = request.ShippingAddress.ToOrderAddressInfo()
-        }, cancellationToken);
-
-        return Ok(prices.Select(p => new ShippingOptionDto(p.ProviderId, p.Name, p.Price)).ToList());
+        return await ShippingOptionsCoreAsync(orderAmount, request.ShippingAddress, cancellationToken);
     }
 
     /// <summary>Places a guest order from the posted cart lines. Returns the created order (with tracking number).</summary>
@@ -169,20 +145,9 @@ public sealed class CheckoutController : ControllerBase
             return BadRequest(new { error = "Guest checkout is not available." });
         }
 
-        var now = _timeProvider.GetUtcNow();
-        var checkout = new Checkout
-        {
-            Id = Guid.NewGuid(),
-            CustomerId = guestId,
-            CreatedById = guestId,
-            CreatedOn = now,
-            LatestUpdatedOn = now,
-            IsProductPriceIncludeTax = request.IsProductPriceIncludeTax,
-            OrderNote = request.OrderNote,
-            CheckoutItems = request.Items
-                .Select(x => new CheckoutItem { ProductId = x.ProductId, Quantity = x.Quantity, CreatedOn = now })
-                .ToList()
-        };
+        var checkout = BuildCheckout(
+            guestId, request.Items.Select(x => (x.ProductId, x.Quantity)),
+            couponCode: null, request.OrderNote, request.IsProductPriceIncludeTax);
 
         _db.Checkouts.Add(checkout);
         await _db.SaveChangesAsync(cancellationToken);
@@ -215,6 +180,40 @@ public sealed class CheckoutController : ControllerBase
         return CreatedAtAction("GetById", "Orders", new { id = order!.Id }, order);
     }
 
+    private async Task<ActionResult<IReadOnlyList<ShippingOptionDto>>> ShippingOptionsCoreAsync(
+        decimal orderAmount, AddressDto shippingAddress, CancellationToken cancellationToken)
+    {
+        var prices = await _shippingPriceService.GetApplicableShippingPricesAsync(new GetShippingPriceRequest
+        {
+            OrderAmount = orderAmount,
+            ShippingAddress = shippingAddress.ToOrderAddressInfo()
+        }, cancellationToken);
+
+        return Ok(prices.Select(p => new ShippingOptionDto(p.ProviderId, p.Name, p.Price)).ToList());
+    }
+
+    /// <summary>Snapshots the given lines into a new <see cref="Checkout"/> (the member and guest flows differ only in what they pass).</summary>
+    private Checkout BuildCheckout(
+        long customerId, IEnumerable<(long ProductId, int Quantity)> items,
+        string? couponCode, string? orderNote, bool isProductPriceIncludeTax)
+    {
+        var now = _timeProvider.GetUtcNow();
+        return new Checkout
+        {
+            Id = Guid.NewGuid(),
+            CustomerId = customerId,
+            CreatedById = customerId,
+            CreatedOn = now,
+            LatestUpdatedOn = now,
+            CouponCode = couponCode,
+            IsProductPriceIncludeTax = isProductPriceIncludeTax,
+            OrderNote = orderNote,
+            CheckoutItems = items
+                .Select(x => new CheckoutItem { ProductId = x.ProductId, Quantity = x.Quantity, CreatedOn = now })
+                .ToList()
+        };
+    }
+
     /// <summary>Sums the (pre-discount) catalog price of the posted guest lines — the shipping-rate threshold input.</summary>
     private async Task<decimal> GuestOrderAmountAsync(
         IReadOnlyCollection<GuestCartLine> items, CancellationToken cancellationToken)
@@ -232,9 +231,7 @@ public sealed class CheckoutController : ControllerBase
     {
         var order = await _db.Orders
             .AsNoTracking()
-            .Include(o => o.OrderItems).ThenInclude(i => i.Product)
-            .Include(o => o.ShippingAddress)
-            .Include(o => o.BillingAddress)
+            .IncludeDetail()
             .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 
         if (order == null)

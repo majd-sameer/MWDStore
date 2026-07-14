@@ -14,10 +14,7 @@ public sealed class PageConfiguration : IEntityTypeConfiguration<Page>
 
         builder.HasIndex(e => e.LatestUpdatedById, "IX_Cms_Page_LatestUpdatedById");
 
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.Slug).HasMaxLength(450);
+        builder.ConfigureSeoColumns();
 
         builder.HasOne(d => d.CreatedBy).WithMany(p => p.PageCreatedBies)
             .HasForeignKey(d => d.CreatedById)

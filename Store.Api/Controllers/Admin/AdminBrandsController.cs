@@ -21,7 +21,6 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminBrandsController : ControllerBase
 {
     private const string EntityType = LocalizedEntity.Brand;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
@@ -54,7 +53,7 @@ public sealed class AdminBrandsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var ids = items.Select(b => b.Id).ToList();
-        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, RequestCulture.EnglishCultureId, cancellationToken);
         var stamps = await _auditStamps.ReadAsync(nameof(Brand), ids, cancellationToken);
 
         var dtos = items
@@ -76,7 +75,7 @@ public sealed class AdminBrandsController : ControllerBase
             return NotFound();
         }
 
-        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
         return Ok(ToDto(brand, overlay.Get(id, LocalizedProperty.Name), overlay.Get(id, LocalizedProperty.Description)));
     }
 
@@ -98,7 +97,7 @@ public sealed class AdminBrandsController : ControllerBase
         await _db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = brand.Id },
-            ToDto(brand, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+            ToDto(brand, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -121,7 +120,7 @@ public sealed class AdminBrandsController : ControllerBase
         await WriteEnglishAsync(brand.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(brand, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+        return Ok(ToDto(brand, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -146,13 +145,12 @@ public sealed class AdminBrandsController : ControllerBase
         brand.IsPublished = request.IsPublished;
     }
 
-    private async Task WriteEnglishAsync(long id, BrandUpsertRequest request, CancellationToken cancellationToken)
-    {
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
-    }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    private Task WriteEnglishAsync(long id, BrandUpsertRequest request, CancellationToken cancellationToken) =>
+        _localizedWriter.SetManyAsync(EntityType, id, RequestCulture.EnglishCultureId,
+        [
+            (LocalizedProperty.Name, request.NameEn),
+            (LocalizedProperty.Description, request.DescriptionEn),
+        ], cancellationToken);
 
     private static AdminBrandDto ToDto(Brand b, string? nameEn, string? descriptionEn) =>
         new(b.Id, b.Name, nameEn, b.Slug, b.Description, descriptionEn, b.IsPublished, b.IsDeleted);

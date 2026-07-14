@@ -14,10 +14,7 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasIndex(e => e.ThumbnailImageId, "IX_Catalog_Category_ThumbnailImageId");
 
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.Slug).HasMaxLength(450);
+        builder.ConfigureSeoColumns();
 
         builder.HasOne(d => d.Parent).WithMany(p => p.InverseParent).HasForeignKey(d => d.ParentId);
 

@@ -45,9 +45,7 @@ public sealed class OrdersController : ControllerBase
         var customerId = User.GetUserId();
         var order = await _db.Orders
             .AsNoTracking()
-            .Include(o => o.OrderItems).ThenInclude(i => i.Product)
-            .Include(o => o.ShippingAddress)
-            .Include(o => o.BillingAddress)
+            .IncludeDetail()
             .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == customerId, cancellationToken);
 
         if (order == null)

@@ -67,16 +67,10 @@ public sealed class AdminUsersController : ControllerBase
                 u.CustomerGroups.Select(g => g.Name).ToList()))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        var ids = result.Items.Select(u => u.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(User), ids, cancellationToken);
-        result = result with
-        {
-            Items = result.Items
-                .Select(u => u with { CreatedBy = stamps.CreatedBy(u.Id), ModifiedBy = stamps.ModifiedBy(u.Id) })
-                .ToList()
-        };
-
-        return Ok(result);
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(User), u => u.Id,
+            (u, createdBy, modifiedBy) => u with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpGet("roles")]
@@ -108,17 +102,8 @@ public sealed class AdminUsersController : ControllerBase
     public async Task<ActionResult<AdminUserDetail>> Create(
         AdminUserCreateRequest request, CancellationToken cancellationToken)
     {
-        var now = _timeProvider.GetUtcNow();
-        var user = new User
-        {
-            UserName = request.Email,
-            Email = request.Email,
-            FullName = request.FullName,
-            PhoneNumber = request.PhoneNumber,
-            UserGuid = Guid.NewGuid(),
-            CreatedOn = now,
-            LatestUpdatedOn = now
-        };
+        var user = UserAdminSupport.BuildUser(
+            request.Email, request.FullName, request.PhoneNumber, _timeProvider.GetUtcNow());
 
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
@@ -131,7 +116,7 @@ public sealed class AdminUsersController : ControllerBase
             await _userManager.AddToRolesAsync(user, request.Roles);
         }
 
-        await SetCustomerGroupsAsync(user.Id, request.CustomerGroupIds, cancellationToken);
+        await UserAdminSupport.SetCustomerGroupsAsync(_db, user.Id, request.CustomerGroupIds, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = user.Id }, await LoadDetailAsync(user.Id, cancellationToken));
@@ -165,7 +150,7 @@ public sealed class AdminUsersController : ControllerBase
             await _userManager.AddToRolesAsync(user, rolesToAdd);
         }
 
-        await SetCustomerGroupsAsync(id, request.CustomerGroupIds, cancellationToken);
+        await UserAdminSupport.SetCustomerGroupsAsync(_db, id, request.CustomerGroupIds, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         return Ok(await LoadDetailAsync(id, cancellationToken));
@@ -186,30 +171,9 @@ public sealed class AdminUsersController : ControllerBase
             return NotFound();
         }
 
-        user.IsDeleted = true;
-        user.LockoutEnabled = true;
-        user.LockoutEnd = DateTimeOffset.MaxValue;
-        user.LatestUpdatedOn = _timeProvider.GetUtcNow();
-        await _db.SaveChangesAsync(cancellationToken);
+        await UserAdminSupport.SoftDeleteAsync(_db, user, _timeProvider, cancellationToken);
 
         return NoContent();
-    }
-
-    private async Task SetCustomerGroupsAsync(long userId, IList<long> groupIds, CancellationToken cancellationToken)
-    {
-        var user = await _db.Users
-            .Include(u => u.CustomerGroups)
-            .FirstAsync(u => u.Id == userId, cancellationToken);
-
-        var groups = await _db.CustomerGroups
-            .Where(g => groupIds.Contains(g.Id))
-            .ToListAsync(cancellationToken);
-
-        user.CustomerGroups.Clear();
-        foreach (var group in groups)
-        {
-            user.CustomerGroups.Add(group);
-        }
     }
 
     private Task<AdminUserDetail?> LoadDetailAsync(long id, CancellationToken cancellationToken) =>

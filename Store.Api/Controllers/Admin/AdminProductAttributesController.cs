@@ -22,7 +22,6 @@ public sealed class AdminProductAttributesController : ControllerBase
 {
     private const string AttributeType = LocalizedEntity.ProductAttribute;
     private const string GroupType = LocalizedEntity.ProductAttributeGroup;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
@@ -48,9 +47,9 @@ public sealed class AdminProductAttributesController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var attrOverlay = await _localization.GetOverlayAsync(
-            AttributeType, attributes.Select(a => a.Id).ToList(), EnCulture, cancellationToken);
+            AttributeType, attributes.Select(a => a.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
         var groupOverlay = await _localization.GetOverlayAsync(
-            GroupType, attributes.Select(a => a.GroupId).Distinct().ToList(), EnCulture, cancellationToken);
+            GroupType, attributes.Select(a => a.GroupId).Distinct().ToList(), RequestCulture.EnglishCultureId, cancellationToken);
         var stamps = await _auditStamps.ReadAsync(
             nameof(ProductAttribute), attributes.Select(a => a.Id).ToList(), cancellationToken);
 
@@ -77,8 +76,8 @@ public sealed class AdminProductAttributesController : ControllerBase
             return NotFound();
         }
 
-        var attrOverlay = await _localization.GetOverlayAsync(AttributeType, new[] { id }, EnCulture, cancellationToken);
-        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { attribute.GroupId }, EnCulture, cancellationToken);
+        var attrOverlay = await _localization.GetOverlayAsync(AttributeType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
+        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { attribute.GroupId }, RequestCulture.EnglishCultureId, cancellationToken);
 
         return Ok(new AdminProductAttributeDto(
             attribute.Id, attribute.Name, attrOverlay.Get(id, LocalizedProperty.Name),
@@ -99,14 +98,14 @@ public sealed class AdminProductAttributesController : ControllerBase
         _db.ProductAttributes.Add(attribute);
         await _db.SaveChangesAsync(cancellationToken);
 
-        await _localizedWriter.SetAsync(AttributeType, attribute.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(AttributeType, attribute.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { group.Id }, EnCulture, cancellationToken);
+        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { group.Id }, RequestCulture.EnglishCultureId, cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = attribute.Id },
             new AdminProductAttributeDto(
-                attribute.Id, attribute.Name, Normalize(request.NameEn),
+                attribute.Id, attribute.Name, AdminText.NormalizeOrNull(request.NameEn),
                 group.Id, group.Name, groupOverlay.Get(group.Id, LocalizedProperty.Name)));
     }
 
@@ -128,13 +127,13 @@ public sealed class AdminProductAttributesController : ControllerBase
 
         attribute.Name = request.Name;
         attribute.GroupId = request.GroupId;
-        await _localizedWriter.SetAsync(AttributeType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(AttributeType, id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { group.Id }, EnCulture, cancellationToken);
+        var groupOverlay = await _localization.GetOverlayAsync(GroupType, new[] { group.Id }, RequestCulture.EnglishCultureId, cancellationToken);
 
         return Ok(new AdminProductAttributeDto(
-            attribute.Id, attribute.Name, Normalize(request.NameEn),
+            attribute.Id, attribute.Name, AdminText.NormalizeOrNull(request.NameEn),
             group.Id, group.Name, groupOverlay.Get(group.Id, LocalizedProperty.Name)));
     }
 
@@ -169,7 +168,7 @@ public sealed class AdminProductAttributesController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayAsync(
-            GroupType, groups.Select(g => g.Id).ToList(), EnCulture, cancellationToken);
+            GroupType, groups.Select(g => g.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
 
         var dtos = groups
             .Select(g => new AdminProductAttributeGroupDto(g.Id, g.Name, overlay.Get(g.Id, LocalizedProperty.Name)))
@@ -186,10 +185,10 @@ public sealed class AdminProductAttributesController : ControllerBase
         _db.Set<ProductAttributeGroup>().Add(group);
         await _db.SaveChangesAsync(cancellationToken);
 
-        await _localizedWriter.SetAsync(GroupType, group.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(GroupType, group.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminProductAttributeGroupDto(group.Id, group.Name, Normalize(request.NameEn)));
+        return Ok(new AdminProductAttributeGroupDto(group.Id, group.Name, AdminText.NormalizeOrNull(request.NameEn)));
     }
 
     [HttpPut("groups/{id:long}")]
@@ -203,10 +202,10 @@ public sealed class AdminProductAttributesController : ControllerBase
         }
 
         group.Name = request.Name;
-        await _localizedWriter.SetAsync(GroupType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(GroupType, id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminProductAttributeGroupDto(group.Id, group.Name, Normalize(request.NameEn)));
+        return Ok(new AdminProductAttributeGroupDto(group.Id, group.Name, AdminText.NormalizeOrNull(request.NameEn)));
     }
 
     [HttpDelete("groups/{id:long}")]
@@ -230,6 +229,4 @@ public sealed class AdminProductAttributesController : ControllerBase
 
         return NoContent();
     }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 }

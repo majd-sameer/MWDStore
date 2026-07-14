@@ -20,7 +20,6 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminProductOptionsController : ControllerBase
 {
     private const string EntityType = LocalizedEntity.ProductOption;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
@@ -46,7 +45,7 @@ public sealed class AdminProductOptionsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayAsync(
-            EntityType, options.Select(o => o.Id).ToList(), EnCulture, cancellationToken);
+            EntityType, options.Select(o => o.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
         var stamps = await _auditStamps.ReadAsync(
             nameof(ProductOption), options.Select(o => o.Id).ToList(), cancellationToken);
 
@@ -68,7 +67,7 @@ public sealed class AdminProductOptionsController : ControllerBase
             return NotFound();
         }
 
-        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
         return Ok(new AdminProductOptionListItem(option.Id, option.Name, overlay.Get(id, LocalizedProperty.Name)));
     }
 
@@ -80,11 +79,11 @@ public sealed class AdminProductOptionsController : ControllerBase
         _db.ProductOptions.Add(option);
         await _db.SaveChangesAsync(cancellationToken);
 
-        await _localizedWriter.SetAsync(EntityType, option.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, option.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = option.Id },
-            new AdminProductOptionListItem(option.Id, option.Name, Normalize(request.NameEn)));
+            new AdminProductOptionListItem(option.Id, option.Name, AdminText.NormalizeOrNull(request.NameEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -98,10 +97,10 @@ public sealed class AdminProductOptionsController : ControllerBase
         }
 
         option.Name = request.Name;
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new AdminProductOptionListItem(option.Id, option.Name, Normalize(request.NameEn)));
+        return Ok(new AdminProductOptionListItem(option.Id, option.Name, AdminText.NormalizeOrNull(request.NameEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -126,6 +125,4 @@ public sealed class AdminProductOptionsController : ControllerBase
 
         return NoContent();
     }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 }

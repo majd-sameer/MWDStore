@@ -42,13 +42,10 @@ public sealed class AdminPromotionsController : ControllerBase
                 r.DiscountAmount, r.StartOn, r.EndOn, r.Coupons.Count, r.CartRuleUsages.Count))
             .ToListAsync(cancellationToken);
 
-        var ids = rules.Select(r => r.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(CartRule), ids, cancellationToken);
-        rules = rules
-            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
-            .ToList();
-
-        return Ok(rules);
+        return Ok(await rules.WithAuditStampsAsync(
+            _auditStamps, nameof(CartRule), r => r.Id,
+            (r, createdBy, modifiedBy) => r with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpGet("{id:long}")]

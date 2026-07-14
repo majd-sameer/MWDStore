@@ -16,12 +16,7 @@ public sealed class OrderAddressConfiguration : IEntityTypeConfiguration<OrderAd
 
         builder.HasIndex(e => e.StateOrProvinceId, "IX_Orders_OrderAddress_StateOrProvinceId");
 
-        builder.Property(e => e.AddressLine1).HasMaxLength(450);
-        builder.Property(e => e.AddressLine2).HasMaxLength(450);
-        builder.Property(e => e.City).HasMaxLength(450);
-        builder.Property(e => e.ContactName).HasMaxLength(450);
-        builder.Property(e => e.Phone).HasMaxLength(450);
-        builder.Property(e => e.ZipCode).HasMaxLength(450);
+        builder.ConfigureAddressColumns();
 
         builder.HasOne(d => d.Country).WithMany(p => p.OrderAddresses).HasForeignKey(d => d.CountryId);
 

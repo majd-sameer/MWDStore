@@ -101,27 +101,12 @@ public sealed class OrderService : IOrderService
                 return Result.Fail<Order>($"There are only {product.StockQuantity} items available for {product.Name}");
             }
 
-            var taxPercent = await _taxService.GetTaxPercentAsync(
-                product.TaxClassId, shippingAddress.CountryId, shippingAddress.StateOrProvinceId, shippingAddress.ZipCode, cancellationToken);
-
             var calculatedProductPrice = _productPricingService.CalculateProductPrice(product);
 
-            // Use the regular (pre-discount) price as the line base, then strip tax out if prices include it.
-            var productPrice = calculatedProductPrice.OldPrice ?? calculatedProductPrice.Price;
-            if (checkout.IsProductPriceIncludeTax)
-            {
-                productPrice /= 1 + (taxPercent / 100);
-            }
-
-            var orderItem = new OrderItem
-            {
-                Product = product,
-                ProductId = product.Id,
-                ProductPrice = productPrice,
-                Quantity = checkoutItem.Quantity,
-                TaxPercent = taxPercent,
-                TaxAmount = checkoutItem.Quantity * (productPrice * taxPercent / 100)
-            };
+            // Use the regular (pre-discount) price as the line base.
+            var orderItem = await BuildOrderItemAsync(
+                product, checkoutItem.Quantity, calculatedProductPrice.OldPrice ?? calculatedProductPrice.Price,
+                checkout.IsProductPriceIncludeTax, shippingAddress, cancellationToken);
 
             var discountedItem = couponResult.DiscountedProducts.FirstOrDefault(x => x.Id == checkoutItem.ProductId);
             if (discountedItem != null)
@@ -187,25 +172,10 @@ public sealed class OrderService : IOrderService
 
             foreach (var cartItem in checkout.CheckoutItems.Where(x => x.Product.VendorId == vendorId))
             {
-                var taxPercent = await _taxService.GetTaxPercentAsync(
-                    cartItem.Product.TaxClassId, shippingAddress.CountryId, shippingAddress.StateOrProvinceId, shippingAddress.ZipCode, cancellationToken);
-
                 // Sub-orders use the raw product price (not the calculated price).
-                var productPrice = cartItem.Product.Price;
-                if (checkout.IsProductPriceIncludeTax)
-                {
-                    productPrice /= 1 + (taxPercent / 100);
-                }
-
-                var orderItem = new OrderItem
-                {
-                    Product = cartItem.Product,
-                    ProductId = cartItem.ProductId,
-                    ProductPrice = productPrice,
-                    Quantity = cartItem.Quantity,
-                    TaxPercent = taxPercent,
-                    TaxAmount = cartItem.Quantity * (productPrice * taxPercent / 100)
-                };
+                var orderItem = await BuildOrderItemAsync(
+                    cartItem.Product, cartItem.Quantity, cartItem.Product.Price,
+                    checkout.IsProductPriceIncludeTax, shippingAddress, cancellationToken);
 
                 if (checkout.IsProductPriceIncludeTax)
                 {
@@ -228,6 +198,35 @@ public sealed class OrderService : IOrderService
         await _db.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(order);
+    }
+
+    /// <summary>
+    /// Builds an order line from a price base: resolves the destination's tax percent, strips tax
+    /// out of the base when prices are tax-inclusive, and computes the line's tax amount. Callers
+    /// choose the price base (calculated price for the master order, raw price for vendor sub-orders).
+    /// </summary>
+    private async Task<OrderItem> BuildOrderItemAsync(
+        Product product, int quantity, decimal priceBase, bool isProductPriceIncludeTax,
+        OrderAddressInfo shippingAddress, CancellationToken cancellationToken)
+    {
+        var taxPercent = await _taxService.GetTaxPercentAsync(
+            product.TaxClassId, shippingAddress.CountryId, shippingAddress.StateOrProvinceId, shippingAddress.ZipCode, cancellationToken);
+
+        var productPrice = priceBase;
+        if (isProductPriceIncludeTax)
+        {
+            productPrice /= 1 + (taxPercent / 100);
+        }
+
+        return new OrderItem
+        {
+            Product = product,
+            ProductId = product.Id,
+            ProductPrice = productPrice,
+            Quantity = quantity,
+            TaxPercent = taxPercent,
+            TaxAmount = quantity * (productPrice * taxPercent / 100)
+        };
     }
 
     /// <summary>

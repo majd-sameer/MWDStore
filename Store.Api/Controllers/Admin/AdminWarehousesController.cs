@@ -38,13 +38,10 @@ public sealed class AdminWarehousesController : ControllerBase
             .Select(Projection)
             .ToListAsync(cancellationToken);
 
-        var ids = warehouses.Select(w => w.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Warehouse), ids, cancellationToken);
-        var dtos = warehouses
-            .Select(w => w with { CreatedBy = stamps.CreatedBy(w.Id), ModifiedBy = stamps.ModifiedBy(w.Id) })
-            .ToList();
-
-        return Ok(dtos);
+        return Ok(await warehouses.WithAuditStampsAsync(
+            _auditStamps, nameof(Warehouse), w => w.Id,
+            (w, createdBy, modifiedBy) => w with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpGet("{id:long}")]

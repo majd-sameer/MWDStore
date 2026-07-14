@@ -21,7 +21,6 @@ public sealed class AdminProductsController : ControllerBase
     private static readonly JsonSerializerOptions OptionValueJson = new() { PropertyNamingPolicy = null };
 
     private const string EntityType = LocalizedEntity.Product;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
@@ -111,18 +110,15 @@ public sealed class AdminProductsController : ControllerBase
                 p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        var ids = result.Items.Select(i => i.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Product), ids, cancellationToken);
-
-        return Ok(result with
-        {
-            Items = result.Items.Select(i => i with
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(Product), i => i.Id,
+            (i, createdBy, modifiedBy) => i with
             {
                 ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl),
-                CreatedBy = stamps.CreatedBy(i.Id),
-                ModifiedBy = stamps.ModifiedBy(i.Id)
-            }).ToList()
-        });
+                CreatedBy = createdBy,
+                ModifiedBy = modifiedBy,
+            },
+            cancellationToken));
     }
 
     /// <summary>Name search for the related/cross-sell product pickers (simple products only).</summary>
@@ -585,18 +581,19 @@ public sealed class AdminProductsController : ControllerBase
     };
 
     private Task<LocalizedOverlay> LoadEnglishAsync(long id, CancellationToken cancellationToken) =>
-        _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        _localization.GetOverlayAsync(EntityType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
 
-    private async Task WriteEnglishAsync(long id, ProductUpsertRequest request, CancellationToken cancellationToken)
-    {
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.ShortDescription, EnCulture, request.ShortDescriptionEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Specification, EnCulture, request.SpecificationEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
-    }
+    private Task WriteEnglishAsync(long id, ProductUpsertRequest request, CancellationToken cancellationToken) =>
+        _localizedWriter.SetManyAsync(EntityType, id, RequestCulture.EnglishCultureId,
+        [
+            (LocalizedProperty.Name, request.NameEn),
+            (LocalizedProperty.ShortDescription, request.ShortDescriptionEn),
+            (LocalizedProperty.Description, request.DescriptionEn),
+            (LocalizedProperty.Specification, request.SpecificationEn),
+            (LocalizedProperty.MetaTitle, request.MetaTitleEn),
+            (LocalizedProperty.MetaKeywords, request.MetaKeywordsEn),
+            (LocalizedProperty.MetaDescription, request.MetaDescriptionEn),
+        ], cancellationToken);
 
     private AdminProductDetail ToDetail(Product p, LocalizedOverlay overlay)
     {

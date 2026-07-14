@@ -70,15 +70,7 @@ public static class NewsCategorySeeder
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        if (!await db.Cultures.AnyAsync(c => c.Id == RequestCulture.EnglishCultureId, cancellationToken))
-        {
-            db.Cultures.Add(new Culture
-            {
-                Id = RequestCulture.EnglishCultureId,
-                Name = RequestCulture.EnglishCultureId,
-            });
-            await db.SaveChangesAsync(cancellationToken);
-        }
+        await SeederSupport.EnsureCultureAsync(db, RequestCulture.EnglishCultureId, cancellationToken);
 
         var rows = await db.NewsCategories
             .Where(c => Categories.Select(s => s.Slug).Contains(c.Slug))

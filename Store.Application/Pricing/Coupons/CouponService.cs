@@ -48,7 +48,10 @@ public sealed class CouponService : ICouponService
         }
 
         var couponUsageCount = await _db.Set<CartRuleUsage>().CountAsync(x => x.CouponId == coupon.Id, cancellationToken);
-        if (coupon.CartRule.UsageLimitPerCoupon.HasValue && couponUsageCount >= coupon.CartRule.UsageLimitPerCoupon)
+        bool CouponLimitReached() =>
+            coupon.CartRule.UsageLimitPerCoupon.HasValue && couponUsageCount >= coupon.CartRule.UsageLimitPerCoupon;
+
+        if (CouponLimitReached())
         {
             validationResult.ErrorMessage = $"The coupon {couponCode} is all used.";
             return validationResult;
@@ -56,7 +59,10 @@ public sealed class CouponService : ICouponService
 
         var couponUsageByCustomerCount = await _db.Set<CartRuleUsage>()
             .CountAsync(x => x.CouponId == coupon.Id && x.UserId == customerId, cancellationToken);
-        if (coupon.CartRule.UsageLimitPerCustomer.HasValue && couponUsageByCustomerCount >= coupon.CartRule.UsageLimitPerCustomer)
+        bool CustomerLimitReached() =>
+            coupon.CartRule.UsageLimitPerCustomer.HasValue && couponUsageByCustomerCount >= coupon.CartRule.UsageLimitPerCustomer;
+
+        if (CustomerLimitReached())
         {
             validationResult.ErrorMessage = $"You can use the coupon {couponCode} only {coupon.CartRule.UsageLimitPerCustomer} times";
             return validationResult;
@@ -78,8 +84,7 @@ public sealed class CouponService : ICouponService
 
         foreach (var item in cart.Items)
         {
-            if ((coupon.CartRule.UsageLimitPerCoupon.HasValue && couponUsageCount >= coupon.CartRule.UsageLimitPerCoupon) ||
-                (coupon.CartRule.UsageLimitPerCustomer.HasValue && couponUsageByCustomerCount >= coupon.CartRule.UsageLimitPerCustomer))
+            if (CouponLimitReached() || CustomerLimitReached())
             {
                 break;
             }

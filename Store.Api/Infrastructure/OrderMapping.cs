@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Store.Api.Models;
 using Store.Application.Localization;
 using Store.Domain;
@@ -7,6 +8,12 @@ namespace Store.Api.Infrastructure;
 /// <summary>Projects <see cref="Order"/> aggregates to API DTOs.</summary>
 public static class OrderMapping
 {
+    /// <summary>Eager-loads everything <see cref="ToDetail"/> needs (items + products + addresses).</summary>
+    public static IQueryable<Order> IncludeDetail(this IQueryable<Order> orders) => orders
+        .Include(o => o.OrderItems).ThenInclude(i => i.Product)
+        .Include(o => o.ShippingAddress)
+        .Include(o => o.BillingAddress);
+
     public static OrderSummaryDto ToSummary(this Order order) => new(
         order.Id,
         order.TrackingNumber,

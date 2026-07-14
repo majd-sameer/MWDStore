@@ -17,8 +17,6 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/comments")]
 public sealed class AdminCommentsController : ControllerBase
 {
-    private static readonly int[] ValidStatuses = [1, 5, 8];
-
     private readonly StoreDbContext _db;
     private readonly IAuditStampReader _auditStamps;
 
@@ -46,25 +44,19 @@ public sealed class AdminCommentsController : ControllerBase
                 c.Status, c.CreatedOn, c.EntityId, c.EntityTypeId, c.ParentId))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        var ids = result.Items.Select(x => x.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Comment), ids, cancellationToken);
-        result = result with
-        {
-            Items = result.Items
-                .Select(x => x with { CreatedBy = stamps.CreatedBy(x.Id), ModifiedBy = stamps.ModifiedBy(x.Id) })
-                .ToList(),
-        };
-
-        return Ok(result);
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(Comment), x => x.Id,
+            (x, createdBy, modifiedBy) => x with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPut("{id:long}/status")]
     public async Task<IActionResult> UpdateStatus(
         long id, ModerationStatusRequest request, CancellationToken cancellationToken)
     {
-        if (!ValidStatuses.Contains(request.Status))
+        if (!Moderation.ValidStatuses.Contains(request.Status))
         {
-            return BadRequest(new { error = "Status must be 1 (Pending), 5 (Approved) or 8 (NotApproved)." });
+            return BadRequest(new { error = Moderation.InvalidStatusError });
         }
 
         var comment = await _db.Comments.FindAsync([id], cancellationToken);

@@ -24,16 +24,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(e => new { e.IsSignature, e.SignatureSortOrder }, "IX_Catalog_Product_Signature")
             .HasFilter("[IsSignature] = 1");
 
+        builder.ConfigureSeoColumns();
         builder.Property(e => e.Gtin).HasMaxLength(450);
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
         builder.Property(e => e.NormalizedName).HasMaxLength(450);
         builder.Property(e => e.OldPrice).HasColumnType("decimal(18, 2)");
         builder.Property(e => e.Price).HasColumnType("decimal(18, 2)");
         builder.Property(e => e.ShortDescription).HasMaxLength(450);
         builder.Property(e => e.Sku).HasMaxLength(450);
-        builder.Property(e => e.Slug).HasMaxLength(450);
         builder.Property(e => e.SpecialPrice).HasColumnType("decimal(18, 2)");
 
         builder.HasOne(d => d.Brand).WithMany(p => p.Products).HasForeignKey(d => d.BrandId);

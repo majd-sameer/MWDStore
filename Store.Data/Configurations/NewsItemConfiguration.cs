@@ -18,11 +18,8 @@ public sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
 
         builder.HasIndex(e => e.ProductId, "IX_News_NewsItem_ProductId");
 
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
+        builder.ConfigureSeoColumns();
         builder.Property(e => e.ShortContent).HasMaxLength(450);
-        builder.Property(e => e.Slug).HasMaxLength(450);
         builder.Property(e => e.AlertCtaUrl).HasMaxLength(2048);
 
         builder.HasOne(d => d.CreatedBy).WithMany(p => p.NewsItemCreatedBies)

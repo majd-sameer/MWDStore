@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,12 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/tax")]
 public sealed class AdminTaxController : ControllerBase
 {
+    private static readonly Expression<Func<TaxRate, AdminTaxRateDto>> ToRateDto = r => new AdminTaxRateDto(
+        r.Id, r.TaxClassId, r.TaxClass.Name, r.CountryId,
+        r.Country != null ? r.Country.Name : null,
+        r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
+        r.ZipCode, r.Rate);
+
     private readonly StoreDbContext _db;
     private readonly IAuditStampReader _auditStamps;
 
@@ -32,13 +39,10 @@ public sealed class AdminTaxController : ControllerBase
             .Select(c => new AdminTaxClassDto(c.Id, c.Name))
             .ToListAsync(cancellationToken);
 
-        var ids = classes.Select(c => c.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(TaxClass), ids, cancellationToken);
-        classes = classes
-            .Select(c => c with { CreatedBy = stamps.CreatedBy(c.Id), ModifiedBy = stamps.ModifiedBy(c.Id) })
-            .ToList();
-
-        return Ok(classes);
+        return Ok(await classes.WithAuditStampsAsync(
+            _auditStamps, nameof(TaxClass), c => c.Id,
+            (c, createdBy, modifiedBy) => c with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPost("classes")]
@@ -96,20 +100,13 @@ public sealed class AdminTaxController : ControllerBase
     {
         var rates = await _db.TaxRates
             .OrderBy(r => r.TaxClass.Name).ThenBy(r => r.CountryId)
-            .Select(r => new AdminTaxRateDto(
-                r.Id, r.TaxClassId, r.TaxClass.Name, r.CountryId,
-                r.Country != null ? r.Country.Name : null,
-                r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
-                r.ZipCode, r.Rate))
+            .Select(ToRateDto)
             .ToListAsync(cancellationToken);
 
-        var ids = rates.Select(r => r.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(TaxRate), ids, cancellationToken);
-        rates = rates
-            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
-            .ToList();
-
-        return Ok(rates);
+        return Ok(await rates.WithAuditStampsAsync(
+            _auditStamps, nameof(TaxRate), r => r.Id,
+            (r, createdBy, modifiedBy) => r with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPost("rates")]
@@ -167,10 +164,6 @@ public sealed class AdminTaxController : ControllerBase
     private Task<AdminTaxRateDto?> GetRateDtoAsync(long id, CancellationToken cancellationToken) =>
         _db.TaxRates
             .Where(r => r.Id == id)
-            .Select(r => new AdminTaxRateDto(
-                r.Id, r.TaxClassId, r.TaxClass.Name, r.CountryId,
-                r.Country != null ? r.Country.Name : null,
-                r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
-                r.ZipCode, r.Rate))
+            .Select(ToRateDto)
             .FirstOrDefaultAsync(cancellationToken)!;
 }

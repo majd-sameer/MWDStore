@@ -20,7 +20,6 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminVendorsController : ControllerBase
 {
     private const string EntityType = LocalizedEntity.Vendor;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
@@ -50,7 +49,7 @@ public sealed class AdminVendorsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var ids = vendors.Select(v => v.Id).ToList();
-        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, RequestCulture.EnglishCultureId, cancellationToken);
         var stamps = await _auditStamps.ReadAsync(nameof(Vendor), ids, cancellationToken);
 
         var dtos = vendors
@@ -75,7 +74,7 @@ public sealed class AdminVendorsController : ControllerBase
         await WriteEnglishAsync(vendor.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(vendor, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+        return Ok(ToDto(vendor, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -94,7 +93,7 @@ public sealed class AdminVendorsController : ControllerBase
         await WriteEnglishAsync(vendor.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(vendor, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+        return Ok(ToDto(vendor, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -122,13 +121,12 @@ public sealed class AdminVendorsController : ControllerBase
         vendor.IsActive = request.IsActive;
     }
 
-    private async Task WriteEnglishAsync(long id, VendorUpsertRequest request, CancellationToken cancellationToken)
-    {
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
-    }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    private Task WriteEnglishAsync(long id, VendorUpsertRequest request, CancellationToken cancellationToken) =>
+        _localizedWriter.SetManyAsync(EntityType, id, RequestCulture.EnglishCultureId,
+        [
+            (LocalizedProperty.Name, request.NameEn),
+            (LocalizedProperty.Description, request.DescriptionEn),
+        ], cancellationToken);
 
     private static AdminVendorDto ToDto(Vendor v, string? nameEn, string? descriptionEn) =>
         new(v.Id, v.Name, nameEn, v.Slug, v.Email, v.Description, descriptionEn, v.IsActive);

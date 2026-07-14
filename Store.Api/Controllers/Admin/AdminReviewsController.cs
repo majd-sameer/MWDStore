@@ -17,8 +17,6 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/reviews")]
 public sealed class AdminReviewsController : ControllerBase
 {
-    private static readonly int[] ValidStatuses = [1, 5, 8];
-
     private readonly StoreDbContext _db;
     private readonly IAuditStampReader _auditStamps;
 
@@ -47,25 +45,19 @@ public sealed class AdminReviewsController : ControllerBase
                 _db.Products.Where(p => p.Id == r.EntityId).Select(p => p.Name).FirstOrDefault()))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        var ids = result.Items.Select(x => x.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Review), ids, cancellationToken);
-        result = result with
-        {
-            Items = result.Items
-                .Select(x => x with { CreatedBy = stamps.CreatedBy(x.Id), ModifiedBy = stamps.ModifiedBy(x.Id) })
-                .ToList(),
-        };
-
-        return Ok(result);
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(Review), x => x.Id,
+            (x, createdBy, modifiedBy) => x with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPut("{id:long}/status")]
     public async Task<IActionResult> UpdateStatus(
         long id, ModerationStatusRequest request, CancellationToken cancellationToken)
     {
-        if (!ValidStatuses.Contains(request.Status))
+        if (!Moderation.ValidStatuses.Contains(request.Status))
         {
-            return BadRequest(new { error = "Status must be 1 (Pending), 5 (Approved) or 8 (NotApproved)." });
+            return BadRequest(new { error = Moderation.InvalidStatusError });
         }
 
         var review = await _db.Reviews.FindAsync([id], cancellationToken);
@@ -76,7 +68,7 @@ public sealed class AdminReviewsController : ControllerBase
 
         review.Status = request.Status;
         await RecalculateProductRatingAsync(
-            review.EntityId, review.Id, request.Status == 5 ? review.Rating : null, cancellationToken);
+            review.EntityId, review.Id, request.Status == Moderation.Approved ? review.Rating : null, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         return NoContent();
@@ -114,7 +106,7 @@ public sealed class AdminReviewsController : ControllerBase
         }
 
         var ratings = await _db.Reviews
-            .Where(r => r.EntityId == productId && r.Status == 5 && r.Id != changedReviewId)
+            .Where(r => r.EntityId == productId && r.Status == Moderation.Approved && r.Id != changedReviewId)
             .Select(r => (double)r.Rating)
             .ToListAsync(cancellationToken);
 

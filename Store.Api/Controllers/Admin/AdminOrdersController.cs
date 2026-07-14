@@ -72,13 +72,10 @@ public sealed class AdminOrdersController : ControllerBase
             .OrderByDescending(o => o.CreatedOn)
             .ToPagedResultAsync(page, pageSize, o => o.ToSummary(), cancellationToken);
 
-        var ids = result.Items.Select(o => o.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Order), ids, cancellationToken);
-        var items = result.Items
-            .Select(o => o with { CreatedBy = stamps.CreatedBy(o.Id), ModifiedBy = stamps.ModifiedBy(o.Id) })
-            .ToList();
-
-        return Ok(result with { Items = items });
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(Order), o => o.Id,
+            (o, createdBy, modifiedBy) => o with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpGet("{id:long}")]
@@ -86,9 +83,7 @@ public sealed class AdminOrdersController : ControllerBase
     {
         var order = await _db.Orders
             .AsNoTracking()
-            .Include(o => o.OrderItems).ThenInclude(i => i.Product)
-            .Include(o => o.ShippingAddress)
-            .Include(o => o.BillingAddress)
+            .IncludeDetail()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         return order == null ? NotFound() : Ok(order.ToDetail());
@@ -100,9 +95,7 @@ public sealed class AdminOrdersController : ControllerBase
         long id, UpdateOrderStatusRequest request, CancellationToken cancellationToken)
     {
         var order = await _db.Orders
-            .Include(o => o.OrderItems).ThenInclude(i => i.Product)
-            .Include(o => o.ShippingAddress)
-            .Include(o => o.BillingAddress)
+            .IncludeDetail()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
         if (order == null)
         {

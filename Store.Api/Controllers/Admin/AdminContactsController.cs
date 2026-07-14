@@ -36,13 +36,10 @@ public sealed class AdminContactsController : ControllerBase
                 c.ContactAreaId, c.ContactArea.Name, c.CreatedOn))
             .ToListAsync(cancellationToken);
 
-        var ids = contacts.Select(x => x.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Contact), ids, cancellationToken);
-        contacts = contacts
-            .Select(x => x with { CreatedBy = stamps.CreatedBy(x.Id), ModifiedBy = stamps.ModifiedBy(x.Id) })
-            .ToList();
-
-        return Ok(contacts);
+        return Ok(await contacts.WithAuditStampsAsync(
+            _auditStamps, nameof(Contact), x => x.Id,
+            (x, createdBy, modifiedBy) => x with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpDelete("{id:long}")]

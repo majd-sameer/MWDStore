@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,13 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/shipping")]
 public sealed class AdminShippingController : ControllerBase
 {
+    private static readonly Expression<Func<PriceAndDestination, AdminTableRateDto>> ToTableRateDto =
+        r => new AdminTableRateDto(
+            r.Id, r.ShippingProviderId, r.ShippingProvider != null ? r.ShippingProvider.Name : null,
+            r.CountryId, r.Country != null ? r.Country.Name : null,
+            r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
+            r.ZipCode, r.MinOrderSubtotal, r.ShippingPrice, r.Note);
+
     private readonly StoreDbContext _db;
     private readonly IAuditStampReader _auditStamps;
 
@@ -118,20 +126,13 @@ public sealed class AdminShippingController : ControllerBase
 
         var rates = await query
             .OrderBy(r => r.ShippingProviderId).ThenBy(r => r.CountryId).ThenBy(r => r.MinOrderSubtotal)
-            .Select(r => new AdminTableRateDto(
-                r.Id, r.ShippingProviderId, r.ShippingProvider != null ? r.ShippingProvider.Name : null,
-                r.CountryId, r.Country != null ? r.Country.Name : null,
-                r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
-                r.ZipCode, r.MinOrderSubtotal, r.ShippingPrice, r.Note))
+            .Select(ToTableRateDto)
             .ToListAsync(cancellationToken);
 
-        var ids = rates.Select(r => r.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(PriceAndDestination), ids, cancellationToken);
-        rates = rates
-            .Select(r => r with { CreatedBy = stamps.CreatedBy(r.Id), ModifiedBy = stamps.ModifiedBy(r.Id) })
-            .ToList();
-
-        return Ok(rates);
+        return Ok(await rates.WithAuditStampsAsync(
+            _auditStamps, nameof(PriceAndDestination), r => r.Id,
+            (r, createdBy, modifiedBy) => r with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPost("table-rates")]
@@ -191,10 +192,6 @@ public sealed class AdminShippingController : ControllerBase
     private Task<AdminTableRateDto?> GetTableRateDtoAsync(long id, CancellationToken cancellationToken) =>
         _db.PriceAndDestinations
             .Where(r => r.Id == id)
-            .Select(r => new AdminTableRateDto(
-                r.Id, r.ShippingProviderId, r.ShippingProvider != null ? r.ShippingProvider.Name : null,
-                r.CountryId, r.Country != null ? r.Country.Name : null,
-                r.StateOrProvinceId, r.StateOrProvince != null ? r.StateOrProvince.Name : null,
-                r.ZipCode, r.MinOrderSubtotal, r.ShippingPrice, r.Note))
+            .Select(ToTableRateDto)
             .FirstOrDefaultAsync(cancellationToken)!;
 }

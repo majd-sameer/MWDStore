@@ -240,15 +240,7 @@ public static class ContentBlockSeeder
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        if (!await db.Cultures.AnyAsync(c => c.Id == RequestCulture.EnglishCultureId, cancellationToken))
-        {
-            db.Cultures.Add(new Culture
-            {
-                Id = RequestCulture.EnglishCultureId,
-                Name = RequestCulture.EnglishCultureId,
-            });
-            await db.SaveChangesAsync(cancellationToken);
-        }
+        await SeederSupport.EnsureCultureAsync(db, RequestCulture.EnglishCultureId, cancellationToken);
 
         var blocks = await db.ContentBlocks
             .Select(b => new { b.Id, b.PageKey, b.SectionKey, b.BlockKey })

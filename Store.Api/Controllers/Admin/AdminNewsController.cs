@@ -20,7 +20,6 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/news")]
 public sealed class AdminNewsController : ControllerBase
 {
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
@@ -52,7 +51,7 @@ public sealed class AdminNewsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsCategory, categories.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
+            LocalizedEntity.NewsCategory, categories.Select(c => c.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
 
         var dtos = categories
             .Select(c => new AdminNewsCategoryDto(
@@ -121,12 +120,12 @@ public sealed class AdminNewsController : ControllerBase
 
     private async Task WriteCategoryEnglishAsync(long id, NewsCategoryUpsertRequest request, CancellationToken cancellationToken)
     {
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsCategory, id, LocalizedProperty.Description, RequestCulture.EnglishCultureId, request.DescriptionEn, cancellationToken);
     }
 
     private static AdminNewsCategoryDto CategoryDto(NewsCategory c, NewsCategoryUpsertRequest request) => new(
-        c.Id, c.Name, Normalize(request.NameEn), c.Slug, c.Description, Normalize(request.DescriptionEn),
+        c.Id, c.Name, AdminText.NormalizeOrNull(request.NameEn), c.Slug, c.Description, AdminText.NormalizeOrNull(request.DescriptionEn),
         c.DisplayOrder, c.IsPublished);
 
     [HttpGet("items")]
@@ -140,17 +139,15 @@ public sealed class AdminNewsController : ControllerBase
                 n.ThumbnailImage != null ? n.ThumbnailImage.FileName : null))
             .ToListAsync(cancellationToken);
 
-        var ids = items.Select(i => i.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(NewsItem), ids, cancellationToken);
-
-        return Ok(items
-            .Select(i => i with
+        return Ok(await items.WithAuditStampsAsync(
+            _auditStamps, nameof(NewsItem), i => i.Id,
+            (i, createdBy, modifiedBy) => i with
             {
                 ThumbnailUrl = _mediaStorage.GetUrl(i.ThumbnailUrl),
-                CreatedBy = stamps.CreatedBy(i.Id),
-                ModifiedBy = stamps.ModifiedBy(i.Id),
-            })
-            .ToList());
+                CreatedBy = createdBy,
+                ModifiedBy = modifiedBy,
+            },
+            cancellationToken));
     }
 
     [HttpGet("items/{id:long}")]
@@ -168,7 +165,7 @@ public sealed class AdminNewsController : ControllerBase
         }
 
         var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsItem, new[] { id }, EnCulture, cancellationToken);
+            LocalizedEntity.NewsItem, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
         return Ok(ToDetail(item, overlay));
     }
 
@@ -259,12 +256,12 @@ public sealed class AdminNewsController : ControllerBase
 
     private async Task WriteItemEnglishAsync(long id, NewsItemUpsertRequest request, CancellationToken cancellationToken)
     {
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.ShortContent, EnCulture, request.ShortContentEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.FullContent, EnCulture, request.FullContentEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
-        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.ShortContent, RequestCulture.EnglishCultureId, request.ShortContentEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.FullContent, RequestCulture.EnglishCultureId, request.FullContentEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaTitle, RequestCulture.EnglishCultureId, request.MetaTitleEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaKeywords, RequestCulture.EnglishCultureId, request.MetaKeywordsEn, cancellationToken);
+        await _localizedWriter.SetAsync(LocalizedEntity.NewsItem, id, LocalizedProperty.MetaDescription, RequestCulture.EnglishCultureId, request.MetaDescriptionEn, cancellationToken);
     }
 
     private async Task SetCategoriesAsync(NewsItem item, IList<long> categoryIds, CancellationToken cancellationToken)
@@ -280,8 +277,6 @@ public sealed class AdminNewsController : ControllerBase
         }
     }
 
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
-
     /// <summary>Builds the detail from a loaded item + an overlay read from the DB.</summary>
     private AdminNewsItemDetail ToDetail(NewsItem n, LocalizedOverlay overlay) => new(
         n.Id, n.Name, overlay.Get(n.Id, LocalizedProperty.Name), n.Slug,
@@ -296,12 +291,12 @@ public sealed class AdminNewsController : ControllerBase
 
     /// <summary>Builds the detail straight from a just-saved request (English values echoed back).</summary>
     private AdminNewsItemDetail ToDetail(NewsItem n, NewsItemUpsertRequest request) => new(
-        n.Id, n.Name, Normalize(request.NameEn), n.Slug,
-        n.ShortContent, Normalize(request.ShortContentEn),
-        n.FullContent, Normalize(request.FullContentEn),
-        n.MetaTitle, Normalize(request.MetaTitleEn),
-        n.MetaKeywords, Normalize(request.MetaKeywordsEn),
-        n.MetaDescription, Normalize(request.MetaDescriptionEn),
+        n.Id, n.Name, AdminText.NormalizeOrNull(request.NameEn), n.Slug,
+        n.ShortContent, AdminText.NormalizeOrNull(request.ShortContentEn),
+        n.FullContent, AdminText.NormalizeOrNull(request.FullContentEn),
+        n.MetaTitle, AdminText.NormalizeOrNull(request.MetaTitleEn),
+        n.MetaKeywords, AdminText.NormalizeOrNull(request.MetaKeywordsEn),
+        n.MetaDescription, AdminText.NormalizeOrNull(request.MetaDescriptionEn),
         n.IsPublished, n.ThumbnailImageId, _mediaStorage.GetUrl(n.ThumbnailImage?.FileName),
         n.Categories.Select(c => c.Id).ToList(),
         n.ProductId, n.Product?.Name, n.AlertExpiresOn, n.AlertCtaUrl);

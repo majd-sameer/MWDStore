@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Store.Domain;
 
-public class NewsItem
+public class NewsItem : ISeoEntity, ISoftDeletable, IAuditedEntity
 {
     public long Id { get; set; }
 

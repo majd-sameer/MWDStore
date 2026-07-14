@@ -10,10 +10,7 @@ public sealed class NewsCategoryConfiguration : IEntityTypeConfiguration<NewsCat
     {
         builder.ToTable("NewsCategory");
 
-        builder.Property(e => e.MetaKeywords).HasMaxLength(450);
-        builder.Property(e => e.MetaTitle).HasMaxLength(450);
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.Slug).HasMaxLength(450);
+        builder.ConfigureSeoColumns();
 
         builder.HasMany(d => d.NewsItems).WithMany(p => p.Categories)
             .UsingEntity<Dictionary<string, object>>(

@@ -108,12 +108,9 @@ public sealed class AdminPaymentsController : ControllerBase
                 p.GatewayTransactionId, p.Status, p.CreatedOn))
             .ToPagedResultAsync(page, pageSize, cancellationToken);
 
-        var ids = result.Items.Select(p => p.Id).ToList();
-        var stamps = await _auditStamps.ReadAsync(nameof(Payment), ids, cancellationToken);
-        var items = result.Items
-            .Select(p => p with { CreatedBy = stamps.CreatedBy(p.Id), ModifiedBy = stamps.ModifiedBy(p.Id) })
-            .ToList();
-
-        return Ok(result with { Items = items });
+        return Ok(await result.WithAuditStampsAsync(
+            _auditStamps, nameof(Payment), p => p.Id,
+            (p, createdBy, modifiedBy) => p with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 }

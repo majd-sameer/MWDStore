@@ -33,14 +33,11 @@ public sealed class AdminProductTemplatesController : ControllerBase
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
 
-        var stamps = await _auditStamps.ReadAsync(
-            nameof(ProductTemplate), templates.Select(t => t.Id).ToList(), cancellationToken);
-
-        var dtos = templates
-            .Select(t => ToDto(t) with { CreatedBy = stamps.CreatedBy(t.Id), ModifiedBy = stamps.ModifiedBy(t.Id) })
-            .ToList();
-
-        return Ok(dtos);
+        var dtos = templates.Select(ToDto).ToList();
+        return Ok(await dtos.WithAuditStampsAsync(
+            _auditStamps, nameof(ProductTemplate), d => d.Id,
+            (d, createdBy, modifiedBy) => d with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpPost]

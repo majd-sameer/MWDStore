@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Store.Data;
 using Store.Domain;
@@ -27,6 +28,17 @@ public interface ILocalizedContentWriter
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Applies <see cref="SetAsync"/> once per (property, value) pair, in order, for one entity
+    /// and culture. Staged like <see cref="SetAsync"/> — the caller still owns the save.
+    /// </summary>
+    Task SetManyAsync(
+        string entityType,
+        long entityId,
+        string cultureId,
+        IEnumerable<(string Property, string? Value)> values,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// String-keyed sibling of <see cref="SetAsync"/> for entities keyed by a code
     /// (<c>LocalizedContentProperty.EntityKey</c>, e.g. <c>Country</c> by ISO code).
     /// </summary>
@@ -52,63 +64,82 @@ public sealed class LocalizedContentWriter : ILocalizedContentWriter
 
     public LocalizedContentWriter(StoreDbContext db) => _db = db;
 
-    public async Task SetAsync(
+    public Task SetAsync(
         string entityType,
         long entityId,
         string propertyName,
         string cultureId,
         string? value,
-        CancellationToken cancellationToken = default)
-    {
-        var row = await _db.LocalizedContentProperties.FirstOrDefaultAsync(
+        CancellationToken cancellationToken = default) =>
+        SetCoreAsync(
             p => p.EntityType == entityType
                 && p.EntityId == entityId
                 && p.ProperyName == propertyName
                 && p.CultureId == cultureId,
-            cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            if (row != null)
-            {
-                _db.LocalizedContentProperties.Remove(row);
-            }
-
-            return;
-        }
-
-        if (row == null)
-        {
-            await EnsureCultureAsync(cultureId, cancellationToken);
-            _db.LocalizedContentProperties.Add(new LocalizedContentProperty
+            () => new LocalizedContentProperty
             {
                 EntityType = entityType,
                 EntityId = entityId,
                 CultureId = cultureId,
                 ProperyName = propertyName,
-                Value = value,
-            });
-        }
-        else
+                Value = value!,
+            },
+            value, cultureId, cancellationToken);
+
+    public async Task SetManyAsync(
+        string entityType,
+        long entityId,
+        string cultureId,
+        IEnumerable<(string Property, string? Value)> values,
+        CancellationToken cancellationToken = default)
+    {
+        foreach (var (property, value) in values)
         {
-            row.Value = value;
+            await SetAsync(entityType, entityId, property, cultureId, value, cancellationToken);
         }
     }
 
-    public async Task SetByKeyAsync(
+    public Task SetByKeyAsync(
         string entityType,
         string entityKey,
         string propertyName,
         string cultureId,
         string? value,
-        CancellationToken cancellationToken = default)
-    {
-        var row = await _db.LocalizedContentProperties.FirstOrDefaultAsync(
+        CancellationToken cancellationToken = default) =>
+        SetCoreAsync(
             p => p.EntityType == entityType
                 && p.EntityKey == entityKey
                 && p.ProperyName == propertyName
                 && p.CultureId == cultureId,
-            cancellationToken);
+            () => new LocalizedContentProperty
+            {
+                EntityType = entityType,
+                EntityKey = entityKey,
+                CultureId = cultureId,
+                ProperyName = propertyName,
+                Value = value!,
+            },
+            value, cultureId, cancellationToken);
+
+    public Task RemoveAllAsync(string entityType, long entityId, CancellationToken cancellationToken = default) =>
+        RemoveWhereAsync(p => p.EntityType == entityType && p.EntityId == entityId, cancellationToken);
+
+    public Task RemoveAllByKeyAsync(string entityType, string entityKey, CancellationToken cancellationToken = default) =>
+        RemoveWhereAsync(p => p.EntityType == entityType && p.EntityKey == entityKey, cancellationToken);
+
+    /// <summary>
+    /// Upsert-or-remove for one overlay row. Only the lookup predicate and the new-row factory
+    /// differ between the id-keyed and key-keyed entry points; <paramref name="createRow"/> is
+    /// invoked only for a non-blank <paramref name="value"/>.
+    /// </summary>
+    private async Task SetCoreAsync(
+        Expression<Func<LocalizedContentProperty, bool>> match,
+        Func<LocalizedContentProperty> createRow,
+        string? value,
+        string cultureId,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.LocalizedContentProperties.FirstOrDefaultAsync(match, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -123,14 +154,7 @@ public sealed class LocalizedContentWriter : ILocalizedContentWriter
         if (row == null)
         {
             await EnsureCultureAsync(cultureId, cancellationToken);
-            _db.LocalizedContentProperties.Add(new LocalizedContentProperty
-            {
-                EntityType = entityType,
-                EntityKey = entityKey,
-                CultureId = cultureId,
-                ProperyName = propertyName,
-                Value = value,
-            });
+            _db.LocalizedContentProperties.Add(createRow());
         }
         else
         {
@@ -138,22 +162,11 @@ public sealed class LocalizedContentWriter : ILocalizedContentWriter
         }
     }
 
-    public async Task RemoveAllAsync(string entityType, long entityId, CancellationToken cancellationToken = default)
+    private async Task RemoveWhereAsync(
+        Expression<Func<LocalizedContentProperty, bool>> match, CancellationToken cancellationToken)
     {
         var rows = await _db.LocalizedContentProperties
-            .Where(p => p.EntityType == entityType && p.EntityId == entityId)
-            .ToListAsync(cancellationToken);
-
-        if (rows.Count > 0)
-        {
-            _db.LocalizedContentProperties.RemoveRange(rows);
-        }
-    }
-
-    public async Task RemoveAllByKeyAsync(string entityType, string entityKey, CancellationToken cancellationToken = default)
-    {
-        var rows = await _db.LocalizedContentProperties
-            .Where(p => p.EntityType == entityType && p.EntityKey == entityKey)
+            .Where(match)
             .ToListAsync(cancellationToken);
 
         if (rows.Count > 0)

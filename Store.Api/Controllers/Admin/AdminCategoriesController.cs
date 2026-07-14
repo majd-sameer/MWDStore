@@ -20,7 +20,6 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminCategoriesController : ControllerBase
 {
     private const string EntityType = LocalizedEntity.Category;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
@@ -57,7 +56,7 @@ public sealed class AdminCategoriesController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayAsync(
-            EntityType, items.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
+            EntityType, items.Select(c => c.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
 
         var stamps = await _auditStamps.ReadAsync(
             nameof(Category), items.Select(c => c.Id).ToList(), cancellationToken);
@@ -82,7 +81,7 @@ public sealed class AdminCategoriesController : ControllerBase
             return NotFound();
         }
 
-        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
         return Ok(ToDto(category, overlay.Get(id, LocalizedProperty.Name), overlay.Get(id, LocalizedProperty.Description)));
     }
 
@@ -105,7 +104,7 @@ public sealed class AdminCategoriesController : ControllerBase
         await _db.SaveChangesAsync(cancellationToken);
 
         return CreatedAtAction(nameof(Get), new { id = category.Id },
-            ToDto(category, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+            ToDto(category, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpPut("{id:long}")]
@@ -133,7 +132,7 @@ public sealed class AdminCategoriesController : ControllerBase
         await WriteEnglishAsync(category.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(category, Normalize(request.NameEn), Normalize(request.DescriptionEn)));
+        return Ok(ToDto(category, AdminText.NormalizeOrNull(request.NameEn), AdminText.NormalizeOrNull(request.DescriptionEn)));
     }
 
     [HttpDelete("{id:long}")]
@@ -169,13 +168,12 @@ public sealed class AdminCategoriesController : ControllerBase
         category.ParentId = request.ParentId;
     }
 
-    private async Task WriteEnglishAsync(long id, CategoryUpsertRequest request, CancellationToken cancellationToken)
-    {
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Description, EnCulture, request.DescriptionEn, cancellationToken);
-    }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    private Task WriteEnglishAsync(long id, CategoryUpsertRequest request, CancellationToken cancellationToken) =>
+        _localizedWriter.SetManyAsync(EntityType, id, RequestCulture.EnglishCultureId,
+        [
+            (LocalizedProperty.Name, request.NameEn),
+            (LocalizedProperty.Description, request.DescriptionEn),
+        ], cancellationToken);
 
     private static AdminCategoryDto ToDto(Category c, string? nameEn, string? descriptionEn) => new(
         c.Id, c.Name, nameEn, c.Slug, c.Description, descriptionEn,

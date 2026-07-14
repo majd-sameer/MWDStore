@@ -10,10 +10,7 @@ public sealed class CatalogRuleConfiguration : IEntityTypeConfiguration<CatalogR
     {
         builder.ToTable("CatalogRule");
 
-        builder.Property(e => e.DiscountAmount).HasColumnType("decimal(18, 2)");
-        builder.Property(e => e.MaxDiscountAmount).HasColumnType("decimal(18, 2)");
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.RuleToApply).HasMaxLength(450);
+        builder.ConfigureRuleColumns();
 
         builder.HasMany(d => d.CustomerGroups).WithMany(p => p.CatalogRules)
             .UsingEntity<Dictionary<string, object>>(

@@ -21,7 +21,6 @@ namespace Store.Api.Controllers.Admin;
 public sealed class AdminPagesController : ControllerBase
 {
     private const string EntityType = LocalizedEntity.Page;
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
@@ -51,16 +50,13 @@ public sealed class AdminPagesController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var ids = pages.Select(p => p.Id).ToList();
-        var overlay = await _localization.GetOverlayAsync(EntityType, ids, EnCulture, cancellationToken);
-        var stamps = await _auditStamps.ReadAsync(nameof(Page), ids, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, ids, RequestCulture.EnglishCultureId, cancellationToken);
 
-        return Ok(pages
-            .Select(p => ToDto(p, overlay) with
-            {
-                CreatedBy = stamps.CreatedBy(p.Id),
-                ModifiedBy = stamps.ModifiedBy(p.Id),
-            })
-            .ToList());
+        var dtos = pages.Select(p => ToDto(p, overlay)).ToList();
+        return Ok(await dtos.WithAuditStampsAsync(
+            _auditStamps, nameof(Page), d => d.Id,
+            (d, createdBy, modifiedBy) => d with { CreatedBy = createdBy, ModifiedBy = modifiedBy },
+            cancellationToken));
     }
 
     [HttpGet("{id:long}")]
@@ -73,7 +69,7 @@ public sealed class AdminPagesController : ControllerBase
             return NotFound();
         }
 
-        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
+        var overlay = await _localization.GetOverlayAsync(EntityType, new[] { id }, RequestCulture.EnglishCultureId, cancellationToken);
         return Ok(ToDto(page, overlay));
     }
 
@@ -160,16 +156,15 @@ public sealed class AdminPagesController : ControllerBase
         page.PublishedOn ??= request.IsPublished ? now : null;
     }
 
-    private async Task WriteEnglishAsync(long id, PageUpsertRequest request, CancellationToken cancellationToken)
-    {
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Body, EnCulture, request.BodyEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaTitle, EnCulture, request.MetaTitleEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaKeywords, EnCulture, request.MetaKeywordsEn, cancellationToken);
-        await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.MetaDescription, EnCulture, request.MetaDescriptionEn, cancellationToken);
-    }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    private Task WriteEnglishAsync(long id, PageUpsertRequest request, CancellationToken cancellationToken) =>
+        _localizedWriter.SetManyAsync(EntityType, id, RequestCulture.EnglishCultureId,
+        [
+            (LocalizedProperty.Name, request.NameEn),
+            (LocalizedProperty.Body, request.BodyEn),
+            (LocalizedProperty.MetaTitle, request.MetaTitleEn),
+            (LocalizedProperty.MetaKeywords, request.MetaKeywordsEn),
+            (LocalizedProperty.MetaDescription, request.MetaDescriptionEn),
+        ], cancellationToken);
 
     /// <summary>Builds the DTO from a loaded page + an overlay read from the DB.</summary>
     private static AdminPageDto ToDto(Page p, LocalizedOverlay overlay) => new(
@@ -182,10 +177,10 @@ public sealed class AdminPagesController : ControllerBase
 
     /// <summary>Builds the DTO straight from a just-saved request (English values echoed back).</summary>
     private static AdminPageDto ToDto(Page p, PageUpsertRequest request) => new(
-        p.Id, p.Name, Normalize(request.NameEn), p.Slug,
-        p.Body, Normalize(request.BodyEn),
-        p.MetaTitle, Normalize(request.MetaTitleEn),
-        p.MetaKeywords, Normalize(request.MetaKeywordsEn),
-        p.MetaDescription, Normalize(request.MetaDescriptionEn),
+        p.Id, p.Name, AdminText.NormalizeOrNull(request.NameEn), p.Slug,
+        p.Body, AdminText.NormalizeOrNull(request.BodyEn),
+        p.MetaTitle, AdminText.NormalizeOrNull(request.MetaTitleEn),
+        p.MetaKeywords, AdminText.NormalizeOrNull(request.MetaKeywordsEn),
+        p.MetaDescription, AdminText.NormalizeOrNull(request.MetaDescriptionEn),
         p.IsPublished, p.PublishedOn, p.CreatedOn);
 }

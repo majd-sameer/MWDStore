@@ -19,7 +19,6 @@ namespace Store.Api.Controllers.Admin;
 [Route("api/admin/locations")]
 public sealed class AdminLocationsController : ControllerBase
 {
-    private static readonly string EnCulture = RequestCulture.EnglishCultureId;
 
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
@@ -58,7 +57,7 @@ public sealed class AdminLocationsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayByKeyAsync(
-            LocalizedEntity.Country, countries.Select(c => c.Id).ToList(), EnCulture, cancellationToken);
+            LocalizedEntity.Country, countries.Select(c => c.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
 
         var dtos = countries
             .Select(c => new AdminCountryDto(
@@ -88,10 +87,10 @@ public sealed class AdminLocationsController : ControllerBase
         _db.Countries.Add(country);
 
         await _localizedWriter.SetByKeyAsync(
-            LocalizedEntity.Country, country.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+            LocalizedEntity.Country, country.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(country, Normalize(request.NameEn), 0));
+        return Ok(ToDto(country, AdminText.NormalizeOrNull(request.NameEn), 0));
     }
 
     [HttpPut("countries/{id}")]
@@ -107,11 +106,11 @@ public sealed class AdminLocationsController : ControllerBase
         Apply(country, request);
 
         await _localizedWriter.SetByKeyAsync(
-            LocalizedEntity.Country, country.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+            LocalizedEntity.Country, country.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         var statesCount = await _db.StateOrProvinces.CountAsync(s => s.CountryId == id, cancellationToken);
-        return Ok(ToDto(country, Normalize(request.NameEn), statesCount));
+        return Ok(ToDto(country, AdminText.NormalizeOrNull(request.NameEn), statesCount));
     }
 
     [HttpDelete("countries/{id}")]
@@ -157,7 +156,7 @@ public sealed class AdminLocationsController : ControllerBase
             .ToListAsync(cancellationToken);
 
         var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.StateOrProvince, states.Select(s => s.Id).ToList(), EnCulture, cancellationToken);
+            LocalizedEntity.StateOrProvince, states.Select(s => s.Id).ToList(), RequestCulture.EnglishCultureId, cancellationToken);
 
         var dtos = states
             .Select(s => new StateOrProvinceLookupDto(
@@ -188,10 +187,10 @@ public sealed class AdminLocationsController : ControllerBase
         await _db.SaveChangesAsync(cancellationToken);
 
         await _localizedWriter.SetAsync(
-            LocalizedEntity.StateOrProvince, state.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+            LocalizedEntity.StateOrProvince, state.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new StateOrProvinceLookupDto(state.Id, state.Name, Normalize(request.NameEn), countryId));
+        return Ok(new StateOrProvinceLookupDto(state.Id, state.Name, AdminText.NormalizeOrNull(request.NameEn), countryId));
     }
 
     [HttpPut("states/{id:long}")]
@@ -209,11 +208,11 @@ public sealed class AdminLocationsController : ControllerBase
         state.Type = request.Type;
 
         await _localizedWriter.SetAsync(
-            LocalizedEntity.StateOrProvince, state.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
+            LocalizedEntity.StateOrProvince, state.Id, LocalizedProperty.Name, RequestCulture.EnglishCultureId, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
         return Ok(new StateOrProvinceLookupDto(
-            state.Id, state.Name, Normalize(request.NameEn), state.CountryId ?? string.Empty));
+            state.Id, state.Name, AdminText.NormalizeOrNull(request.NameEn), state.CountryId ?? string.Empty));
     }
 
     [HttpDelete("states/{id:long}")]
@@ -250,8 +249,6 @@ public sealed class AdminLocationsController : ControllerBase
         country.IsZipCodeEnabled = request.IsZipCodeEnabled;
         country.IsDistrictEnabled = request.IsDistrictEnabled;
     }
-
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
     private static AdminCountryDto ToDto(Country c, string? nameEn, int statesCount) => new(
         c.Id, c.Name, nameEn, c.Code3, c.IsBillingEnabled, c.IsShippingEnabled,

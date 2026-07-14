@@ -79,16 +79,12 @@ public sealed class ContentController : ControllerBase
                 n.Categories.OrderBy(c => c.DisplayOrder).Select(c => c.Slug).FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsItem, items.Select(i => i.Id).ToList(), cultureId, cancellationToken);
-
-        return Ok(items.Select(i => i with
+        return Ok(await ApplyNewsOverlayAsync(items, i => i.Id, (i, overlay) => i with
         {
             Name = overlay.Apply(i.Id, LocalizedProperty.Name, i.Name) ?? i.Name,
             ShortContent = overlay.Apply(i.Id, LocalizedProperty.ShortContent, i.ShortContent),
             ThumbnailUrl = _mediaUrl.GetUrl(i.ThumbnailUrl),
-        }).ToList());
+        }, cancellationToken));
     }
 
     [HttpGet("news/{slug}")]
@@ -151,15 +147,25 @@ public sealed class ContentController : ControllerBase
             .Select(n => new AlertDto(n.Id, n.Slug, n.Name, n.ShortContent, n.AlertCtaUrl))
             .ToListAsync(cancellationToken);
 
-        var cultureId = RequestCulture.OverlayCultureId(Request);
-        var overlay = await _localization.GetOverlayAsync(
-            LocalizedEntity.NewsItem, items.Select(i => i.Id).ToList(), cultureId, cancellationToken);
-
-        return Ok(items.Select(i => i with
+        return Ok(await ApplyNewsOverlayAsync(items, i => i.Id, (i, overlay) => i with
         {
             Name = overlay.Apply(i.Id, LocalizedProperty.Name, i.Name) ?? i.Name,
             ShortContent = overlay.Apply(i.Id, LocalizedProperty.ShortContent, i.ShortContent),
-        }).ToList());
+        }, cancellationToken));
+    }
+
+    /// <summary>
+    /// Re-projects news-item DTOs through the request culture's overlay. The per-endpoint
+    /// differences (e.g. thumbnail URL resolution) stay in each caller's <paramref name="apply"/>.
+    /// </summary>
+    private async Task<List<T>> ApplyNewsOverlayAsync<T>(
+        List<T> items, Func<T, long> id, Func<T, LocalizedOverlay, T> apply, CancellationToken cancellationToken)
+    {
+        var cultureId = RequestCulture.OverlayCultureId(Request);
+        var overlay = await _localization.GetOverlayAsync(
+            LocalizedEntity.NewsItem, items.Select(id).ToList(), cultureId, cancellationToken);
+
+        return items.Select(i => apply(i, overlay)).ToList();
     }
 
     /// <summary>

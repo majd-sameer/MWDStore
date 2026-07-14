@@ -10,10 +10,7 @@ public sealed class CartRuleConfiguration : IEntityTypeConfiguration<CartRule>
     {
         builder.ToTable("CartRule");
 
-        builder.Property(e => e.DiscountAmount).HasColumnType("decimal(18, 2)");
-        builder.Property(e => e.MaxDiscountAmount).HasColumnType("decimal(18, 2)");
-        builder.Property(e => e.Name).HasMaxLength(450);
-        builder.Property(e => e.RuleToApply).HasMaxLength(450);
+        builder.ConfigureRuleColumns();
 
         builder.HasMany(d => d.Categories).WithMany(p => p.CartRules)
             .UsingEntity<Dictionary<string, object>>(

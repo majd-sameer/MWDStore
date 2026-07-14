@@ -123,14 +123,7 @@ public sealed class CatalogService : ICatalogService
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        var items = products.Select(ToListItem).ToList();
-        foreach (var item in items)
-        {
-            item.CalculatedProductPrice = _pricing.CalculateProductPrice(
-                item.Price, item.OldPrice, item.SpecialPrice, item.SpecialPriceStart, item.SpecialPriceEnd);
-        }
-
-        result.Products = items;
+        result.Products = ToPricedListItems(products);
         result.PageSize = pageSize;
         result.Page = currentPageNum;
         return result;
@@ -150,14 +143,7 @@ public sealed class CatalogService : ICatalogService
             .Take(take)
             .ToListAsync(cancellationToken);
 
-        var items = products.Select(ToListItem).ToList();
-        foreach (var item in items)
-        {
-            item.CalculatedProductPrice = _pricing.CalculateProductPrice(
-                item.Price, item.OldPrice, item.SpecialPrice, item.SpecialPriceStart, item.SpecialPriceEnd);
-        }
-
-        return items;
+        return ToPricedListItems(products);
     }
 
     private static IQueryable<Product> ApplySort(ProductListOptions options, IQueryable<Product> query)
@@ -335,6 +321,19 @@ public sealed class CatalogService : ICatalogService
         var item = ProductListItem.FromProduct(product);
         item.ThumbnailImageUrl = _mediaUrl.GetUrl(product.ThumbnailImage?.FileName);
         return item;
+    }
+
+    /// <summary>Maps products to list items and resolves each item's effective (special/sale) price.</summary>
+    private List<ProductListItem> ToPricedListItems(IEnumerable<Product> products)
+    {
+        var items = products.Select(ToListItem).ToList();
+        foreach (var item in items)
+        {
+            item.CalculatedProductPrice = _pricing.CalculateProductPrice(
+                item.Price, item.OldPrice, item.SpecialPrice, item.SpecialPriceStart, item.SpecialPriceEnd);
+        }
+
+        return items;
     }
 
     private void MapRelatedProducts(Product product, ProductDetailModel model)
