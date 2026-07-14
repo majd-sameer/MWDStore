@@ -3,14 +3,9 @@ using Store.Domain;
 namespace Store.Application.Catalog.Pricing;
 
 /// <summary>
-/// Faithful port of SimplCommerce's <c>ProductPricingService.CalculateProductPrice</c>
-/// (<c>Module.Catalog/Services/ProductPricingService.cs</c>).
+/// The clock is injected via <see cref="TimeProvider"/> so the time-boxed special-price window is
+/// deterministic in tests; production wiring passes <see cref="TimeProvider.System"/>.
 /// </summary>
-/// <remarks>
-/// SimplCommerce uses <c>DateTimeOffset.Now</c> (local) directly. Here the clock is injected via
-/// <see cref="TimeProvider"/> so the time-boxed special-price window is deterministic in tests;
-/// production wiring passes <see cref="TimeProvider.System"/>, which is equivalent.
-/// </remarks>
 public sealed class ProductPricingService : IProductPricingService
 {
     private readonly TimeProvider _timeProvider;
@@ -39,8 +34,8 @@ public sealed class ProductPricingService : IProductPricingService
         var calculatedPrice = price;
         var now = _timeProvider.GetLocalNow();
 
-        // Special price wins if it is live. Note the nullable comparisons: when either bound is null
-        // the lifted '<' operator yields false, so the special price is ignored (matches SimplCommerce).
+        // Special price wins if it is live. When either bound is null the lifted '<' operator
+        // yields false, so the special price is ignored.
         if (specialPrice.HasValue && specialPriceStart < now && now < specialPriceEnd)
         {
             calculatedPrice = specialPrice.Value;

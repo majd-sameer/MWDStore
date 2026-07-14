@@ -70,7 +70,7 @@ public sealed class AdminBrandsController : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminBrandDto>> Get(long id, CancellationToken cancellationToken)
     {
-        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+        var brand = await _db.Brands.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
         if (brand == null)
         {
             return NotFound();

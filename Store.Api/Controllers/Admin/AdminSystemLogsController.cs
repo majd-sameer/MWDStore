@@ -7,8 +7,7 @@ using Store.Data;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Read-only system logs: activity log (old ActivityLog module) and the search-query
-/// log (old Search module's admin page, grouped by query text).</summary>
+/// <summary>Read-only system logs: activity log and the search-query log (grouped by query text).</summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/logs")]

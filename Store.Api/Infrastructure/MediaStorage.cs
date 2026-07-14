@@ -1,8 +1,8 @@
 namespace Store.Api.Infrastructure;
 
 /// <summary>
-/// Mirrors SimplCommerce's <c>MediaType</c> enum; <see cref="Store.Domain.Medium.MediaType"/> is
-/// stored as a plain <see cref="int"/>, so these constants keep the values compatible.
+/// <see cref="Store.Domain.Medium.MediaType"/> is stored as a plain <see cref="int"/>; these
+/// constants keep the values compatible with migrated data.
 /// </summary>
 public static class MediaTypes
 {
@@ -12,7 +12,7 @@ public static class MediaTypes
 }
 
 /// <summary>
-/// Local-disk media storage, the port of SimplCommerce's StorageLocal module. Files live under
+/// Local-disk media storage. Files live under
 /// <c>{ContentRoot}/user-content</c> and are served by the static-files middleware at
 /// <c>/user-content/{fileName}</c> (see Program.cs).
 /// </summary>

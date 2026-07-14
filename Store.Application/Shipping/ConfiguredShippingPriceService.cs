@@ -1,10 +1,9 @@
 namespace Store.Application.Shipping;
 
 /// <summary>
-/// A simple, configurable rate provider standing in for SimplCommerce's pluggable provider system
-/// (ShippingFree / ShippingTableRate / etc.). It returns the configured methods whose
-/// <see cref="ShippingMethodSetting.MinOrderSubtotal"/> the order amount meets. Real deployments would
-/// register a provider that also applies geographic gating; that gating is intentionally out of scope here.
+/// A simple, configurable rate provider: returns the configured methods whose
+/// <see cref="ShippingMethodSetting.MinOrderSubtotal"/> the order amount meets. Applies no
+/// geographic gating.
 /// </summary>
 public sealed class ConfiguredShippingPriceService : IShippingPriceService
 {

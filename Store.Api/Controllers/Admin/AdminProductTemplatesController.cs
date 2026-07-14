@@ -28,6 +28,7 @@ public sealed class AdminProductTemplatesController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminProductTemplateDto>>> List(CancellationToken cancellationToken)
     {
         var templates = await _db.ProductTemplates
+            .AsNoTracking()
             .Include(t => t.ProductAttributes).ThenInclude(a => a.Group)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);

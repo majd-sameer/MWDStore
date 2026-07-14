@@ -148,6 +148,7 @@ public sealed class PaymentsController : ControllerBase
     public async Task<IActionResult> StripeWebhook(CancellationToken cancellationToken)
     {
         var provider = await _db.PaymentProviders
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == StripeProviderId && p.IsEnabled, cancellationToken);
 
         var webhookSecret = GatewaySettings.Parse(provider?.AdditionalSettings).StripeWebhookSecret;

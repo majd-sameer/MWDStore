@@ -11,7 +11,7 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin CRUD for CMS pages (old Cms module's page admin). Deletes are soft. <c>Name</c>, <c>Body</c>
+/// Admin CRUD for CMS pages. Deletes are soft. <c>Name</c>, <c>Body</c>
 /// and the meta fields are bilingual: Arabic in the base columns, English in the
 /// <c>LocalizedContentProperty</c> overlay (served to the storefront under <c>Accept-Language: en</c>).
 /// </summary>
@@ -45,6 +45,7 @@ public sealed class AdminPagesController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminPageDto>>> List(CancellationToken cancellationToken)
     {
         var pages = await _db.Pages
+            .AsNoTracking()
             .Where(p => !p.IsDeleted)
             .OrderByDescending(p => p.Id)
             .ToListAsync(cancellationToken);
@@ -65,7 +66,8 @@ public sealed class AdminPagesController : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminPageDto>> Get(long id, CancellationToken cancellationToken)
     {
-        var page = await _db.Pages.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+        var page = await _db.Pages.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
         if (page == null)
         {
             return NotFound();

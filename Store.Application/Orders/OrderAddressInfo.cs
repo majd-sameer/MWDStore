@@ -2,7 +2,7 @@ namespace Store.Application.Orders;
 
 /// <summary>
 /// The address fields needed to create an order: copied into an immutable <c>OrderAddress</c> and used to
-/// resolve the tax rate and shipping availability. Stands in for SimplCommerce's <c>Address</c> input.
+/// resolve the tax rate and shipping availability.
 /// </summary>
 public sealed class OrderAddressInfo
 {

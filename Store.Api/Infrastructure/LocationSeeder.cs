@@ -44,7 +44,6 @@ public static class LocationSeeder
         var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("LocationSeeder");
         var db = sp.GetRequiredService<StoreDbContext>();
 
-        // 1) Country.
         if (!await db.Countries.AnyAsync(c => c.Id == CountryId, cancellationToken))
         {
             db.Countries.Add(new Country
@@ -62,7 +61,6 @@ public static class LocationSeeder
             logger.LogInformation("Seeded country [{CountryId}].", CountryId);
         }
 
-        // 2) Governorates (insert only the codes that don't exist yet).
         var existingCodes = (await db.StateOrProvinces
                 .Where(s => s.CountryId == CountryId)
                 .Select(s => s.Code)
@@ -93,12 +91,13 @@ public static class LocationSeeder
             logger.LogInformation("Seeded {Count} governorate(s).", newGovernorates);
         }
 
-        // 3) Main Warehouse (Address + Warehouse) in Amman.
         if (!await db.Warehouses.AnyAsync(w => w.Name == WarehouseName, cancellationToken))
         {
-            var amman = await db.StateOrProvinces
-                .FirstOrDefaultAsync(s => s.CountryId == CountryId && s.Code == "AM", cancellationToken);
-            if (amman == null)
+            var ammanId = await db.StateOrProvinces
+                .Where(s => s.CountryId == CountryId && s.Code == "AM")
+                .Select(s => (long?)s.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (ammanId == null)
             {
                 logger.LogWarning("Amman governorate not found — skipping warehouse seeding.");
                 return;
@@ -111,7 +110,7 @@ public static class LocationSeeder
                 City = "Amman",
                 ZipCode = "11118",
                 CountryId = CountryId,
-                StateOrProvinceId = amman.Id
+                StateOrProvinceId = ammanId.Value
             };
             db.Addresses.Add(address);
             await db.SaveChangesAsync(cancellationToken);

@@ -1,17 +1,16 @@
 namespace Store.Application.Catalog.Models;
 
 /// <summary>
-/// Port of SimplCommerce's <c>SearchOption</c> — the query/filter/sort/paging inputs shared by the
-/// category, brand and search listings.
+/// The query/filter/sort/paging inputs shared by the category, brand and search listings.
 /// </summary>
 public sealed class ProductListOptions
 {
     public string? Query { get; set; }
 
-    /// <summary>"--"-separated brand slugs (matches SimplCommerce's encoding).</summary>
+    /// <summary>"--"-separated brand slugs.</summary>
     public string? Brand { get; set; }
 
-    /// <summary>"--"-separated category slugs (matches SimplCommerce's encoding).</summary>
+    /// <summary>"--"-separated category slugs.</summary>
     public string? Category { get; set; }
 
     public int Page { get; set; }

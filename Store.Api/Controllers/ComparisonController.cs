@@ -9,7 +9,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's product comparison list (old ProductComparison module, max 4 products).</summary>
+/// <summary>The signed-in customer's product comparison list (max 4 products).</summary>
 [ApiController]
 [Authorize]
 [Route("api/comparison")]
@@ -33,6 +33,7 @@ public sealed class ComparisonController : ControllerBase
     {
         var userId = User.GetUserId();
         var comparing = await _db.ComparingProducts
+            .AsNoTracking()
             .Include(c => c.Product).ThenInclude(p => p.ThumbnailImage)
             .Include(c => c.Product).ThenInclude(p => p.ProductAttributeValues).ThenInclude(a => a.Attribute)
             .Where(c => c.UserId == userId)

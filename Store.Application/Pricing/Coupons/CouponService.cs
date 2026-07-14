@@ -4,14 +4,6 @@ using Store.Domain;
 
 namespace Store.Application.Pricing.Coupons;
 
-/// <summary>
-/// Faithful port of SimplCommerce's <c>CouponService</c> (<c>Module.Pricing/Services/CouponService.cs</c>).
-/// </summary>
-/// <remarks>
-/// SimplCommerce reads <c>DateTimeOffset.Now</c> for the rule's active window; here the clock is injected
-/// via <see cref="TimeProvider"/> so validation is deterministic in tests. The category scoping is adapted
-/// to this model's <c>Product.ProductCategories</c> join (SimplCommerce uses a <c>Product.Categories</c> nav).
-/// </remarks>
 public sealed class CouponService : ICouponService
 {
     private readonly StoreDbContext _db;
@@ -27,8 +19,10 @@ public sealed class CouponService : ICouponService
         long customerId, string couponCode, CartInfoForCoupon cart, CancellationToken cancellationToken = default)
     {
         var coupon = await _db.Set<Coupon>()
+            .AsNoTracking()
             .Include(x => x.CartRule).ThenInclude(c => c.Products)
             .Include(x => x.CartRule).ThenInclude(c => c.Categories)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.Code == couponCode, cancellationToken);
 
         var validationResult = new CouponValidationResult { Succeeded = false };
@@ -71,7 +65,6 @@ public sealed class CouponService : ICouponService
         IList<DiscountableProduct> discountableProducts;
         if (!coupon.CartRule.Products.Any() && !coupon.CartRule.Categories.Any())
         {
-            // No scope -> every product in the cart is discountable.
             var productIds = cart.Items.Select(x => x.ProductId).ToList();
             discountableProducts = await _db.Products
                 .Where(x => productIds.Contains(x.Id))

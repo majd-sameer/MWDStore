@@ -10,8 +10,7 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Review moderation, the port of the old Reviews admin. Status values follow the old enum:
-/// 1 = Pending, 5 = Approved, 8 = NotApproved.
+/// Review moderation. Status values: 1 = Pending, 5 = Approved, 8 = NotApproved.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Moderation)]
@@ -101,10 +100,9 @@ public sealed class AdminReviewsController : ControllerBase
     }
 
     /// <summary>
-    /// Keeps the product's denormalized ReviewsCount/RatingAverage in sync with approved reviews,
-    /// like the old module did on approval. The changed review is excluded from the DB query (its
-    /// stored row is stale at this point) and re-added via <paramref name="changedApprovedRating"/>
-    /// when it ends up approved.
+    /// Keeps the product's denormalized ReviewsCount/RatingAverage in sync with approved reviews.
+    /// The changed review is excluded from the DB query (its stored row is stale at this point)
+    /// and re-added via <paramref name="changedApprovedRating"/> when it ends up approved.
     /// </summary>
     private async Task RecalculateProductRatingAsync(
         long productId, long changedReviewId, int? changedApprovedRating, CancellationToken cancellationToken)

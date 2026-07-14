@@ -9,7 +9,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin view of contact submissions + contact-area management (old Contacts module).</summary>
+/// <summary>Admin view of contact submissions + contact-area management.</summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Sales)]
 [Route("api/admin/contacts")]
@@ -59,8 +59,6 @@ public sealed class AdminContactsController : ControllerBase
 
         return NoContent();
     }
-
-    // ----- Areas ------------------------------------------------------------------------------------
 
     [HttpGet("areas")]
     public async Task<ActionResult<IReadOnlyList<AdminContactAreaDto>>> Areas(CancellationToken cancellationToken)

@@ -11,8 +11,8 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin CRUD for news categories and news items (old News module). Deletes are soft. Human-readable
-/// copy (category Name/Description; item Name/ShortContent/FullContent/meta) is bilingual: Arabic in
+/// Admin CRUD for news categories and news items. Deletes are soft. Human-readable copy
+/// (category Name/Description; item Name/ShortContent/FullContent/meta) is bilingual: Arabic in
 /// the base columns, English in the <c>LocalizedContentProperty</c> overlay.
 /// </summary>
 [ApiController]
@@ -41,8 +41,6 @@ public sealed class AdminNewsController : ControllerBase
         _localizedWriter = localizedWriter;
         _auditStamps = auditStamps;
     }
-
-    // ----- Categories -----------------------------------------------------------------------------
 
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<AdminNewsCategoryDto>>> ListCategories(CancellationToken cancellationToken)
@@ -131,8 +129,6 @@ public sealed class AdminNewsController : ControllerBase
         c.Id, c.Name, Normalize(request.NameEn), c.Slug, c.Description, Normalize(request.DescriptionEn),
         c.DisplayOrder, c.IsPublished);
 
-    // ----- News items ------------------------------------------------------------------------------
-
     [HttpGet("items")]
     public async Task<ActionResult<IReadOnlyList<AdminNewsItemListItem>>> ListItems(CancellationToken cancellationToken)
     {
@@ -161,6 +157,7 @@ public sealed class AdminNewsController : ControllerBase
     public async Task<ActionResult<AdminNewsItemDetail>> GetItem(long id, CancellationToken cancellationToken)
     {
         var item = await _db.NewsItems
+            .AsNoTracking()
             .Include(n => n.Categories)
             .Include(n => n.ThumbnailImage)
             .Include(n => n.Product)

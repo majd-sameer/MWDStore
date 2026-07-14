@@ -4,8 +4,8 @@ using Store.Domain;
 namespace Store.Application.Catalog.Models;
 
 /// <summary>
-/// Port of SimplCommerce's <c>ProductThumbnail</c> (storefront list item). Carries the raw price
-/// fields plus the resolved <see cref="CalculatedProductPrice"/>.
+/// Storefront list item. Carries the raw price fields plus the resolved
+/// <see cref="CalculatedProductPrice"/>.
 /// </summary>
 public sealed class ProductListItem
 {

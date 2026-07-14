@@ -1,7 +1,7 @@
 namespace Store.Application.Catalog.Models;
 
 /// <summary>
-/// Port of SimplCommerce's <c>FilterOption</c> facets, computed over the unfiltered base query.
+/// Listing facets, computed over the unfiltered base query.
 /// </summary>
 public sealed class FilterOption
 {

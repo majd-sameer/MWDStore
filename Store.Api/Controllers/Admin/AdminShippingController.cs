@@ -14,8 +14,7 @@ namespace Store.Api.Controllers.Admin;
 /// <summary>
 /// Admin management of shipping providers and the table-rate rows
 /// (<see cref="PriceAndDestination"/>) consumed by <see cref="DbShippingPriceService"/>.
-/// The two standard providers ("Free", "TableRate") are seeded on first access,
-/// matching the rows the old ShippingFree/ShippingTableRate modules registered.
+/// The standard providers are seeded on first access.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Fulfillment)]
@@ -31,14 +30,12 @@ public sealed class AdminShippingController : ControllerBase
         _auditStamps = auditStamps;
     }
 
-    // ----- Providers ------------------------------------------------------------------------------
-
     [HttpGet("providers")]
     public async Task<ActionResult<IReadOnlyList<AdminShippingProviderDto>>> ListProviders(CancellationToken cancellationToken)
     {
         await EnsureSeedProvidersAsync(cancellationToken);
 
-        var providers = await _db.ShippingProviders.OrderBy(p => p.Name).ToListAsync(cancellationToken);
+        var providers = await _db.ShippingProviders.AsNoTracking().OrderBy(p => p.Name).ToListAsync(cancellationToken);
         return Ok(providers.Select(ToDto).ToList());
     }
 
@@ -108,8 +105,6 @@ public sealed class AdminShippingController : ControllerBase
         provider.Id == DbShippingPriceService.FreeProviderId
             ? DbShippingPriceService.ParseFreeShippingSetting(provider.AdditionalSettings).MinimumOrderAmount
             : null);
-
-    // ----- Table rates ----------------------------------------------------------------------------
 
     [HttpGet("table-rates")]
     public async Task<ActionResult<IReadOnlyList<AdminTableRateDto>>> ListTableRates(

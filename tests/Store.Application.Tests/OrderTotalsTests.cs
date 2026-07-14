@@ -10,9 +10,9 @@ using static Store.Application.Tests.CheckoutTestSupport;
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Order-creation totals math ported from SimplCommerce's <c>OrderService.CreateOrder</c>: per-line tax,
+/// Order-creation totals math: per-line tax,
 /// effective price, tax stripping for tax-inclusive prices, coupon + catalog discounts, stock decrement,
-/// and the rolled-up totals in SimplCommerce's exact order
+/// and the rolled-up totals in a fixed order
 /// (discount → shipping → tax → subtotal → subtotal-with-discount → grand total).
 /// </summary>
 public class OrderTotalsTests

@@ -8,7 +8,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin localization (old Localization module): cultures and per-culture resource strings.</summary>
+/// <summary>Admin localization: cultures and per-culture resource strings.</summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/localization")]

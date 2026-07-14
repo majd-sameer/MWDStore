@@ -8,7 +8,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin app-settings page (old Core module's configuration admin): list + bulk upsert.</summary>
+/// <summary>Admin app-settings page: list + bulk upsert.</summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Settings)]
 [Route("api/admin/settings")]

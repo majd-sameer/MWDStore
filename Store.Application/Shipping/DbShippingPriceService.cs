@@ -6,18 +6,14 @@ using Store.Domain;
 namespace Store.Application.Shipping;
 
 /// <summary>
-/// Port of SimplCommerce's pluggable shipping pipeline (ShippingPrices + ShippingFree +
-/// ShippingTableRate modules): every enabled <see cref="ShippingProvider"/> contributes its
-/// applicable prices. When no provider rows exist yet, falls back to the configured
-/// <see cref="ShippingOptions"/> methods so a fresh database still has a working checkout.
+/// Every enabled <see cref="ShippingProvider"/> contributes its applicable prices. When no
+/// provider rows exist yet, falls back to the configured <see cref="ShippingOptions"/> methods
+/// so a fresh database still has a working checkout.
 /// </summary>
 public sealed class DbShippingPriceService : IShippingPriceService
 {
-    /// <summary>Well-known provider ids, matching the old modules' seed rows.</summary>
     public const string FreeProviderId = "Free";
     public const string TableRateProviderId = "TableRate";
-
-    /// <summary>The two carriers offered at checkout, each with its own table-rate rows.</summary>
     public const string AramexProviderId = "Aramex";
     public const string JordanPostProviderId = "JordanPost";
 
@@ -36,6 +32,7 @@ public sealed class DbShippingPriceService : IShippingPriceService
         GetShippingPriceRequest request, CancellationToken cancellationToken = default)
     {
         var providers = await _db.ShippingProviders
+            .AsNoTracking()
             .Where(p => p.IsEnabled)
             .ToListAsync(cancellationToken);
 
@@ -47,6 +44,11 @@ public sealed class DbShippingPriceService : IShippingPriceService
                 .ToList();
         }
 
+        var cheapestRateByProvider = await GetCheapestTableRatesAsync(
+            providers.Where(p => p.Id != FreeProviderId).Select(p => p.Id).ToList(),
+            request,
+            cancellationToken);
+
         IList<ShippingPrice> prices = [];
         foreach (var provider in providers)
         {
@@ -54,18 +56,16 @@ public sealed class DbShippingPriceService : IShippingPriceService
             {
                 AddFreeShippingPrice(prices, request, provider);
             }
-            else
+            else if (cheapestRateByProvider.TryGetValue(provider.Id, out var price))
             {
-                // Every other provider (TableRate, Aramex, JordanPost, …) prices from its own
-                // table-rate rows — the ones tagged with its id.
-                await AddTableRatePriceAsync(prices, request, provider, cancellationToken);
+                prices.Add(new ShippingPrice(provider.Name, price, provider.Id));
             }
         }
 
         return prices;
     }
 
-    /// <summary>Old <c>FreeShippingServiceProvider</c>: free above the configured minimum order amount.</summary>
+    /// <summary>Free above the configured minimum order amount.</summary>
     private static void AddFreeShippingPrice(
         IList<ShippingPrice> prices, GetShippingPriceRequest request, ShippingProvider provider)
     {
@@ -76,33 +76,34 @@ public sealed class DbShippingPriceService : IShippingPriceService
         }
     }
 
-    /// <summary>Old <c>TableRateShippingServiceProvider</c>, now scoped per provider: the cheapest
-    /// matching <see cref="PriceAndDestination"/> row owned by <paramref name="provider"/>, where null
-    /// columns act as wildcards. The emitted price is labelled with the provider's name so the
-    /// storefront can offer each carrier (e.g. Aramex / Jordan Post) as a selectable option.</summary>
-    private async Task AddTableRatePriceAsync(
-        IList<ShippingPrice> prices, GetShippingPriceRequest request, ShippingProvider provider,
+    /// <summary>
+    /// The cheapest matching <see cref="PriceAndDestination"/> row per provider, resolved in one
+    /// query; null destination columns act as wildcards.
+    /// </summary>
+    private async Task<Dictionary<string, decimal>> GetCheapestTableRatesAsync(
+        IReadOnlyCollection<string> providerIds,
+        GetShippingPriceRequest request,
         CancellationToken cancellationToken)
     {
-        var address = request.ShippingAddress;
-        var rows = await _db.PriceAndDestinations
-            .Where(x => x.ShippingProviderId == provider.Id)
-            .ToListAsync(cancellationToken);
+        if (providerIds.Count == 0)
+        {
+            return [];
+        }
 
-        var cheapestApplicable = rows
-            .Where(x =>
-                (x.CountryId == null || x.CountryId == address.CountryId)
+        var address = request.ShippingAddress;
+        var cheapest = await _db.PriceAndDestinations
+            .Where(x => x.ShippingProviderId != null
+                && providerIds.Contains(x.ShippingProviderId)
+                && (x.CountryId == null || x.CountryId == address.CountryId)
                 && (x.StateOrProvinceId == null || x.StateOrProvinceId == address.StateOrProvinceId)
                 && (x.DistrictId == null || x.DistrictId == address.DistrictId)
                 && (string.IsNullOrWhiteSpace(x.ZipCode) || x.ZipCode == address.ZipCode)
                 && request.OrderAmount >= x.MinOrderSubtotal)
-            .OrderBy(x => x.ShippingPrice)
-            .FirstOrDefault();
+            .GroupBy(x => x.ShippingProviderId!)
+            .Select(g => new { ProviderId = g.Key, Price = g.Min(x => x.ShippingPrice) })
+            .ToListAsync(cancellationToken);
 
-        if (cheapestApplicable != null)
-        {
-            prices.Add(new ShippingPrice(provider.Name, cheapestApplicable.ShippingPrice, provider.Id));
-        }
+        return cheapest.ToDictionary(x => x.ProviderId, x => x.Price);
     }
 
     public static FreeShippingSetting ParseFreeShippingSetting(string? additionalSettings)
@@ -124,7 +125,7 @@ public sealed class DbShippingPriceService : IShippingPriceService
     }
 }
 
-/// <summary>Mirrors the old ShippingFree module's <c>FreeShippingSetting</c> (JSON in <c>AdditionalSettings</c>).</summary>
+/// <summary>Deserialized from the provider's <c>AdditionalSettings</c> JSON.</summary>
 public sealed class FreeShippingSetting
 {
     public decimal MinimumOrderAmount { get; set; }

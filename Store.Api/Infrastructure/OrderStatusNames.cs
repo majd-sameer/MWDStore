@@ -2,7 +2,7 @@ using Store.Application.Orders;
 
 namespace Store.Api.Infrastructure;
 
-/// <summary>Maps SimplCommerce's integer <see cref="OrderStatus"/> codes to display names.</summary>
+/// <summary>Maps integer <see cref="OrderStatus"/> codes to display names.</summary>
 public static class OrderStatusNames
 {
     public static string For(int status) => status switch

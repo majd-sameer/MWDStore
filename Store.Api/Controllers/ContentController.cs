@@ -10,10 +10,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>
-/// Public content: CMS pages by slug (old Cms module), news listing/detail (old News module)
-/// and the contact form (old Contacts module).
-/// </summary>
+/// <summary>Public content: CMS pages by slug, news listing/detail, content blocks and the contact form.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api")]
@@ -35,8 +32,6 @@ public sealed class ContentController : ControllerBase
         _mediaUrl = mediaUrl;
         _localization = localization;
     }
-
-    // ----- CMS pages ----------------------------------------------------------------------------
 
     [HttpGet("pages/{slug}")]
     public async Task<ActionResult<PublicPageDto>> Page(string slug, CancellationToken cancellationToken)
@@ -61,8 +56,6 @@ public sealed class ContentController : ControllerBase
             overlay.Apply(page.Id, LocalizedProperty.Body, page.Body),
             page.MetaTitle, page.MetaKeywords, page.MetaDescription));
     }
-
-    // ----- News ----------------------------------------------------------------------------------
 
     [HttpGet("news")]
     public async Task<ActionResult<IReadOnlyList<NewsListItemDto>>> News(
@@ -103,6 +96,7 @@ public sealed class ContentController : ControllerBase
     public async Task<ActionResult<NewsDetailDto>> NewsDetail(string slug, CancellationToken cancellationToken)
     {
         var item = await _db.NewsItems
+            .AsNoTracking()
             .Include(n => n.ThumbnailImage)
             .Include(n => n.Categories)
             .Include(n => n.Product).ThenInclude(p => p!.ThumbnailImage)
@@ -119,7 +113,6 @@ public sealed class ContentController : ControllerBase
         var categorySlug = item.Categories.OrderBy(c => c.DisplayOrder).Select(c => c.Slug).FirstOrDefault();
 
         NewsLinkedProductDto? product = null;
-        // Only surface the linked product when it is still publicly visible.
         if (item.Product is { IsPublished: true, IsDeleted: false } p)
         {
             var productOverlay = await _localization.GetOverlayAsync(
@@ -170,8 +163,6 @@ public sealed class ContentController : ControllerBase
         }).ToList());
     }
 
-    // ----- Content blocks (editable static text/media, fixed design) -------------------------------
-
     /// <summary>
     /// Active content blocks for a storefront page, with each block's <c>Value</c> overlaid to the
     /// requested culture and image blocks resolved to a <c>/user-content/…</c> URL. Anonymous and
@@ -212,8 +203,6 @@ public sealed class ContentController : ControllerBase
 
         return Ok(result);
     }
-
-    // ----- Contact ---------------------------------------------------------------------------------
 
     [HttpGet("contact/areas")]
     public async Task<ActionResult<IReadOnlyList<ContactAreaPublicDto>>> ContactAreas(CancellationToken cancellationToken)

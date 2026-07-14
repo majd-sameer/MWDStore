@@ -1,8 +1,7 @@
 namespace Store.Application.Pricing.Coupons;
 
 /// <summary>
-/// Port of SimplCommerce's <c>ICouponService</c>: validates a coupon against a cart and records
-/// redemptions when an order is created.
+/// Validates a coupon against a cart and records redemptions when an order is created.
 /// </summary>
 public interface ICouponService
 {

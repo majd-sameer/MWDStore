@@ -56,11 +56,11 @@ builder.Services.AddStoreApplication();
 // Local media storage for admin uploads (product images, etc.).
 builder.Services.AddSingleton<IMediaStorage, LocalMediaStorage>();
 
-// ----- Identity (JWT-only API; no cookie schemes) -------------------------------------------------
+// Identity (JWT-only API; no cookie schemes)
 builder.Services
     .AddIdentityCore<User>(options =>
     {
-        // Match SimplCommerce's relaxed password policy so migrated accounts keep working.
+        // Relaxed password policy so accounts migrated from the legacy store keep working.
         options.Password.RequireDigit = false;
         options.Password.RequiredLength = 4;
         options.Password.RequireNonAlphanumeric = false;

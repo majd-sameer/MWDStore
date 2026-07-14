@@ -2,7 +2,7 @@ using Store.Application.Catalog.Pricing;
 
 namespace Store.Application.ShoppingCart;
 
-/// <summary>Outcome of an add-to-cart attempt (mirrors SimplCommerce's <c>AddToCartResult</c>).</summary>
+/// <summary>Outcome of an add-to-cart attempt.</summary>
 public sealed class AddToCartResult
 {
     public bool Success { get; set; }
@@ -37,7 +37,7 @@ public sealed class CartItemModel
 }
 
 /// <summary>
-/// The computed cart (SimplCommerce's <c>CartVm</c>). <see cref="SubTotal"/> is summed at the regular
+/// The computed cart. <see cref="SubTotal"/> is summed at the regular
 /// (pre-discount) price; <see cref="Discount"/> folds the coupon discount together with catalog
 /// special/old-price savings. Tax and shipping are not part of the cart — they are computed at checkout.
 /// </summary>

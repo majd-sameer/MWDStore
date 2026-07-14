@@ -5,9 +5,8 @@ using Store.Domain;
 namespace Store.Application.Tax;
 
 /// <summary>
-/// Faithful port of SimplCommerce's <c>TaxService.GetTaxPercent</c>
-/// (<c>Module.Tax/Services/TaxService.cs</c>). "First match wins": rows whose
-/// <see cref="TaxRate.StateOrProvinceId"/> or <see cref="TaxRate.ZipCode"/> are null/blank act as wildcards.
+/// First match wins: rows whose <see cref="TaxRate.StateOrProvinceId"/> or
+/// <see cref="TaxRate.ZipCode"/> are null/blank act as wildcards.
 /// </summary>
 public sealed class TaxService : ITaxService
 {
@@ -40,7 +39,9 @@ public sealed class TaxService : ITaxService
             query = query.Where(x => x.ZipCode == zipCode || string.IsNullOrWhiteSpace(x.ZipCode));
         }
 
-        var taxRate = await query.FirstOrDefaultAsync(cancellationToken);
-        return taxRate?.Rate ?? 0;
+        var rate = await query
+            .Select(x => (decimal?)x.Rate)
+            .FirstOrDefaultAsync(cancellationToken);
+        return rate ?? 0;
     }
 }

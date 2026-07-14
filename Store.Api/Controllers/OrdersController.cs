@@ -29,6 +29,7 @@ public sealed class OrdersController : ControllerBase
     {
         var customerId = User.GetUserId();
         var orders = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems)
             .Where(o => o.CustomerId == customerId && o.ParentId == null)
             .OrderByDescending(o => o.CreatedOn)
@@ -43,6 +44,7 @@ public sealed class OrdersController : ControllerBase
     {
         var customerId = User.GetUserId();
         var order = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems).ThenInclude(i => i.Product)
             .Include(o => o.ShippingAddress)
             .Include(o => o.BillingAddress)
@@ -75,10 +77,12 @@ public sealed class OrdersController : ControllerBase
 
         var trackingNumber = number.Trim();
         var order = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems).ThenInclude(i => i.Product)
             .Include(o => o.OrderHistories)
             .Include(o => o.ShippingAddress)
             .Include(o => o.BillingAddress)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(o => o.TrackingNumber == trackingNumber && o.ParentId == null, cancellationToken);
 
         if (order == null)

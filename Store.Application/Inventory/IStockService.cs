@@ -5,7 +5,7 @@ using Store.Domain;
 namespace Store.Application.Inventory;
 
 /// <summary>
-/// Port of SimplCommerce's <c>IStockService</c>: warehouse-level stock administration. The denormalized
+/// Warehouse-level stock administration. The denormalized
 /// <c>Product.StockQuantity</c> (which cart/order checks read) is kept in sync with the per-warehouse
 /// <c>Stock</c> rows. Order creation decrements <c>Product.StockQuantity</c> directly (see OrderService);
 /// it does not go through this service.

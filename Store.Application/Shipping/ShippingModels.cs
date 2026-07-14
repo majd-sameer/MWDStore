@@ -21,8 +21,8 @@ public sealed class ShippingPrice
 }
 
 /// <summary>
-/// Port of SimplCommerce's <c>GetShippingPriceRequest</c>: the order amount (Σ Price·Qty) that threshold
-/// rules compare against, plus the destination address that gates geographic availability.
+/// The order amount (Σ Price·Qty) that threshold rules compare against, plus the destination
+/// address that gates geographic availability.
 /// </summary>
 public sealed class GetShippingPriceRequest
 {

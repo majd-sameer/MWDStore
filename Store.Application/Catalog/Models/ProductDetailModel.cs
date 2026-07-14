@@ -2,10 +2,6 @@ using Store.Application.Catalog.Pricing;
 
 namespace Store.Application.Catalog.Models;
 
-/// <summary>
-/// Port of SimplCommerce's <c>ProductDetail</c> view model (the parts that are pure domain logic;
-/// media, localization and currency formatting are out of scope here).
-/// </summary>
 public sealed class ProductDetailModel
 {
     public long Id { get; set; }

@@ -76,7 +76,7 @@ public sealed class AdminCategoriesController : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminCategoryDto>> Get(long id, CancellationToken cancellationToken)
     {
-        var category = await _db.Categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        var category = await _db.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         if (category == null)
         {
             return NotFound();

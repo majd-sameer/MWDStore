@@ -1,8 +1,8 @@
 namespace Store.Application.ShoppingCart;
 
 /// <summary>
-/// Port of SimplCommerce's shopping-cart behavior (<c>Module.ShoppingCart</c>). The cart is simply the
-/// set of <c>CartItem</c> rows for a customer — there is no cart header entity; totals are computed on the fly.
+/// The cart is simply the set of <c>CartItem</c> rows for a customer — there is no cart header
+/// entity; totals are computed on the fly.
 /// </summary>
 public interface ICartService
 {

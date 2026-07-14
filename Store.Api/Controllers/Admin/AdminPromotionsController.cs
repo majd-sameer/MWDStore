@@ -10,9 +10,9 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin CRUD for cart rules (promotions) and their coupons, the port of the old Pricing module's
-/// cart-rule admin. Category/product restrictions map to the CartRuleCategory/CartRuleProduct
-/// join tables; usage rows come from checkout's <c>CouponService</c>.
+/// Admin CRUD for cart rules (promotions) and their coupons. Category/product restrictions map
+/// to the CartRuleCategory/CartRuleProduct join tables; usage rows come from checkout's
+/// <c>CouponService</c>.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Marketing)]
@@ -54,7 +54,7 @@ public sealed class AdminPromotionsController : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminCartRuleDetail>> Get(long id, CancellationToken cancellationToken)
     {
-        var rule = await LoadAsync(id, cancellationToken);
+        var rule = await LoadAsync(id, tracked: false, cancellationToken);
         return rule == null ? NotFound() : Ok(ToDetail(rule));
     }
 
@@ -75,7 +75,7 @@ public sealed class AdminPromotionsController : ControllerBase
         await ReconcileAsync(rule, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var created = await LoadAsync(rule.Id, cancellationToken);
+        var created = await LoadAsync(rule.Id, tracked: false, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = rule.Id }, ToDetail(created!));
     }
 
@@ -88,7 +88,7 @@ public sealed class AdminPromotionsController : ControllerBase
             return BadRequest(new { error = "RuleToApply must be 'cart_fixed' or 'by_percent'." });
         }
 
-        var rule = await LoadAsync(id, cancellationToken);
+        var rule = await LoadAsync(id, tracked: true, cancellationToken);
         if (rule == null)
         {
             return NotFound();
@@ -98,7 +98,7 @@ public sealed class AdminPromotionsController : ControllerBase
         await ReconcileAsync(rule, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var updated = await LoadAsync(id, cancellationToken);
+        var updated = await LoadAsync(id, tracked: false, cancellationToken);
         return Ok(ToDetail(updated!));
     }
 
@@ -110,6 +110,7 @@ public sealed class AdminPromotionsController : ControllerBase
             .Include(r => r.Categories)
             .Include(r => r.Products)
             .Include(r => r.CustomerGroups)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         if (rule == null)
         {
@@ -154,13 +155,12 @@ public sealed class AdminPromotionsController : ControllerBase
         return Ok(items);
     }
 
-    // ----- helpers --------------------------------------------------------------------------------
-
-    private Task<CartRule?> LoadAsync(long id, CancellationToken cancellationToken) =>
-        _db.CartRules
+    private Task<CartRule?> LoadAsync(long id, bool tracked, CancellationToken cancellationToken) =>
+        (tracked ? _db.CartRules : _db.CartRules.AsNoTracking())
             .Include(r => r.Coupons)
             .Include(r => r.Categories)
             .Include(r => r.Products)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
     private static void Apply(CartRule rule, CartRuleUpsertRequest request)
@@ -181,7 +181,7 @@ public sealed class AdminPromotionsController : ControllerBase
 
     private async Task ReconcileAsync(CartRule rule, CartRuleUpsertRequest request, CancellationToken cancellationToken)
     {
-        // Coupon: a single primary code per rule, like the old admin form.
+        // A rule carries a single primary coupon code.
         var code = request.CouponCode?.Trim();
         var existingCoupon = rule.Coupons.FirstOrDefault();
         if (string.IsNullOrEmpty(code))
@@ -214,7 +214,6 @@ public sealed class AdminPromotionsController : ControllerBase
             rule.Categories.Add(category);
         }
 
-        // Product restrictions.
         var products = await _db.Products
             .Where(p => request.ProductIds.Contains(p.Id))
             .ToListAsync(cancellationToken);

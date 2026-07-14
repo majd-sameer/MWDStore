@@ -2,19 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Store.Api.Models;
 
-// ----- Media --------------------------------------------------------------------------------------
+// Media
 
 public sealed record MediaDto(long Id, string? FileName, string Url, string? Caption, int MediaType);
 
-// ----- Products -----------------------------------------------------------------------------------
+// Products
 
 public sealed record AdminProductListItem(
     long Id, string Name, string Slug, decimal Price, decimal? OldPrice,
     int StockQuantity, bool IsPublished, bool IsDeleted, long? BrandId,
     bool HasOptions, bool IsVisibleIndividually, bool IsSignature, string? ThumbnailUrl, string? CreatedBy = null, string? ModifiedBy = null);
 
-/// <summary>One value of a product option (mirrors SimplCommerce's <c>ProductOptionValueVm</c>;
-/// the list is JSON-serialized into <c>ProductOptionValue.Value</c>).</summary>
+/// <summary>One value of a product option; the list is JSON-serialized into
+/// <c>ProductOptionValue.Value</c>.</summary>
 public sealed class ProductOptionValueItem
 {
     public string Key { get; set; } = string.Empty;
@@ -184,7 +184,7 @@ public sealed class ProductSignatureRequest
 /// <summary>Lightweight result for the related/cross-sell product picker.</summary>
 public sealed record ProductQuickSearchItem(long Id, string Name, string? Sku, bool IsPublished);
 
-// ----- Product options (admin CRUD) ----------------------------------------------------------------
+// Product options (admin CRUD)
 
 public sealed record AdminProductOptionListItem(long Id, string Name, string? NameEn, string? CreatedBy = null, string? ModifiedBy = null);
 
@@ -197,7 +197,7 @@ public sealed class ProductOptionUpsertRequest
     public string? NameEn { get; set; }
 }
 
-// ----- Product attributes (admin CRUD) --------------------------------------------------------------
+// Product attributes (admin CRUD)
 
 public sealed record AdminProductAttributeDto(
     long Id, string Name, string? NameEn, long GroupId, string GroupName, string? GroupNameEn, string? CreatedBy = null, string? ModifiedBy = null);
@@ -225,7 +225,7 @@ public sealed class ProductAttributeGroupUpsertRequest
     public string? NameEn { get; set; }
 }
 
-// ----- Categories ---------------------------------------------------------------------------------
+// Categories
 
 public sealed class CategoryUpsertRequest
 {
@@ -254,7 +254,7 @@ public sealed record AdminCategoryDto(
     long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
     int DisplayOrder, bool IsPublished, bool IncludeInMenu, long? ParentId, bool IsDeleted, string? CreatedBy = null, string? ModifiedBy = null);
 
-// ----- Brands -------------------------------------------------------------------------------------
+// Brands
 
 public sealed class BrandUpsertRequest
 {
@@ -277,7 +277,7 @@ public sealed record AdminBrandDto(
     long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
     bool IsPublished, bool IsDeleted, string? CreatedBy = null, string? ModifiedBy = null);
 
-// ----- Order management ---------------------------------------------------------------------------
+// Order management
 
 public sealed class UpdateOrderStatusRequest
 {
@@ -285,7 +285,7 @@ public sealed class UpdateOrderStatusRequest
     public int OrderStatus { get; set; }
 }
 
-// ----- Inventory ----------------------------------------------------------------------------------
+// Inventory
 
 public sealed record StockRowDto(long WarehouseId, string WarehouseName, int Quantity, int ReservedQuantity);
 
@@ -305,7 +305,7 @@ public sealed class StockAdjustmentRequest
     public string? Note { get; set; }
 }
 
-// ----- Tax ----------------------------------------------------------------------------------------
+// Tax
 
 public sealed record AdminTaxClassDto(long Id, string Name, string? CreatedBy = null, string? ModifiedBy = null);
 
@@ -332,7 +332,7 @@ public sealed class TaxRateUpsertRequest
     public decimal Rate { get; set; }
 }
 
-// ----- Shipping -------------------------------------------------------------------------------------
+// Shipping
 
 public sealed record AdminShippingProviderDto(
     string Id, string Name, bool IsEnabled, decimal? FreeShippingMinimumOrderAmount, string? CreatedBy = null, string? ModifiedBy = null);
@@ -372,7 +372,7 @@ public sealed class TableRateUpsertRequest
     public string? Note { get; set; }
 }
 
-// ----- Warehouses ------------------------------------------------------------------------------------
+// Warehouses
 
 public sealed record AdminWarehouseDto(
     long Id, string Name, string? ContactName, string? Phone, string? AddressLine1, string? AddressLine2,
@@ -398,13 +398,13 @@ public sealed class WarehouseUpsertRequest
     public string CountryId { get; set; } = string.Empty;
 }
 
-// ----- Location lookups --------------------------------------------------------------------------------
+// Location lookups
 
 public sealed record CountryLookupDto(string Id, string Name);
 
 public sealed record StateOrProvinceLookupDto(long Id, string Name, string? NameEn, string CountryId);
 
-// ----- Promotions (cart rules / coupons) ---------------------------------------------------------------
+// Promotions (cart rules / coupons)
 
 public sealed record AdminCartRuleListItem(
     long Id, string Name, bool IsActive, bool IsCouponRequired, string? RuleToApply,
@@ -450,7 +450,7 @@ public sealed record AdminCartRuleUsageDto(
     long Id, long CartRuleId, string CartRuleName, string? CouponCode, long UserId, string? UserEmail,
     long OrderId, DateTimeOffset CreatedOn);
 
-// ----- Users & customer groups ---------------------------------------------------------------------
+// Users & customer groups
 
 public sealed record AdminUserListItem(
     long Id, string? Email, string FullName, string? PhoneNumber, DateTimeOffset CreatedOn,
@@ -488,7 +488,7 @@ public sealed class AdminUserUpdateRequest
 
 public sealed record RoleDto(long Id, string? Name);
 
-// ----- Customers (storefront shoppers; non-admin users) ----------------------------------------------
+// Customers (storefront shoppers; non-admin users)
 
 public sealed record AdminCustomerListItem(
     long Id, string? Email, string FullName, string? PhoneNumber, DateTimeOffset CreatedOn,
@@ -532,7 +532,7 @@ public sealed class CustomerGroupUpsertRequest
     public bool IsActive { get; set; } = true;
 }
 
-// ----- Reviews & comments moderation ------------------------------------------------------------------
+// Reviews & comments moderation
 
 public sealed record AdminReviewDto(
     long Id, string? Title, string? Comment, int Rating, string? ReviewerName, string? UserEmail,
@@ -542,14 +542,14 @@ public sealed record AdminCommentDto(
     long Id, string? CommentText, string? CommenterName, string? UserEmail,
     int Status, DateTimeOffset CreatedOn, long EntityId, string? EntityTypeId, long? ParentId, string? CreatedBy = null, string? ModifiedBy = null);
 
-/// <summary>1 = Pending, 5 = Approved, 8 = NotApproved (the old SimplCommerce enum values).</summary>
+/// <summary>1 = Pending, 5 = Approved, 8 = NotApproved (legacy values kept for migrated data).</summary>
 public sealed class ModerationStatusRequest
 {
     [Required]
     public int Status { get; set; }
 }
 
-// ----- CMS: pages & menus --------------------------------------------------------------------------
+// CMS: pages & menus
 
 public sealed record AdminPageDto(
     long Id, string Name, string? NameEn, string Slug, string? Body, string? BodyEn,
@@ -610,7 +610,7 @@ public sealed class MenuItemUpsertRequest
     public int DisplayOrder { get; set; }
 }
 
-// ----- News -----------------------------------------------------------------------------------------
+// News
 
 public sealed record AdminNewsCategoryDto(
     long Id, string Name, string? NameEn, string Slug, string? Description, string? DescriptionEn,
@@ -685,7 +685,7 @@ public sealed class NewsItemUpsertRequest
     public string? AlertCtaUrl { get; set; }
 }
 
-// ----- Payments --------------------------------------------------------------------------------------
+// Payments
 
 public sealed record AdminPaymentProviderDto(string Id, string Name, bool IsEnabled, string? AdditionalSettings);
 
@@ -704,7 +704,7 @@ public sealed record AdminPaymentDto(
     long Id, long OrderId, decimal Amount, decimal PaymentFee, string? PaymentMethod,
     string? GatewayTransactionId, int Status, DateTimeOffset CreatedOn, string? CreatedBy = null, string? ModifiedBy = null);
 
-// ----- Settings, countries/states, localization --------------------------------------------------------
+// Settings, countries/states, localization
 
 public sealed record AppSettingDto(string Id, string? Value, string? Module, bool IsVisibleInCommonSettingPage);
 
@@ -765,7 +765,7 @@ public sealed class ResourceUpsertRequest
     public string CultureId { get; set; } = string.Empty;
 }
 
-// ----- Shipments --------------------------------------------------------------------------------------
+// Shipments
 
 public sealed record AdminShipmentItemDto(long Id, long OrderItemId, long ProductId, string ProductName, int Quantity);
 
@@ -796,7 +796,7 @@ public sealed class ShipmentCreateRequest
     public IList<ShipmentItemRequest> Items { get; set; } = new List<ShipmentItemRequest>();
 }
 
-// ----- Vendors -----------------------------------------------------------------------------------------
+// Vendors
 
 public sealed record AdminVendorDto(
     long Id, string Name, string? NameEn, string Slug, string? Email, string? Description,
@@ -819,7 +819,7 @@ public sealed class VendorUpsertRequest
     public bool IsActive { get; set; } = true;
 }
 
-// ----- Contacts -----------------------------------------------------------------------------------------
+// Contacts
 
 public sealed record AdminContactDto(
     long Id, string? FullName, string? EmailAddress, string? PhoneNumber, string? Address,
@@ -833,7 +833,7 @@ public sealed class ContactAreaUpsertRequest
     public string Name { get; set; } = string.Empty;
 }
 
-// ----- Activity log & search queries ----------------------------------------------------------------------
+// Activity log & search queries
 
 public sealed record AdminActivityDto(
     long Id, long ActivityTypeId, string ActivityTypeName, long UserId, long EntityId,
@@ -841,7 +841,7 @@ public sealed record AdminActivityDto(
 
 public sealed record AdminSearchQueryDto(string QueryText, int Count, DateTimeOffset LatestCreatedOn);
 
-// ----- Product templates -----------------------------------------------------------------------------------
+// Product templates
 
 public sealed record AdminProductTemplateDto(
     long Id, string Name, IReadOnlyList<AdminProductAttributeDto> Attributes, string? CreatedBy = null, string? ModifiedBy = null);
@@ -854,7 +854,7 @@ public sealed class ProductTemplateUpsertRequest
     public IList<long> AttributeIds { get; set; } = new List<long>();
 }
 
-// ----- Dashboard / analytics -------------------------------------------------------------------------------
+// Dashboard / analytics
 
 /// <summary>Aggregate decision-maker view for the admin landing page (GET /api/admin/dashboard/stats).
 /// All order metrics cover the requested rolling window; stock metrics are current state.</summary>

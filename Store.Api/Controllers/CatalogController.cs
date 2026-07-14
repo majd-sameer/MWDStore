@@ -78,7 +78,6 @@ public sealed class CatalogController : ControllerBase
     {
         var result = await _catalog.SearchAsync(options, cancellationToken);
 
-        // Old Search module behavior: persist what customers search for (feeds the admin query log).
         if (!string.IsNullOrWhiteSpace(options.Query))
         {
             _db.Queries.Add(new Store.Domain.Query

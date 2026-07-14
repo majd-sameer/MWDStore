@@ -4,8 +4,8 @@ using Store.Domain;
 namespace Store.Application.Orders;
 
 /// <summary>
-/// Port of SimplCommerce's <c>IOrderService</c> order-creation path: turns a <c>Checkout</c> snapshot into
-/// an <c>Order</c> with authoritative per-line and rolled-up totals.
+/// Turns a <c>Checkout</c> snapshot into an <c>Order</c> with authoritative per-line and
+/// rolled-up totals.
 /// </summary>
 public interface IOrderService
 {

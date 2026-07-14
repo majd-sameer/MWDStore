@@ -9,19 +9,6 @@ using Store.Domain;
 
 namespace Store.Application.Orders;
 
-/// <summary>
-/// Faithful port of SimplCommerce's <c>OrderService.CreateOrder</c> core overload
-/// (<c>Module.Orders/Services/OrderService.cs</c>): per-line tax/price/discount resolution, stock decrement,
-/// and the order-level rollup performed in SimplCommerce's exact order
-/// (discount → shipping → tax → subtotal → subtotal-with-discount → grand total).
-/// </summary>
-/// <remarks>
-/// Deviations from the original, all behavior-preserving: the address-resolving overload (JSON
-/// <c>ShippingData</c> deserialization + <c>UserAddress</c> creation) is replaced by an
-/// <see cref="OrderAddressInfo"/> input; the order's <c>Customer</c>/<c>CreatedBy</c> navigations are set by
-/// id; explicit DB transactions and MediatR events are omitted (a single <c>SaveChanges</c> persists stock,
-/// order(s) and coupon usage). The marketplace sub-order split is preserved.
-/// </remarks>
 public sealed class OrderService : IOrderService
 {
     private readonly StoreDbContext _db;
@@ -157,7 +144,6 @@ public sealed class OrderService : IOrderService
             }
         }
 
-        // Order-level rollup — SimplCommerce's exact ordering of totals.
         order.OrderStatus = orderStatus;
         order.OrderNote = checkout.OrderNote;
         order.CouponCode = couponResult.CouponCode;
@@ -237,7 +223,7 @@ public sealed class OrderService : IOrderService
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        // Record coupon usage against the persisted order id, then commit.
+        // Coupon usage needs the order id, which only exists after the first save.
         _couponService.AddCouponUsage(checkout.CustomerId, order.Id, couponResult);
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -245,11 +231,10 @@ public sealed class OrderService : IOrderService
     }
 
     /// <summary>
-    /// Records an online-store sale against the product's primary warehouse stock so the movement
-    /// shows in the stock-out log stamped Sale / OnlineStore (performer null — no staff removed it).
-    /// No-op when the product has no per-warehouse <c>Stock</c> row. Does not touch
-    /// <c>Product.StockQuantity</c> (the caller already did) and does not save — the order's single
-    /// <c>SaveChanges</c> persists it atomically.
+    /// Records an online-store sale against the product's primary warehouse stock. No-op when the
+    /// product has no per-warehouse <c>Stock</c> row. Does not touch <c>Product.StockQuantity</c>
+    /// (the caller already did) and does not save — the order's single <c>SaveChanges</c> persists
+    /// it atomically.
     /// </summary>
     private async Task StampOnlineSaleAsync(
         long productId, int quantity, long createdById, DateTimeOffset now, CancellationToken cancellationToken)

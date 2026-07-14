@@ -2,7 +2,7 @@ namespace Store.Application.Inventory;
 
 /// <summary>
 /// A request to adjust one product's stock in one warehouse by <see cref="AdjustedQuantity"/>
-/// (positive to add, negative to remove). Mirrors SimplCommerce's <c>StockUpdateRequest</c>.
+/// (positive to add, negative to remove).
 /// </summary>
 public sealed class StockUpdateRequest
 {

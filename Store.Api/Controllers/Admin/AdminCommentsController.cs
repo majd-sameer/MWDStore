@@ -10,8 +10,7 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Comment moderation, the port of the old Comments admin. Status values follow the old enum:
-/// 1 = Pending, 5 = Approved, 8 = NotApproved.
+/// Comment moderation. Status values: 1 = Pending, 5 = Approved, 8 = NotApproved.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Moderation)]

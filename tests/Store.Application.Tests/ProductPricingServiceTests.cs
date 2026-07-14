@@ -3,8 +3,7 @@ using Store.Application.Catalog.Pricing;
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Sample cases verifying the port of SimplCommerce's
-/// <c>ProductPricingService.CalculateProductPrice</c> produces identical results.
+/// Sample cases for <c>ProductPricingService.CalculateProductPrice</c>.
 /// </summary>
 public class ProductPricingServiceTests
 {
@@ -85,7 +84,7 @@ public class ProductPricingServiceTests
     [Fact]
     public void OldPriceNotAbovePrice_IsPassedThrough_WithNoSaving()
     {
-        // SimplCommerce returns the supplied oldPrice as-is; saving stays 0 because oldPrice <= price.
+        // The supplied oldPrice is returned as-is; saving stays 0 because oldPrice <= price.
         var result = Service().CalculateProductPrice(100m, 50m, null, null, null);
 
         Assert.Equal(100m, result.Price);

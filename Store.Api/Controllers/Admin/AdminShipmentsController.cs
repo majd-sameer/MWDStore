@@ -9,10 +9,9 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Shipment management, the port of the old Shipments module: create a shipment for an order's
-/// items from a warehouse (decrementing that warehouse's stock rows + writing stock history,
-/// like the old module — <c>Product.StockQuantity</c> was already reduced at order time),
-/// list shipments globally or per order, and update tracking numbers.
+/// Shipment management: create a shipment for an order's items from a warehouse (decrementing
+/// that warehouse's stock rows + writing stock history — <c>Product.StockQuantity</c> was already
+/// reduced at order time), list shipments globally or per order, and update tracking numbers.
 /// </summary>
 [ApiController]
 [Route("api/admin/shipments")]
@@ -81,6 +80,24 @@ public sealed class AdminShipmentsController : ControllerBase
         var now = _timeProvider.GetUtcNow();
         var userId = User.GetUserId();
 
+        var orderItemIds = request.Items.Select(i => i.OrderItemId).ToList();
+        var shippedQuantities = await _db.ShipmentItems
+            .Where(si => orderItemIds.Contains(si.OrderItemId))
+            .GroupBy(si => si.OrderItemId)
+            .Select(g => new { OrderItemId = g.Key, Quantity = g.Sum(si => si.Quantity) })
+            .ToDictionaryAsync(g => g.OrderItemId, g => g.Quantity, cancellationToken);
+
+        var productIds = order.OrderItems
+            .Where(i => orderItemIds.Contains(i.Id))
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+        var stocks = (await _db.Stocks
+                .Where(s => s.WarehouseId == warehouse.Id && productIds.Contains(s.ProductId))
+                .ToListAsync(cancellationToken))
+            .GroupBy(s => s.ProductId)
+            .ToDictionary(g => g.Key, g => g.First());
+
         var shipment = new Shipment
         {
             OrderId = order.Id,
@@ -99,9 +116,7 @@ public sealed class AdminShipmentsController : ControllerBase
                 return BadRequest(new { error = $"Order item {itemRequest.OrderItemId} does not belong to order {order.Id}." });
             }
 
-            var alreadyShipped = await _db.ShipmentItems
-                .Where(si => si.OrderItemId == orderItem.Id)
-                .SumAsync(si => (int?)si.Quantity, cancellationToken) ?? 0;
+            shippedQuantities.TryGetValue(orderItem.Id, out var alreadyShipped);
             if (itemRequest.Quantity + alreadyShipped > orderItem.Quantity)
             {
                 return BadRequest(new
@@ -117,11 +132,9 @@ public sealed class AdminShipmentsController : ControllerBase
                 Quantity = itemRequest.Quantity
             });
 
-            // Old Shipments module behavior: shipping pulls from the warehouse's Stock rows.
-            // Product.StockQuantity was already decremented when the order was placed.
-            var stock = await _db.Stocks.FirstOrDefaultAsync(
-                s => s.ProductId == orderItem.ProductId && s.WarehouseId == warehouse.Id, cancellationToken);
-            if (stock != null)
+            // Shipping pulls from the warehouse's Stock rows; Product.StockQuantity
+            // was already decremented when the order was placed.
+            if (stocks.TryGetValue(orderItem.ProductId, out var stock))
             {
                 stock.Quantity -= itemRequest.Quantity;
             }
@@ -139,7 +152,6 @@ public sealed class AdminShipmentsController : ControllerBase
 
         _db.Shipments.Add(shipment);
 
-        // Move the order along like the old admin did once a shipment exists.
         if (order.OrderStatus < Store.Application.Orders.OrderStatus.Shipping)
         {
             order.OrderStatus = Store.Application.Orders.OrderStatus.Shipping;

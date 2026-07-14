@@ -13,17 +13,17 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin product management, ported from SimplCommerce's <c>ProductApiController</c>:
-/// scalars + SEO, categories, media (by uploaded media id), attribute values, options,
-/// variations (child products linked via <c>ProductLinkType.Super</c> with option combinations,
-/// matched by name) and related/cross-sell links. Deletes are soft (sets <c>IsDeleted</c>).
+/// Admin product management: scalars + SEO, categories, media (by uploaded media id),
+/// attribute values, options, variations (child products linked via <c>ProductLinkType.Super</c>
+/// with option combinations, matched by name) and related/cross-sell links.
+/// Deletes are soft (sets <c>IsDeleted</c>).
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/products")]
 public sealed class AdminProductsController : ControllerBase
 {
-    /// <summary>PascalCase to stay byte-compatible with rows written by the old Newtonsoft-based admin.</summary>
+    /// <summary>PascalCase to stay byte-compatible with existing option-value rows.</summary>
     private static readonly JsonSerializerOptions OptionValueJson = new() { PropertyNamingPolicy = null };
 
     private const string EntityType = LocalizedEntity.Product;
@@ -99,7 +99,6 @@ public sealed class AdminProductsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(query))
         {
             var term = query.Trim();
-            // Match by name or SKU (partial), plus an exact product-id hit when the term is numeric.
             products = long.TryParse(term, out var idTerm)
                 ? products.Where(p =>
                     p.Id == idTerm ||
@@ -155,7 +154,7 @@ public sealed class AdminProductsController : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<AdminProductDetail>> Get(long id, CancellationToken cancellationToken)
     {
-        var product = await LoadAggregateAsync(id, cancellationToken);
+        var product = await LoadAggregateAsync(id, tracked: false, cancellationToken);
         if (product == null)
         {
             return NotFound();
@@ -195,7 +194,7 @@ public sealed class AdminProductsController : ControllerBase
         await WriteEnglishAsync(product.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var created = await LoadAggregateAsync(product.Id, cancellationToken);
+        var created = await LoadAggregateAsync(product.Id, tracked: false, cancellationToken);
         var overlay = await LoadEnglishAsync(product.Id, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = product.Id }, ToDetail(created!, overlay));
     }
@@ -204,7 +203,7 @@ public sealed class AdminProductsController : ControllerBase
     public async Task<ActionResult<AdminProductDetail>> Update(
         long id, ProductUpsertRequest request, CancellationToken cancellationToken)
     {
-        var product = await LoadAggregateAsync(id, cancellationToken);
+        var product = await LoadAggregateAsync(id, tracked: true, cancellationToken);
         if (product == null)
         {
             return NotFound();
@@ -237,7 +236,7 @@ public sealed class AdminProductsController : ControllerBase
         await WriteEnglishAsync(product.Id, request, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        var updated = await LoadAggregateAsync(id, cancellationToken);
+        var updated = await LoadAggregateAsync(id, tracked: false, cancellationToken);
         var overlay = await LoadEnglishAsync(id, cancellationToken);
         return Ok(ToDetail(updated!, overlay));
     }
@@ -297,10 +296,8 @@ public sealed class AdminProductsController : ControllerBase
         return NoContent();
     }
 
-    // ----- Save pipeline ----------------------------------------------------------------------
-
-    private Task<Product?> LoadAggregateAsync(long id, CancellationToken cancellationToken) =>
-        _db.Products
+    private Task<Product?> LoadAggregateAsync(long id, bool tracked, CancellationToken cancellationToken) =>
+        (tracked ? _db.Products : _db.Products.AsNoTracking())
             .Include(p => p.ThumbnailImage)
             .Include(p => p.ProductCategories)
             .Include(p => p.ProductMedia).ThenInclude(m => m.Media)
@@ -449,8 +446,8 @@ public sealed class AdminProductsController : ControllerBase
         }
     }
 
-    /// <summary>Variations are matched by name, like the old admin: new names create a cloned child
-    /// product linked with <c>Super</c>; missing names soft-delete the child and remove the link.</summary>
+    /// <summary>Variations are matched by name: new names create a cloned child product linked
+    /// with <c>Super</c>; missing names soft-delete the child and remove the link.</summary>
     private async Task ReconcileVariationsAsync(
         Product product, IList<ProductVariationRequest> variations, long userId, DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -551,7 +548,6 @@ public sealed class AdminProductsController : ControllerBase
         }
     }
 
-    /// <summary>Port of the old <c>Product.Clone()</c> used when spawning a variation child.</summary>
     private static Product CloneForVariation(Product parent) => new()
     {
         Name = parent.Name,
@@ -594,9 +590,6 @@ public sealed class AdminProductsController : ControllerBase
         SpecialPriceEnd = product.SpecialPriceEnd
     };
 
-    // ----- Mapping ------------------------------------------------------------------------------
-
-    /// <summary>Reads the English overlay for one product's localizable fields.</summary>
     private Task<LocalizedOverlay> LoadEnglishAsync(long id, CancellationToken cancellationToken) =>
         _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
 
@@ -685,7 +678,7 @@ public sealed class AdminProductsController : ControllerBase
         }
         catch (JsonException)
         {
-            // Old rows may hold a plain string array (very early SimplCommerce format).
+            // Legacy rows may hold a plain string array instead of key/value objects.
             try
             {
                 var plain = JsonSerializer.Deserialize<List<string>>(json);

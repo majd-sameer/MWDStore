@@ -3,7 +3,7 @@ using Store.Application.Orders;
 
 namespace Store.Api.Models;
 
-// ----- Catalog ------------------------------------------------------------------------------------
+// Catalog
 
 /// <summary>A storefront category node (flattened; <see cref="ParentId"/> conveys the tree).</summary>
 public sealed record CategoryDto(
@@ -12,7 +12,7 @@ public sealed record CategoryDto(
 /// <summary>A storefront brand.</summary>
 public sealed record BrandDto(long Id, string Name, string Slug);
 
-// ----- Cart ---------------------------------------------------------------------------------------
+// Cart
 
 public sealed class AddToCartRequest
 {
@@ -29,7 +29,7 @@ public sealed class UpdateCartItemRequest
     public int Quantity { get; set; }
 }
 
-// ----- Checkout -----------------------------------------------------------------------------------
+// Checkout
 
 /// <summary>The address an order ships/bills to (maps to <see cref="OrderAddressInfo"/>).</summary>
 public sealed class AddressDto
@@ -90,7 +90,7 @@ public sealed class PlaceOrderRequest
 
     public string? OrderNote { get; set; }
 
-    /// <summary>Whether the catalog prices already include tax (SimplCommerce's checkout flag).</summary>
+    /// <summary>Whether the catalog prices already include tax.</summary>
     public bool IsProductPriceIncludeTax { get; set; }
 }
 
@@ -143,11 +143,11 @@ public sealed class GuestPlaceOrderRequest
 
     public string? OrderNote { get; set; }
 
-    /// <summary>Whether the catalog prices already include tax (SimplCommerce's checkout flag).</summary>
+    /// <summary>Whether the catalog prices already include tax.</summary>
     public bool IsProductPriceIncludeTax { get; set; }
 }
 
-// ----- Orders -------------------------------------------------------------------------------------
+// Orders
 
 public sealed record OrderItemDto(
     long Id, long ProductId, string ProductName, decimal ProductPrice, int Quantity,

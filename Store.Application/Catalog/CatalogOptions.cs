@@ -1,8 +1,7 @@
 namespace Store.Application.Catalog;
 
 /// <summary>
-/// Catalog configuration. <see cref="ProductPageSize"/> corresponds to SimplCommerce's
-/// <c>Catalog.ProductPageSize</c> app setting (page size is server-controlled, not client-supplied).
+/// Catalog configuration. <see cref="ProductPageSize"/> is the server-controlled default page size.
 /// </summary>
 public sealed class CatalogOptions
 {

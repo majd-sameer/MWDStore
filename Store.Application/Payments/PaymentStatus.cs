@@ -1,8 +1,8 @@
 namespace Store.Application.Payments;
 
 /// <summary>
-/// Port of SimplCommerce's <c>PaymentStatus</c> values (the domain stores the status as an <c>int</c>
-/// on <see cref="Store.Domain.Payment.Status"/>).
+/// Payment status values; the domain stores the status as an <c>int</c> on
+/// <see cref="Store.Domain.Payment.Status"/>.
 /// </summary>
 public static class PaymentStatus
 {

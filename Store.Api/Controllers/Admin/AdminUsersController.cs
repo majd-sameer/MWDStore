@@ -11,9 +11,9 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin user management (the old Core module's user admin): list/search, create with password,
-/// edit profile + roles + customer groups, soft delete. Role changes go through
-/// <see cref="UserManager{TUser}"/> so Identity's security stamp stays consistent.
+/// Admin user management: list/search, create with password, edit profile + roles + customer
+/// groups, soft delete. Role changes go through <see cref="UserManager{TUser}"/> so Identity's
+/// security stamp stays consistent.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Users)]
@@ -171,7 +171,7 @@ public sealed class AdminUsersController : ControllerBase
         return Ok(await LoadDetailAsync(id, cancellationToken));
     }
 
-    /// <summary>Soft-deletes the user (matching the old admin; sign-in is also locked out).</summary>
+    /// <summary>Soft-deletes the user; sign-in is also locked out.</summary>
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {

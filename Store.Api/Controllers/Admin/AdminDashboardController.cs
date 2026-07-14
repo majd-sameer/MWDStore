@@ -48,7 +48,6 @@ public sealed class AdminDashboardController : ControllerBase
         var fromDate = new DateTimeOffset(firstDay, now.Offset);
 
         // Pull the window's master orders once (datasets are small) and aggregate in memory.
-        // Project to an anonymous type in SQL, then map to OrderRow client-side.
         var rawOrders = await _db.Orders
             .Where(o => o.ParentId == null && o.CreatedOn >= fromDate)
             .Select(o => new { o.OrderStatus, o.OrderTotal, o.CreatedOn, o.PaymentMethod, o.GuestEmail })
@@ -63,7 +62,6 @@ public sealed class AdminDashboardController : ControllerBase
         var revenue = Revenue(windowOrders);
         var orderCount = windowOrders.Count;
 
-        // ----- Revenue & orders trend (gap-filled so the line is continuous) -----
         var byDay = windowOrders
             .GroupBy(r => DateOnly.FromDateTime(r.CreatedOn.Date))
             .ToDictionary(g => g.Key, g => new { Revenue = Revenue(g), Orders = g.Count() });
@@ -77,7 +75,6 @@ public sealed class AdminDashboardController : ControllerBase
                 : new AdminTrendPointDto(day, 0m, 0));
         }
 
-        // ----- Order-status funnel -----
         var statusFunnel = windowOrders
             .GroupBy(r => r.Status)
             .Select(g => new AdminStatusSliceDto(
@@ -85,7 +82,6 @@ public sealed class AdminDashboardController : ControllerBase
             .OrderBy(s => s.Status)
             .ToList();
 
-        // ----- Payment & channel mix -----
         var paymentMix = windowOrders
             .GroupBy(r => string.IsNullOrWhiteSpace(r.PaymentMethod) ? "(none)" : r.PaymentMethod!)
             .Select(g => new AdminNameCountDto(g.Key, g.Count()))
@@ -96,7 +92,6 @@ public sealed class AdminDashboardController : ControllerBase
             windowOrders.Count(r => r.GuestEmail != null),
             windowOrders.Count(r => r.GuestEmail == null));
 
-        // ----- Current stock health (all warehouses) -----
         var outOfStock = await _db.Stocks.CountAsync(s => s.Quantity <= 0, cancellationToken);
         var lowCount = await _db.Stocks.CountAsync(
             s => s.Quantity > 0 && s.Quantity <= LowStockThreshold, cancellationToken);
@@ -112,7 +107,6 @@ public sealed class AdminDashboardController : ControllerBase
                 s.ProductId, s.Product.Name, s.Product.Sku, s.Quantity, s.ReservedQuantity))
             .ToListAsync(cancellationToken);
 
-        // ----- Best sellers in the window -----
         // Group by the scalar ProductId only (grouping by a navigation property is not translatable
         // alongside the join filter + order-by-aggregate), then resolve names in a second query.
         var topRaw = await _db.OrderItems
@@ -139,8 +133,9 @@ public sealed class AdminDashboardController : ControllerBase
                 x.ProductId, namesById.GetValueOrDefault(x.ProductId, string.Empty), x.Units, x.Revenue))
             .ToList();
 
-        // ----- Work queue: open orders needing action (current, not windowed) -----
+        // Work queue reflects current open orders, not the reporting window.
         var actionRows = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems)
             .Where(o => o.ParentId == null && ActionStatuses.Contains(o.OrderStatus))
             .OrderByDescending(o => o.CreatedOn)

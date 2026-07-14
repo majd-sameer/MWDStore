@@ -160,8 +160,6 @@ public sealed class AdminProductAttributesController : ControllerBase
         return NoContent();
     }
 
-    // ----- Groups -------------------------------------------------------------------------------
-
     [HttpGet("groups")]
     public async Task<ActionResult<IReadOnlyList<AdminProductAttributeGroupDto>>> ListGroups(CancellationToken cancellationToken)
     {

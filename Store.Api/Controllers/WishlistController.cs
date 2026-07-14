@@ -9,7 +9,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's wishlist (port of the old WishList module).</summary>
+/// <summary>The signed-in customer's wishlist.</summary>
 [ApiController]
 [Authorize]
 [Route("api/wishlist")]
@@ -31,6 +31,7 @@ public sealed class WishlistController : ControllerBase
     {
         var userId = User.GetUserId();
         var wishList = await _db.WishLists
+            .AsNoTracking()
             .Include(w => w.WishListItems).ThenInclude(i => i.Product).ThenInclude(p => p.ThumbnailImage)
             .FirstOrDefaultAsync(w => w.UserId == userId, cancellationToken);
 
@@ -87,6 +88,7 @@ public sealed class WishlistController : ControllerBase
         await _db.SaveChangesAsync(cancellationToken);
 
         var reloaded = await _db.WishLists
+            .AsNoTracking()
             .Include(w => w.WishListItems).ThenInclude(i => i.Product).ThenInclude(p => p.ThumbnailImage)
             .FirstAsync(w => w.UserId == userId, cancellationToken);
 

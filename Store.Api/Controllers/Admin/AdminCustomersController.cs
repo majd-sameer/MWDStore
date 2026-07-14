@@ -144,7 +144,7 @@ public sealed class AdminCustomersController : ControllerBase
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {
         var user = await _db.Users
-            .Include(u => u.Roles)
+            .Include(u => u.Roles).ThenInclude(r => r.Role)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user == null || user.Roles.Any(r => AppRoles.Staff.Contains(r.Role.Name!)))
         {

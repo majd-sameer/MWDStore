@@ -7,8 +7,7 @@ using Store.Domain;
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Listing behavior ported from SimplCommerce's <c>CategoryController.CategoryDetail</c> and
-/// <c>SearchController.Index</c>: base visibility filter, search matching, price/category/brand
+/// Listing behavior: base visibility filter, search matching, price/category/brand
 /// filters, sort, pagination clamp and facets.
 /// </summary>
 public class CatalogListingTests
@@ -335,7 +334,7 @@ public class CatalogListingTests
         using var db = SeedSearchFixture();
         var result = await NewService(db).SearchAsync(new ProductListOptions { Query = "   " });
 
-        // Unlike SimplCommerce (which redirected home), a blank query browses the whole catalog —
+        // A blank query browses the whole catalog —
         // the listing page reuses this endpoint with filters but no search text. Id 5 is unpublished.
         Assert.Equal(4, result.TotalProduct);
         Assert.Equal([1L, 2L, 3L, 4L], Ids(result));

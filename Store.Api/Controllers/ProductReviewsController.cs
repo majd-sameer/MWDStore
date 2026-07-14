@@ -9,8 +9,8 @@ using Store.Domain;
 namespace Store.Api.Controllers;
 
 /// <summary>
-/// Public product reviews (old Reviews module): anyone reads approved reviews; signed-in customers
-/// submit reviews that land in moderation as Pending (status 1).
+/// Public product reviews: anyone reads approved reviews; signed-in customers submit reviews that
+/// land in moderation as Pending (status 1).
 /// </summary>
 [ApiController]
 [Route("api/products/{productId:long}/reviews")]
@@ -68,7 +68,10 @@ public sealed class ProductReviewsController : ControllerBase
             return Conflict(new { error = "You have already reviewed this product." });
         }
 
-        var user = await _db.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+        var reviewerName = await _db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.FullName)
+            .FirstAsync(cancellationToken);
         var review = new Review
         {
             UserId = userId,
@@ -77,7 +80,7 @@ public sealed class ProductReviewsController : ControllerBase
             Title = request.Title,
             Comment = request.Comment,
             Rating = request.Rating,
-            ReviewerName = user.FullName,
+            ReviewerName = reviewerName,
             Status = PendingStatus,
             CreatedOn = _timeProvider.GetUtcNow()
         };

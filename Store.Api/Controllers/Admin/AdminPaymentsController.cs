@@ -11,9 +11,8 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin payment management: the provider list with per-gateway settings (the old Payments module's
-/// provider page + each gateway's config page, generalized to a JSON settings blob) and the payment
-/// transaction log. The standard providers are seeded on first access using the old modules' ids.
+/// Admin payment management: the provider list with per-gateway settings (a JSON settings blob)
+/// and the payment transaction log. The standard providers are seeded on first access.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Payments)]

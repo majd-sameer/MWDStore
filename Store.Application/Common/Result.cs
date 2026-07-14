@@ -1,8 +1,7 @@
 namespace Store.Application.Common;
 
 /// <summary>
-/// Minimal port of SimplCommerce's <c>Result</c> / <c>Result&lt;T&gt;</c> (Infrastructure):
-/// a success flag, an optional error message, and (for the generic form) a value.
+/// A success flag, an optional error message, and (for the generic form) a value.
 /// </summary>
 public class Result
 {

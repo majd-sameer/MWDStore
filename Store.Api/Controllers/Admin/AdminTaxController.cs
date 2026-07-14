@@ -24,8 +24,6 @@ public sealed class AdminTaxController : ControllerBase
         _auditStamps = auditStamps;
     }
 
-    // ----- Tax classes ---------------------------------------------------------------------------
-
     [HttpGet("classes")]
     public async Task<ActionResult<IReadOnlyList<AdminTaxClassDto>>> ListClasses(CancellationToken cancellationToken)
     {
@@ -92,8 +90,6 @@ public sealed class AdminTaxController : ControllerBase
 
         return NoContent();
     }
-
-    // ----- Tax rates -----------------------------------------------------------------------------
 
     [HttpGet("rates")]
     public async Task<ActionResult<IReadOnlyList<AdminTaxRateDto>>> ListRates(CancellationToken cancellationToken)

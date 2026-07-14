@@ -11,9 +11,8 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin CRUD for menus and their items (old Cms module's menu admin). Menu and menu-item
-/// <c>Name</c>s are bilingual: Arabic in the base column, English in the
-/// <c>LocalizedContentProperty</c> overlay.
+/// Admin CRUD for menus and their items. Menu and menu-item <c>Name</c>s are bilingual: Arabic in
+/// the base column, English in the <c>LocalizedContentProperty</c> overlay.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Content)]
@@ -43,6 +42,7 @@ public sealed class AdminMenusController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminMenuDto>>> List(CancellationToken cancellationToken)
     {
         var menus = await _db.Menus
+            .AsNoTracking()
             .Include(m => m.MenuItems)
             .OrderBy(m => m.Name)
             .ToListAsync(cancellationToken);
@@ -63,6 +63,7 @@ public sealed class AdminMenusController : ControllerBase
     public async Task<ActionResult<AdminMenuDto>> Get(long id, CancellationToken cancellationToken)
     {
         var menu = await _db.Menus
+            .AsNoTracking()
             .Include(m => m.MenuItems)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         if (menu == null)
@@ -121,10 +122,11 @@ public sealed class AdminMenusController : ControllerBase
             return Conflict(new { error = "System menus cannot be deleted." });
         }
 
-        foreach (var it in menu.MenuItems)
-        {
-            await _localizedWriter.RemoveAllAsync(ItemType, it.Id, cancellationToken);
-        }
+        var itemIds = menu.MenuItems.Select(i => i.Id).ToList();
+        var itemOverlays = await _db.LocalizedContentProperties
+            .Where(p => p.EntityType == ItemType && itemIds.Contains(p.EntityId))
+            .ToListAsync(cancellationToken);
+        _db.LocalizedContentProperties.RemoveRange(itemOverlays);
 
         await _localizedWriter.RemoveAllAsync(MenuType, menu.Id, cancellationToken);
         _db.MenuItems.RemoveRange(menu.MenuItems);
@@ -133,8 +135,6 @@ public sealed class AdminMenusController : ControllerBase
 
         return NoContent();
     }
-
-    // ----- Items ----------------------------------------------------------------------------------
 
     [HttpPost("{menuId:long}/items")]
     public async Task<ActionResult<AdminMenuItemDto>> AddItem(
@@ -196,12 +196,11 @@ public sealed class AdminMenusController : ControllerBase
             return NotFound();
         }
 
-        foreach (var child in item.InverseParent)
-        {
-            await _localizedWriter.RemoveAllAsync(ItemType, child.Id, cancellationToken);
-        }
-
-        await _localizedWriter.RemoveAllAsync(ItemType, item.Id, cancellationToken);
+        var overlayIds = item.InverseParent.Select(c => c.Id).Append(item.Id).ToList();
+        var overlays = await _db.LocalizedContentProperties
+            .Where(p => p.EntityType == ItemType && overlayIds.Contains(p.EntityId))
+            .ToListAsync(cancellationToken);
+        _db.LocalizedContentProperties.RemoveRange(overlays);
         _db.MenuItems.RemoveRange(item.InverseParent);
         _db.MenuItems.Remove(item);
         await _db.SaveChangesAsync(cancellationToken);

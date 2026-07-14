@@ -9,7 +9,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's recently viewed products (old ProductRecentlyViewed module).</summary>
+/// <summary>The signed-in customer's recently viewed products.</summary>
 [ApiController]
 [Authorize]
 [Route("api/recently-viewed")]
@@ -37,16 +37,24 @@ public sealed class RecentlyViewedController : ControllerBase
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.LatestViewedOn)
             .Take(count)
-            .Join(_db.Products.Include(p => p.ThumbnailImage).Where(p => p.IsPublished && !p.IsDeleted),
+            .Join(_db.Products.Where(p => p.IsPublished && !p.IsDeleted),
                 r => r.ProductId, p => p.Id,
-                (r, p) => new { r, p })
+                (r, p) => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Slug,
+                    p.Price,
+                    ThumbnailFileName = p.ThumbnailImage != null ? p.ThumbnailImage.FileName : null,
+                    r.LatestViewedOn
+                })
             .ToListAsync(cancellationToken);
 
         var items = rows
             .Select(x => new RecentlyViewedDto(
-                x.p.Id, x.p.Name, x.p.Slug, x.p.Price,
-                _mediaUrl.GetUrl(x.p.ThumbnailImage != null ? x.p.ThumbnailImage.FileName : null),
-                x.r.LatestViewedOn))
+                x.Id, x.Name, x.Slug, x.Price,
+                _mediaUrl.GetUrl(x.ThumbnailFileName),
+                x.LatestViewedOn))
             .ToList();
 
         return Ok(items);

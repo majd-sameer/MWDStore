@@ -6,7 +6,7 @@ using static Store.Application.Tests.CheckoutTestSupport;
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Warehouse stock administration ported from SimplCommerce's <c>StockService.UpdateStock</c>: clamp at
+/// Warehouse stock administration: clamp at
 /// zero, mirror the delta onto <c>Product.StockQuantity</c>, audit, and fire back-in-stock on the 0→positive
 /// crossing.
 /// </summary>

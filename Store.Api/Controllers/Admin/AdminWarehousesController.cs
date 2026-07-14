@@ -9,7 +9,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>Admin CRUD for warehouses (each owns an <see cref="Address"/> row, like the old Inventory module).</summary>
+/// <summary>Admin CRUD for warehouses (each owns an <see cref="Address"/> row).</summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Inventory)]
 [Route("api/admin/warehouses")]

@@ -7,12 +7,6 @@ using Store.Domain;
 
 namespace Store.Application.ShoppingCart;
 
-/// <summary>
-/// Faithful port of SimplCommerce's <c>CartService</c> (<c>Module.ShoppingCart/Services/CartService.cs</c>):
-/// add-to-cart merging, and the display-time total computation (regular sub-total, coupon + catalog savings
-/// folded into a single discount). Media URLs, variation-option display and currency formatting are out of scope.
-/// Update/remove are provided here (SimplCommerce keeps them in the controller layer) for a complete cart API.
-/// </summary>
 public sealed class CartService : ICartService
 {
     private readonly StoreDbContext _db;
@@ -119,6 +113,7 @@ public sealed class CartService : ICartService
         long customerId, string? couponCode = null, CancellationToken cancellationToken = default)
     {
         var cartItems = await _db.Set<CartItem>()
+            .AsNoTracking()
             .Include(x => x.Product).ThenInclude(p => p.ThumbnailImage)
             .Where(x => x.CustomerId == customerId)
             .ToListAsync(cancellationToken);
@@ -146,8 +141,6 @@ public sealed class CartService : ICartService
             })
             .ToList();
 
-        // SubTotal is summed at the regular (pre-discount) price: OldPrice when a catalog discount exists,
-        // otherwise the plain product price.
         cart.SubTotal = cart.Items.Sum(x => x.Quantity * (x.CalculatedProductPrice.OldPrice ?? x.ProductPrice));
 
         if (!string.IsNullOrWhiteSpace(cart.CouponCode))
@@ -168,7 +161,6 @@ public sealed class CartService : ICartService
             }
         }
 
-        // Catalog (special/old-price) savings are folded into the same Discount field as the coupon.
         cart.Discount += cart.Items
             .Where(x => x.CalculatedProductPrice.OldPrice.HasValue)
             .Sum(x => x.Quantity * (x.CalculatedProductPrice.OldPrice!.Value - x.CalculatedProductPrice.Price));

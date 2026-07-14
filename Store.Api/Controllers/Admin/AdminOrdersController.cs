@@ -37,7 +37,7 @@ public sealed class AdminOrdersController : ControllerBase
         [FromQuery] long? orderNumber, [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken cancellationToken = default)
     {
-        var orders = _db.Orders.Include(o => o.OrderItems).AsQueryable();
+        var orders = _db.Orders.AsNoTracking().Include(o => o.OrderItems).AsQueryable();
         if (statuses is { Length: > 0 })
         {
             orders = orders.Where(o => statuses.Contains(o.OrderStatus));
@@ -85,6 +85,7 @@ public sealed class AdminOrdersController : ControllerBase
     public async Task<ActionResult<OrderDetailDto>> Get(long id, CancellationToken cancellationToken)
     {
         var order = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems).ThenInclude(i => i.Product)
             .Include(o => o.ShippingAddress)
             .Include(o => o.BillingAddress)
@@ -116,7 +117,7 @@ public sealed class AdminOrdersController : ControllerBase
         return Ok(order.ToDetail());
     }
 
-    /// <summary>Cancels the order and restocks each stock-tracked line (SimplCommerce's cancel behavior).</summary>
+    /// <summary>Cancels the order and restocks each stock-tracked line.</summary>
     [HttpPost("{id:long}/cancel")]
     [Authorize(Policy = AuthPolicies.Sales)]
     public async Task<ActionResult<OrderDetailDto>> Cancel(long id, CancellationToken cancellationToken)

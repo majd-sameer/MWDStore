@@ -6,7 +6,7 @@ using Store.Domain;
 namespace Store.Application.Tests;
 
 /// <summary>
-/// Product-detail behavior ported from SimplCommerce's <c>ProductController.ProductDetail</c>:
+/// Product-detail behavior:
 /// attributes, categories, variations (child products linked via <c>ProductLink</c> type Super,
 /// options ordered by SortIndex) and related/cross-sell products.
 /// </summary>

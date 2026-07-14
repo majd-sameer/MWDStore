@@ -7,12 +7,6 @@ using Store.Domain;
 
 namespace Store.Application.Catalog;
 
-/// <summary>
-/// Faithful port of SimplCommerce's storefront catalog read paths:
-/// <c>CategoryController.CategoryDetail</c>, <c>SearchController.Index</c> and
-/// <c>ProductController.ProductDetail</c>. Media, localization, currency formatting and the
-/// search-query persistence / brand-redirect concerns are intentionally out of scope.
-/// </summary>
 public sealed class CatalogService : ICatalogService
 {
     private readonly StoreDbContext _db;
@@ -43,7 +37,6 @@ public sealed class CatalogService : ICatalogService
     public async Task<ProductListResult> SearchAsync(
         ProductListOptions options, CancellationToken cancellationToken = default)
     {
-        // SimplCommerce only applies the category filter when Category != "all".
         if (string.Equals(options.Category, "all", StringComparison.OrdinalIgnoreCase))
         {
             options.Category = null;
@@ -51,14 +44,11 @@ public sealed class CatalogService : ICatalogService
 
         var baseQuery = _db.Products.Where(x => x.IsPublished && x.IsVisibleIndividually);
 
-        // Unlike SimplCommerce (which redirects to home), an empty query browses the full catalog —
-        // the storefront listing page uses this endpoint with filters but no search text.
         if (!string.IsNullOrWhiteSpace(options.Query))
         {
             var q = options.Query.Trim().ToLower();
 
-            // Note: the null-guards reproduce SQL NULL semantics (LOWER(NULL) LIKE '%q%' is NULL/false) and
-            // are required for client-side (LINQ-to-objects) evaluation; the matched set is identical.
+            // The null-guards reproduce SQL NULL semantics when the predicate is evaluated in memory.
             baseQuery = baseQuery.Where(x =>
                 (x.Name != null && x.Name.ToLower().Contains(q))
                 || (x.ShortDescription != null && x.ShortDescription.ToLower().Contains(q))
@@ -69,11 +59,6 @@ public sealed class CatalogService : ICatalogService
         return await BuildListResultAsync(baseQuery, options, cancellationToken);
     }
 
-    /// <summary>
-    /// The pipeline shared by the category and search listings (same order as SimplCommerce):
-    /// facets over the base query → price/category/brand filters → count → page clamp → sort →
-    /// page → project + resolve price.
-    /// </summary>
     private async Task<ProductListResult> BuildListResultAsync(
         IQueryable<Product> baseQuery, ProductListOptions options, CancellationToken cancellationToken)
     {
@@ -116,7 +101,6 @@ public sealed class CatalogService : ICatalogService
             query = query.Where(x => x.BrandId != null && brands.Contains(x.Brand!.Slug));
         }
 
-        // The client may ask for a (bounded) page size; otherwise the configured default applies.
         var pageSize = options.PageSize is > 0 and <= 48 ? options.PageSize : _options.ProductPageSize;
         var total = await query.CountAsync(cancellationToken);
         result.TotalProduct = total;
@@ -132,6 +116,7 @@ public sealed class CatalogService : ICatalogService
         query = ApplySort(options, query);
 
         var products = await query
+            .AsNoTracking()
             .Include(x => x.ThumbnailImage)
             .Include(x => x.ProductCategories).ThenInclude(c => c.Category)
             .Skip(offset)
@@ -157,6 +142,7 @@ public sealed class CatalogService : ICatalogService
         take = Math.Clamp(take, 1, 24);
 
         var products = await _db.Products
+            .AsNoTracking()
             .Where(x => x.IsPublished && x.IsVisibleIndividually && x.IsSignature)
             .OrderBy(x => x.SignatureSortOrder).ThenBy(x => x.Id)
             .Include(x => x.ThumbnailImage)
@@ -176,11 +162,8 @@ public sealed class CatalogService : ICatalogService
 
     private static IQueryable<Product> ApplySort(ProductListOptions options, IQueryable<Product> query)
     {
-        // In-stock (orderable) products always lead, whatever sort is chosen, so sold-out items
-        // sink to the end of the whole result set rather than just within a page. Call-for-pricing
-        // items count as available. This mirrors the storefront's own availability check (which only
-        // sees IsAllowToOrder / StockQuantity / IsCallForPricing) so SSR and client agree and the
-        // list doesn't reshuffle on hydration.
+        // Orderable products always lead so sold-out items sink to the end of the whole result set;
+        // the predicate must match the storefront availability check or SSR and client disagree.
         var available = query.OrderByDescending(x =>
             x.IsCallForPricing || (x.IsAllowToOrder && x.StockQuantity > 0));
 
@@ -189,11 +172,8 @@ public sealed class CatalogService : ICatalogService
         {
             "price-asc" => available.ThenBy(x => x.Price),
             "price-desc" => available.ThenByDescending(x => x.Price),
-            // SQL Server sorts NULLs last in DESC order, so unrated products trail.
             "rating" => available.ThenByDescending(x => x.RatingAverage).ThenByDescending(x => x.ReviewsCount),
             "newest" => available.ThenByDescending(x => x.CreatedOn).ThenByDescending(x => x.Id),
-            // "featured" (default / relevance): signature products lead, then featured, then stable
-            // catalog order. Explicit sorts above (price/rating/newest) intentionally skip this boost.
             _ => available
                 .ThenByDescending(x => x.IsSignature)
                 .ThenBy(x => x.SignatureSortOrder)
@@ -221,13 +201,9 @@ public sealed class CatalogService : ICatalogService
             })
             .ToListAsync(cancellationToken);
 
-        var brandProducts = await baseQuery
+        filter.Brands = await baseQuery
             .Where(x => x.BrandId != null)
-            .Include(x => x.Brand)
-            .ToListAsync(cancellationToken);
-
-        filter.Brands = brandProducts
-            .GroupBy(x => x.Brand!)
+            .GroupBy(x => new { x.Brand!.Id, x.Brand.Name, x.Brand.Slug })
             .Select(g => new FilterBrand
             {
                 Id = g.Key.Id,
@@ -235,13 +211,14 @@ public sealed class CatalogService : ICatalogService
                 Slug = g.Key.Slug,
                 Count = g.Count()
             })
-            .ToList();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<ProductDetailModel?> GetProductDetailAsync(
         long id, CancellationToken cancellationToken = default)
     {
         var product = await _db.Products
+            .AsNoTracking()
             .Include(x => x.ProductOptionValues)
             .Include(x => x.ProductCategories).ThenInclude(c => c.Category)
             .Include(x => x.ProductAttributeValues).ThenInclude(a => a.Attribute)
@@ -308,6 +285,7 @@ public sealed class CatalogService : ICatalogService
         }
 
         var variations = await _db.Products
+            .AsNoTracking()
             .Include(x => x.ProductOptionCombinations).ThenInclude(o => o.Option)
             .Include(x => x.ThumbnailImage)
             .Include(x => x.ProductMedia).ThenInclude(m => m.Media)

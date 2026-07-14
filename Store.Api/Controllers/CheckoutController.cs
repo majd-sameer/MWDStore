@@ -117,7 +117,6 @@ public sealed class CheckoutController : ControllerBase
             return BadRequest(new { error = result.Error });
         }
 
-        // Order placed — empty the cart.
         _db.CartItems.RemoveRange(cartItems);
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -125,7 +124,6 @@ public sealed class CheckoutController : ControllerBase
         return CreatedAtAction("GetById", "Orders", new { id = order!.Id }, order);
     }
 
-    // ----- Guest (no-login) checkout ---------------------------------------------------------------
     // Guests have no server cart, so these mirror the authed endpoints but take the cart lines in the
     // body. The order is snapshotted against the shared guest account; the shopper's real email is
     // stored on the order for the public track lookup.
@@ -233,6 +231,7 @@ public sealed class CheckoutController : ControllerBase
     private async Task<OrderDetailDto?> LoadOrderDetailAsync(long orderId, CancellationToken cancellationToken)
     {
         var order = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.OrderItems).ThenInclude(i => i.Product)
             .Include(o => o.ShippingAddress)
             .Include(o => o.BillingAddress)

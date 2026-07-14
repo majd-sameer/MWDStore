@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Store.Api.Models;
 
-// ----- Wishlist -------------------------------------------------------------------------------------
+// Wishlist
 
 public sealed record WishListItemDto(
     long Id, long ProductId, string ProductName, string ProductSlug, decimal Price,
@@ -18,7 +18,7 @@ public sealed class AddWishListItemRequest
     public int Quantity { get; set; } = 1;
 }
 
-// ----- Reviews --------------------------------------------------------------------------------------
+// Reviews
 
 public sealed record ReviewDto(
     long Id, string? Title, string? Comment, int Rating, string? ReviewerName, DateTimeOffset CreatedOn);
@@ -34,7 +34,7 @@ public sealed class SubmitReviewRequest
     public int Rating { get; set; }
 }
 
-// ----- CMS pages & news --------------------------------------------------------------------------------
+// CMS pages & news
 
 public sealed record PublicPageDto(
     string Name, string Slug, string? Body, string? MetaTitle, string? MetaKeywords, string? MetaDescription);
@@ -56,7 +56,7 @@ public sealed record NewsLinkedProductDto(
 public sealed record AlertDto(
     long Id, string Slug, string Name, string? ShortContent, string? AlertCtaUrl);
 
-// ----- Contact -----------------------------------------------------------------------------------------
+// Contact
 
 public sealed record ContactAreaPublicDto(long Id, string Name);
 
@@ -78,7 +78,7 @@ public sealed class SubmitContactRequest
     public long ContactAreaId { get; set; }
 }
 
-// ----- Comparison & recently viewed ----------------------------------------------------------------------
+// Comparison & recently viewed
 
 public sealed record ComparisonAttributeDto(string Name, string? Value);
 

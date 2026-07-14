@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Identity;
 namespace Store.Domain;
 
 /// <summary>
-/// Application user. Derives from <see cref="IdentityUser{TKey}"/> (matching SimplCommerce's
-/// <c>User : IdentityUser&lt;long&gt;</c>); the Identity base supplies UserName, Email, PasswordHash,
-/// SecurityStamp, lockout/2FA, etc. Only the SimplCommerce-specific members and navigations live here.
+/// Application user. Derives from <see cref="IdentityUser{TKey}"/>; the Identity base supplies
+/// UserName, Email, PasswordHash, SecurityStamp, lockout/2FA, etc. Only store-specific members
+/// and navigations live here.
 /// </summary>
 public class User : IdentityUser<long>
 {

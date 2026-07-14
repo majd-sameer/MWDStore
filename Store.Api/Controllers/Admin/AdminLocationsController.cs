@@ -10,10 +10,9 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Country/state lookups for admin forms plus full CRUD (the old Core module's
-/// countries and states-provinces admin pages). Country/state <c>Name</c> is bilingual: Arabic in
-/// the base column, English in the <c>LocalizedContentProperty</c> overlay. Country keys the overlay
-/// by its ISO code (<c>EntityKey</c>); StateOrProvince keys by its numeric id (<c>EntityId</c>).
+/// Country/state lookups for admin forms plus full CRUD. Country/state <c>Name</c> is bilingual:
+/// Arabic in the base column, English in the <c>LocalizedContentProperty</c> overlay. Country keys the
+/// overlay by its ISO code (<c>EntityKey</c>); StateOrProvince keys by its numeric id (<c>EntityId</c>).
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Settings)]
@@ -87,7 +86,6 @@ public sealed class AdminLocationsController : ControllerBase
         var country = new Country { Id = request.Id };
         Apply(country, request);
         _db.Countries.Add(country);
-        await _db.SaveChangesAsync(cancellationToken);
 
         await _localizedWriter.SetByKeyAsync(
             LocalizedEntity.Country, country.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
@@ -100,9 +98,7 @@ public sealed class AdminLocationsController : ControllerBase
     public async Task<ActionResult<AdminCountryDto>> UpdateCountry(
         string id, CountryUpsertRequest request, CancellationToken cancellationToken)
     {
-        var country = await _db.Countries
-            .Include(c => c.StateOrProvinces)
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        var country = await _db.Countries.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         if (country == null)
         {
             return NotFound();
@@ -114,7 +110,8 @@ public sealed class AdminLocationsController : ControllerBase
             LocalizedEntity.Country, country.Id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToDto(country, Normalize(request.NameEn), country.StateOrProvinces.Count));
+        var statesCount = await _db.StateOrProvinces.CountAsync(s => s.CountryId == id, cancellationToken);
+        return Ok(ToDto(country, Normalize(request.NameEn), statesCount));
     }
 
     [HttpDelete("countries/{id}")]
@@ -134,10 +131,11 @@ public sealed class AdminLocationsController : ControllerBase
         }
 
         var states = await _db.StateOrProvinces.Where(s => s.CountryId == id).ToListAsync(cancellationToken);
-        foreach (var state in states)
-        {
-            await _localizedWriter.RemoveAllAsync(LocalizedEntity.StateOrProvince, state.Id, cancellationToken);
-        }
+        var stateIds = states.Select(s => s.Id).ToList();
+        var stateOverlays = await _db.LocalizedContentProperties
+            .Where(p => p.EntityType == LocalizedEntity.StateOrProvince && stateIds.Contains(p.EntityId))
+            .ToListAsync(cancellationToken);
+        _db.LocalizedContentProperties.RemoveRange(stateOverlays);
 
         await _localizedWriter.RemoveAllByKeyAsync(LocalizedEntity.Country, id, cancellationToken);
 

@@ -21,7 +21,7 @@ public static class ContentBlockSeeder
 
     private static readonly BlockSeed[] Blocks =
     [
-        // ----- Home ---------------------------------------------------------------------------------
+        // Home
         new("home", "hero-grid", "hero-copy.title", "text",
             "منتجات صُنعت بعزيمة وأيادٍ تستحق الفرصة",
             "Products made with determination by hands that deserve a chance", Sort: 0),
@@ -37,7 +37,7 @@ public static class ContentBlockSeeder
         new("home", "cta-band", "cta.title", "text",
             "كن أول من يعرف عن المنتجات الجديدة", "Be the first to know about new products"),
 
-        // ----- About (/pages/about-us) — every visible line of copy, fixed design -------------------
+        // About (/pages/about-us) — every visible line of copy, fixed design
         new("about", "about-hero", "eyebrow", "text", "من نحن", "About us", Sort: 0),
         new("about", "about-hero", "title", "text",
             "صُنع بعزيمة — حين تتحوّل الإرادة إلى منتج",
@@ -113,7 +113,7 @@ public static class ContentBlockSeeder
             "معايير دقيقة لكل منتج قبل أن يصل إلى يديك.",
             "Strict standards for every product before it reaches your hands.", Sort: 11),
 
-        // ----- Footer (global) — editable copy + social links, fixed design --------------------------
+        // Footer (global) — editable copy + social links, fixed design
         new("footer", "footer-brand", "tagline", "text",
             "منتجات يدوية من صنع نزلاء مراكز الإصلاح والتأهيل في الأردن — ١٠٠٪ من العائدات تدعم التأهيل وإعادة الدمج.",
             "Handmade products by inmates of Jordan's Reform & Rehabilitation Centers — 100% of proceeds "
@@ -157,7 +157,7 @@ public static class ContentBlockSeeder
             Sort: 0),
         new("footer", "footer-location", "map", "link", null, null, Sort: 1),
 
-        // ----- FAQ (/pages/faq) — editable heading + Q&A pairs, fixed design ------------------------
+        // FAQ (/pages/faq) — editable heading + Q&A pairs, fixed design
         new("faq", "faq-hero", "title", "text",
             "الأسئلة الشائعة", "Frequently asked questions", Sort: 0),
         new("faq", "faq-hero", "subtitle", "text",
@@ -254,6 +254,11 @@ public static class ContentBlockSeeder
             .Select(b => new { b.Id, b.PageKey, b.SectionKey, b.BlockKey })
             .ToListAsync(cancellationToken);
         var blockIds = blocks.Select(b => b.Id).ToList();
+        var blockIdsByKey = new Dictionary<(string PageKey, string SectionKey, string BlockKey), long>();
+        foreach (var block in blocks)
+        {
+            blockIdsByKey.TryAdd((block.PageKey, block.SectionKey, block.BlockKey), block.Id);
+        }
 
         var overlaid = (await db.LocalizedContentProperties
                 .Where(p => p.EntityType == LocalizedEntity.ContentBlock
@@ -267,9 +272,8 @@ public static class ContentBlockSeeder
         var overlayInserted = 0;
         foreach (var seed in Blocks.Where(s => !string.IsNullOrEmpty(s.En)))
         {
-            var block = blocks.FirstOrDefault(
-                b => b.PageKey == seed.Page && b.SectionKey == seed.Section && b.BlockKey == seed.Key);
-            if (block is null || overlaid.Contains(block.Id))
+            if (!blockIdsByKey.TryGetValue((seed.Page, seed.Section, seed.Key), out var blockId)
+                || overlaid.Contains(blockId))
             {
                 continue;
             }
@@ -277,7 +281,7 @@ public static class ContentBlockSeeder
             db.LocalizedContentProperties.Add(new LocalizedContentProperty
             {
                 EntityType = LocalizedEntity.ContentBlock,
-                EntityId = block.Id,
+                EntityId = blockId,
                 CultureId = RequestCulture.EnglishCultureId,
                 ProperyName = LocalizedProperty.Value,
                 Value = seed.En,

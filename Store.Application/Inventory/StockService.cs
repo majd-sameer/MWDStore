@@ -7,11 +7,6 @@ using Store.Domain;
 
 namespace Store.Application.Inventory;
 
-/// <summary>
-/// Faithful port of SimplCommerce's <c>StockService</c>
-/// (<c>Module.Inventory/Services/StockService.cs</c>). Uses an injected <see cref="TimeProvider"/> for the
-/// audit timestamp and an <see cref="IProductBackInStockNotifier"/> in place of the MediatR event.
-/// </summary>
 public sealed class StockService : IStockService
 {
     private readonly StoreDbContext _db;
@@ -55,7 +50,7 @@ public sealed class StockService : IStockService
         stock.Quantity += adjustedQuantity;
         product.StockQuantity += adjustedQuantity;
 
-        // The audit row records the originally requested amount (not the clamped value), as SimplCommerce does.
+        // The audit row records the originally requested amount, not the clamped value.
         _db.Set<StockHistory>().Add(new StockHistory
         {
             ProductId = request.ProductId,

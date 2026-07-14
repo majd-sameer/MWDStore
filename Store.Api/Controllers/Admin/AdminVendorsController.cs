@@ -11,8 +11,8 @@ using Store.Domain;
 namespace Store.Api.Controllers.Admin;
 
 /// <summary>
-/// Admin CRUD for vendors (old Vendors module). Deletes are soft. <c>Name</c> and <c>Description</c>
-/// are bilingual: Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay.
+/// Admin CRUD for vendors. Deletes are soft. <c>Name</c> and <c>Description</c> are bilingual:
+/// Arabic in the base columns, English in the <c>LocalizedContentProperty</c> overlay.
 /// </summary>
 [ApiController]
 [Authorize(Policy = AuthPolicies.Vendors)]

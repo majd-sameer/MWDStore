@@ -52,12 +52,21 @@ public static class CatalogSeeder
         }
 
         // 1) Categories (idempotent by slug). Parents must be listed before children.
+        var seedCategorySlugs = seed.Categories.Select(c => c.Slug).ToList();
+        var existingCategories = await db.Categories
+            .Where(c => seedCategorySlugs.Contains(c.Slug))
+            .ToListAsync(cancellationToken);
+
         var categoriesBySlug = new Dictionary<string, Category>(StringComparer.OrdinalIgnoreCase);
+        foreach (var existingCategory in existingCategories)
+        {
+            categoriesBySlug[existingCategory.Slug] = existingCategory;
+        }
+
         var newCategories = 0;
         foreach (var seedCategory in seed.Categories)
         {
-            var category = await db.Categories.FirstOrDefaultAsync(c => c.Slug == seedCategory.Slug, cancellationToken);
-            if (category == null)
+            if (!categoriesBySlug.ContainsKey(seedCategory.Slug))
             {
                 long? parentId = null;
                 if (seedCategory.Parent is { Length: > 0 } parentSlug)
@@ -71,7 +80,7 @@ public static class CatalogSeeder
                     parentId = parent.Id;
                 }
 
-                category = new Category
+                var category = new Category
                 {
                     Name = seedCategory.Name,
                     Slug = seedCategory.Slug,
@@ -84,17 +93,20 @@ public static class CatalogSeeder
                 db.Categories.Add(category);
                 await db.SaveChangesAsync(cancellationToken);
                 newCategories++;
-            }
 
-            categoriesBySlug[seedCategory.Slug] = category;
+                categoriesBySlug[seedCategory.Slug] = category;
+            }
         }
 
         // 2) Products — insert only the slugs that don't exist yet, as full object graphs
         //    (media + thumbnail + category links + warehouse stock) in batched SaveChanges calls.
         var existingSlugs = (await db.Products.Select(p => p.Slug).ToListAsync(cancellationToken))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var warehouse = await db.Warehouses.OrderBy(w => w.Id).FirstOrDefaultAsync(cancellationToken);
-        if (warehouse == null)
+        var warehouseId = await db.Warehouses
+            .OrderBy(w => w.Id)
+            .Select(w => (long?)w.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (warehouseId == null)
         {
             logger.LogWarning("No warehouse exists — seeded products will have no Stock rows.");
         }
@@ -151,11 +163,11 @@ public static class CatalogSeeder
                 product.ThumbnailImage ??= medium;
             }
 
-            if (warehouse != null)
+            if (warehouseId != null)
             {
                 product.Stocks.Add(new Stock
                 {
-                    WarehouseId = warehouse.Id,
+                    WarehouseId = warehouseId.Value,
                     Quantity = seedProduct.Stock,
                     ReservedQuantity = 0
                 });

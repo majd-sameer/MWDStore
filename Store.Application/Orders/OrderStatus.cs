@@ -1,7 +1,7 @@
 namespace Store.Application.Orders;
 
 /// <summary>
-/// SimplCommerce's <c>OrderStatus</c> values (the domain stores the status as an <c>int</c>).
+/// Order status values; the domain stores the status as an <c>int</c>.
 /// </summary>
 public static class OrderStatus
 {
