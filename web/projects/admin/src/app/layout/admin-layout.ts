@@ -137,6 +137,7 @@ export class AdminLayout {
         { path: '/locations', key: 'countries', icon: 'bi-globe2', roles: AREA.settings },
         { path: '/audit-log', key: 'auditLog', icon: 'bi-clipboard-check', roles: AREA.settings },
         { path: '/settings', key: 'settings', icon: 'bi-gear', roles: AREA.settings },
+        { path: '/dev-assistant', key: 'devAssistant', icon: 'bi-terminal', roles: AREA['dev-assistant'] },
       ],
     },
   ];

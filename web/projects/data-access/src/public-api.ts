@@ -61,3 +61,4 @@ export * from './lib/admin/admin-system.service';
 export * from './lib/admin/admin-operations.service';
 export * from './lib/admin/admin-audit.service';
 export * from './lib/admin/admin-content-blocks.service';
+export * from './lib/admin/admin-dev-assistant.service';

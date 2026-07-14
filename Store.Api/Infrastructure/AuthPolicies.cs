@@ -59,6 +59,12 @@ public static class AuthPolicies
     /// <summary>User &amp; role management.</summary>
     public const string Users = "area:users";
 
+    /// <summary>
+    /// The Developer Assistant portal. Deliberately super-admin only — it reveals the complete
+    /// schema and route/policy topology, which is reconnaissance-grade information.
+    /// </summary>
+    public const string DevAssistant = "area:dev-assistant";
+
     /// <summary>Registers every admin-area policy on the authorization options.</summary>
     public static void AddStorePolicies(this AuthorizationOptions options)
     {
@@ -81,5 +87,6 @@ public static class AuthPolicies
         Area(Reports, AppRoles.SuperAdmin, AppRoles.Admin);
         Area(Settings, AppRoles.SuperAdmin, AppRoles.Admin);
         Area(Users, AppRoles.SuperAdmin, AppRoles.Admin);
+        Area(DevAssistant, AppRoles.SuperAdmin);
     }
 }

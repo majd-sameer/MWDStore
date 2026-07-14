@@ -30,6 +30,9 @@ export const AREA = {
   reports: [Role.superAdmin, Role.admin],
   settings: [Role.superAdmin, Role.admin],
   users: [Role.superAdmin, Role.admin],
+  // Mirrors `area:dev-assistant` (AuthPolicies) — deliberately super-admin only: the portal
+  // reveals the complete schema and route/policy topology.
+  'dev-assistant': [Role.superAdmin],
 } as const;
 
 

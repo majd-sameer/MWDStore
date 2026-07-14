@@ -5,6 +5,7 @@ using Store.Application.Auth;
 using Store.Application.Catalog;
 using Store.Application.Catalog.Pricing;
 using Store.Application.Common;
+using Store.Application.DevAssistant;
 using Store.Application.Inventory;
 using Store.Application.Localization;
 using Store.Application.Orders;
@@ -49,6 +50,12 @@ public static class DependencyInjection
         // JwtOptions is bound and registered by the host (Store.Api) from configuration.
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IRefreshTokenService, RefreshTokenService>();
+
+        // Developer Assistant portal. The host registers IApiSurfaceSource (it alone can reflect
+        // over the API assembly) and binds DevAssistantOptions; fall back to defaults when it doesn't.
+        services.TryAddSingleton(new DevAssistantOptions());
+        services.AddSingleton<ISystemMetadataProvider, SystemMetadataProvider>();
+        services.AddSingleton<IDevAssistantService, DevAssistantService>();
 
         return services;
     }

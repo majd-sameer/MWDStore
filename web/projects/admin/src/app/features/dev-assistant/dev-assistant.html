@@ -1,0 +1,111 @@
+<div class="dev-assistant-theme">
+  <header class="da-header">
+    <div class="da-header-title">
+      <span class="da-header-icon"><i class="bi bi-terminal" aria-hidden="true"></i></span>
+      <h1>{{ 'devAssistant.title' | translate }}</h1>
+      <span class="da-subtitle">{{ 'devAssistant.subtitle' | translate }}</span>
+    </div>
+    <div class="da-header-side">
+      @if (capabilities.hasValue()) {
+        <span class="da-fingerprint" dir="ltr" [title]="'devAssistant.fingerprintHint' | translate">
+          {{ capabilities.value().fingerprint.assemblyVersion }}
+          · {{ capabilities.value().fingerprint.modelHash }}
+          · {{ capabilities.value().fingerprint.builtAt | date: 'short' }}
+        </span>
+      }
+      @if (!store.isEmpty()) {
+        <button type="button" class="da-clear" (click)="store.clear()">
+          <i class="bi bi-trash3" aria-hidden="true"></i>
+          {{ 'devAssistant.clear' | translate }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (capabilities.hasValue() && capabilities.value().notices.length > 0) {
+    <div class="da-notice">
+      <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+      {{ 'devAssistant.degraded' | translate }}
+    </div>
+  }
+
+  <main #transcript class="da-transcript" aria-live="polite">
+    @if (store.isEmpty()) {
+      <section class="da-welcome">
+        <span class="da-welcome-icon"><i class="bi bi-terminal" aria-hidden="true"></i></span>
+        <h2>{{ 'devAssistant.welcomeTitle' | translate }}</h2>
+        <p>{{ 'devAssistant.welcomeBody' | translate }}</p>
+        @if (capabilities.hasValue()) {
+          <div class="da-suggestions">
+            @for (capability of capabilities.value().capabilities; track capability.intent) {
+              <button
+                type="button"
+                class="da-chip"
+                (click)="submit(capability.examples[0])"
+                [title]="capability.description"
+              >
+                {{ capability.examples[0] }}
+              </button>
+            }
+          </div>
+        } @else if (capabilities.isLoading()) {
+          <p class="da-muted">{{ 'devAssistant.loading' | translate }}</p>
+        }
+      </section>
+    }
+
+    @for (entry of store.entries(); track entry.id) {
+      @if (entry.role === 'user') {
+        <div class="da-turn da-turn-user">
+          <div class="da-bubble">{{ entry.text }}</div>
+        </div>
+      } @else if (entry.reply; as reply) {
+        <div class="da-turn da-turn-assistant">
+          <div class="da-cards">
+            @for (block of reply.blocks; track $index) {
+              <app-dev-assistant-block
+                [block]="block"
+                [checked]="store.checkedSteps(entry, $index)"
+                (toggleStep)="store.toggleStep(entry.id, $index, $event)"
+                (run)="submit($event)"
+              />
+            }
+            <span class="da-turn-meta" dir="ltr">
+              {{ reply.intent }}@if (reply.subject) {<span> · {{ reply.subject }}</span>}
+              · {{ reply.fingerprint.modelHash }}
+            </span>
+          </div>
+        </div>
+      }
+    }
+
+    @if (failure()) {
+      <div class="da-notice sev-critical">
+        <i class="bi bi-wifi-off" aria-hidden="true"></i>
+        {{ 'devAssistant.failure' | translate }}
+      </div>
+    }
+  </main>
+
+  <footer class="da-composer">
+    <textarea
+      rows="2"
+      [placeholder]="'devAssistant.composerPlaceholder' | translate"
+      [value]="draft()"
+      (input)="draft.set($any($event.target).value)"
+      (keydown)="onComposerKeydown($event)"
+      [disabled]="sending()"
+      [attr.aria-label]="'devAssistant.composerAria' | translate"
+      maxlength="500"
+    ></textarea>
+    <button
+      type="button"
+      class="da-send"
+      (click)="submit(draft())"
+      [disabled]="sending() || !draft().trim()"
+      [attr.aria-label]="'devAssistant.send' | translate"
+    >
+      <i class="bi bi-send" aria-hidden="true"></i>
+    </button>
+  </footer>
+</div>

@@ -1,0 +1,344 @@
+@switch (block().type) {
+  @case ('text') {
+    <p class="da-text">
+      @for (segment of segments(); track $index) {
+        @switch (segment.kind) {
+          @case ('strong') {
+            <strong>{{ segment.value }}</strong>
+          }
+          @case ('code') {
+            <code>{{ segment.value }}</code>
+          }
+          @default {
+            <span>{{ segment.value }}</span>
+          }
+        }
+      }
+    </p>
+  }
+
+  @case ('checklist') {
+    <div class="da-card da-checklist">
+      <div class="da-card-header">
+        <span class="da-card-title">{{ asChecklist(block()).title }}</span>
+        @if (asChecklist(block()).interactive) {
+          <span class="da-progress">{{
+            'devAssistant.progress'
+              | translate: { done: checkedCount(), total: asChecklist(block()).steps.length }
+          }}</span>
+        }
+      </div>
+      <ol class="da-steps">
+        @for (step of asChecklist(block()).steps; track $index) {
+          <li class="da-step" [class.done]="checked().has($index)">
+            <div class="da-step-main">
+              @if (asChecklist(block()).interactive) {
+                <input
+                  type="checkbox"
+                  class="da-check"
+                  [checked]="checked().has($index)"
+                  (change)="toggleStep.emit($index)"
+                  [attr.aria-label]="'devAssistant.markStep' | translate: { n: $index + 1 }"
+                />
+              }
+              <div class="da-step-body">
+                <div class="da-step-head">
+                  <span class="da-layer" [class]="layerClass(step.layer)">{{ step.layer }}</span>
+                  @if (step.filePath) {
+                    <span class="da-path" dir="ltr">
+                      <code>{{ step.filePath }}</code>
+                      <button
+                        type="button"
+                        class="da-copy"
+                        (click)="copy(step.filePath)"
+                        [attr.aria-label]="('devAssistant.copy' | translate) + ' ' + step.filePath"
+                      >
+                        <i
+                          class="bi"
+                          [class.bi-clipboard]="copiedText() !== step.filePath"
+                          [class.bi-clipboard-check]="copiedText() === step.filePath"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    </span>
+                    @if (!step.verified) {
+                      <span class="da-expected" [title]="'devAssistant.expectedTitle' | translate">{{
+                        'devAssistant.expectedBadge' | translate
+                      }}</span>
+                    }
+                  }
+                </div>
+                <p class="da-step-desc">{{ step.description }}</p>
+                @if (step.command) {
+                  <div class="da-command" dir="ltr">
+                    <pre>{{ step.command }}</pre>
+                    <button
+                      type="button"
+                      class="da-copy"
+                      (click)="copy(step.command)"
+                      [attr.aria-label]="'devAssistant.copy' | translate"
+                    >
+                      <i
+                        class="bi"
+                        [class.bi-clipboard]="copiedText() !== step.command"
+                        [class.bi-clipboard-check]="copiedText() === step.command"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  </div>
+                }
+                @for (warning of step.warnings; track warning.ruleId) {
+                  <div class="da-warning" [class]="'sev-' + warning.severity">
+                    <span class="da-rule-id">{{ warning.ruleId }}</span>
+                    <span>{{ warning.text }}</span>
+                    @if (warning.docRef) {
+                      <span class="da-doc-ref" dir="ltr">{{ warning.docRef }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+
+  @case ('propertyGrid') {
+    <div class="da-card da-grid">
+      <div class="da-card-header">
+        <span class="da-card-title" dir="ltr">
+          {{ asGrid(block()).entityName }}
+          <code class="da-table-name">{{ asGrid(block()).tableName }}</code>
+        </span>
+        <span class="da-pills">
+          @for (marker of asGrid(block()).markers; track marker) {
+            <span class="da-pill" dir="ltr">{{ marker }}</span>
+          }
+          @if (asGrid(block()).isBilingual) {
+            <span class="da-pill da-pill-lang">{{ 'devAssistant.grid.bilingual' | translate }}</span>
+          }
+        </span>
+      </div>
+      @if (asGrid(block()).rows.length > 15) {
+        <input
+          type="text"
+          class="da-filter"
+          [placeholder]="'devAssistant.grid.filter' | translate"
+          [value]="gridFilter()"
+          (input)="gridFilter.set($any($event.target).value)"
+          [attr.aria-label]="'devAssistant.grid.filter' | translate"
+        />
+      }
+      <div class="da-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ 'devAssistant.grid.column' | translate }}</th>
+              <th>{{ 'devAssistant.grid.clrType' | translate }}</th>
+              <th>{{ 'devAssistant.grid.sqlType' | translate }}</th>
+              <th>{{ 'devAssistant.grid.nullable' | translate }}</th>
+              <th>{{ 'devAssistant.grid.badges' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of gridRows(); track row.name) {
+              <tr [class.sensitive]="row.isSensitive">
+                <td dir="ltr"><code>{{ row.name }}</code></td>
+                <td dir="ltr">{{ row.clrType ?? '—' }}</td>
+                <td dir="ltr">
+                  {{ row.sqlType ?? '—'
+                  }}@if (row.maxLength !== null) {<span> ({{ row.maxLength }})</span>}
+                </td>
+                <td>
+                  {{
+                    row.nullable === null
+                      ? '—'
+                      : (row.nullable ? 'devAssistant.grid.yes' : 'devAssistant.grid.no') | translate
+                  }}
+                </td>
+                <td class="da-badges">
+                  @if (row.isPrimaryKey) {
+                    <span class="da-pill da-pill-pk">PK</span>
+                  }
+                  @if (row.isForeignKey) {
+                    <button
+                      type="button"
+                      class="da-pill da-pill-fk"
+                      dir="ltr"
+                      (click)="run.emit('Show the columns of ' + row.foreignKeyPrincipal)"
+                      [attr.aria-label]="'devAssistant.showSchemaOf' | translate: { name: row.foreignKeyPrincipal }"
+                    >
+                      FK → {{ row.foreignKeyPrincipal }}
+                    </button>
+                  }
+                  @if (row.isUnique) {
+                    <span class="da-pill">{{ 'devAssistant.grid.unique' | translate }}</span>
+                  } @else if (row.isIndexed) {
+                    <span class="da-pill">{{ 'devAssistant.grid.indexed' | translate }}</span>
+                  }
+                  @if (row.isSensitive) {
+                    <span class="da-pill da-pill-sensitive">{{ 'devAssistant.grid.sensitive' | translate }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (asGrid(block()).relations.length > 0) {
+        <div class="da-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ 'devAssistant.relations.direction' | translate }}</th>
+                <th>{{ 'devAssistant.relations.navigation' | translate }}</th>
+                <th>{{ 'devAssistant.relations.relatedEntity' | translate }}</th>
+                <th>{{ 'devAssistant.relations.cardinality' | translate }}</th>
+                <th>{{ 'devAssistant.relations.onDelete' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (relation of asGrid(block()).relations; track relation.name) {
+                <tr>
+                  <td>{{ 'devAssistant.relations.' + relation.direction | translate }}</td>
+                  <td dir="ltr"><code>{{ relation.name }}</code></td>
+                  <td>
+                    <button
+                      type="button"
+                      class="da-pill da-pill-fk"
+                      dir="ltr"
+                      (click)="run.emit('Show the columns of ' + relation.relatedEntity)"
+                      [attr.aria-label]="'devAssistant.showSchemaOf' | translate: { name: relation.relatedEntity }"
+                    >
+                      {{ relation.relatedEntity }}
+                    </button>
+                  </td>
+                  <td dir="ltr">{{ relation.cardinality }}</td>
+                  <td dir="ltr">{{ relation.deleteBehavior ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  @case ('endpointMatrix') {
+    <div class="da-card da-matrix">
+      <div class="da-card-header">
+        <span class="da-card-title">{{
+          'devAssistant.matrix.routesFor' | translate: { area: asMatrix(block()).area }
+        }}</span>
+        <span class="da-matrix-filters">
+          <select
+            class="da-filter"
+            [value]="matrixVerb()"
+            (change)="matrixVerb.set($any($event.target).value)"
+            [attr.aria-label]="'devAssistant.matrix.filterVerb' | translate"
+          >
+            <option value="">{{ 'devAssistant.matrix.allVerbs' | translate }}</option>
+            @for (verb of matrixVerbs(); track verb) {
+              <option [value]="verb">{{ verb }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            class="da-filter"
+            [placeholder]="'devAssistant.matrix.filter' | translate"
+            [value]="matrixFilter()"
+            (input)="matrixFilter.set($any($event.target).value)"
+            [attr.aria-label]="'devAssistant.matrix.filter' | translate"
+          />
+        </span>
+      </div>
+      <div class="da-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ 'devAssistant.matrix.verb' | translate }}</th>
+              <th>{{ 'devAssistant.matrix.route' | translate }}</th>
+              <th>{{ 'devAssistant.matrix.action' | translate }}</th>
+              <th>{{ 'devAssistant.matrix.policy' | translate }}</th>
+              <th>{{ 'devAssistant.matrix.audited' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of matrixRows(); track row.route + row.verb + row.action) {
+              <tr>
+                <td><span class="da-verb" [class]="'verb-' + row.verb.toLowerCase()">{{ row.verb }}</span></td>
+                <td>
+                  <span class="da-path" dir="ltr">
+                    <code>{{ row.route }}</code>
+                    <button
+                      type="button"
+                      class="da-copy"
+                      (click)="copy(row.route)"
+                      [attr.aria-label]="('devAssistant.copy' | translate) + ' ' + row.route"
+                    >
+                      <i
+                        class="bi"
+                        [class.bi-clipboard]="copiedText() !== row.route"
+                        [class.bi-clipboard-check]="copiedText() === row.route"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  </span>
+                </td>
+                <td dir="ltr">{{ row.action }}</td>
+                <td dir="ltr">
+                  @if (row.policy) {
+                    <code>{{ row.policy }}</code>
+                  } @else {
+                    <span class="da-anonymous">{{ 'devAssistant.matrix.anonymous' | translate }}</span>
+                  }
+                </td>
+                <td>{{ row.audited ? ('devAssistant.grid.yes' | translate) : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @case ('callout') {
+    <div class="da-callout" [class]="'sev-' + asCallout(block()).severity">
+      <div class="da-callout-head">
+        <i
+          class="bi"
+          [class.bi-info-circle]="asCallout(block()).severity === 'info'"
+          [class.bi-exclamation-triangle]="asCallout(block()).severity === 'warning'"
+          [class.bi-sign-stop]="asCallout(block()).severity === 'critical'"
+          aria-hidden="true"
+        ></i>
+        @if (asCallout(block()).ruleId) {
+          <span class="da-rule-id">{{ asCallout(block()).ruleId }}</span>
+        }
+      </div>
+      <p>{{ asCallout(block()).text }}</p>
+      @if (asCallout(block()).docRef) {
+        <span class="da-doc-ref" dir="ltr">{{ asCallout(block()).docRef }}</span>
+      }
+    </div>
+  }
+
+  @case ('suggestions') {
+    <div class="da-suggestions">
+      @for (chip of asSuggestions(block()).items; track chip.query) {
+        <button type="button" class="da-chip" (click)="run.emit(chip.query)">
+          {{ chip.label }}
+        </button>
+      }
+    </div>
+  }
+
+  @default {
+    <!-- Unknown block type: client older than server — graceful summary fallback (FR-UI-7). -->
+    <div class="da-card da-fallback">
+      <p>{{ block().summary }}</p>
+      <span class="da-fallback-note">{{ 'devAssistant.fallbackNote' | translate }} ({{ block().type }})</span>
+    </div>
+  }
+}

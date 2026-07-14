@@ -61,7 +61,14 @@
 
     <!-- Backdrop dims the page while the mobile nav drawer is open; tapping it closes. -->
     @if (mobileNavOpen()) {
-      <div class="nav-backdrop d-lg-none" (click)="closeMobileNav()"></div>
+      <div
+        class="nav-backdrop d-lg-none"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'common.menu' | translate"
+        (click)="closeMobileNav()"
+        (keyup.enter)="closeMobileNav()"
+      ></div>
     }
 
     <div class="admin-main d-flex flex-column min-vh-100">

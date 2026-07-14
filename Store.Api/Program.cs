@@ -51,6 +51,16 @@ builder.Services.AddStoreData(builder.Configuration);
 builder.Services.AddSingleton(
     builder.Configuration.GetSection(Store.Application.Payments.PaymentsOptions.SectionName)
         .Get<Store.Application.Payments.PaymentsOptions>() ?? new Store.Application.Payments.PaymentsOptions());
+// Developer Assistant portal (docs/DEV-ASSISTANT-PORTAL-SPEC.md). The reflection source is
+// host-registered because only the API project can reflect over its own controllers; the options
+// bind the DevAssistant:Enabled kill switch (the fifth configuration section). Registered before
+// AddStoreApplication so the bound instance wins over the library's TryAddSingleton default.
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection(Store.Application.DevAssistant.DevAssistantOptions.SectionName)
+        .Get<Store.Application.DevAssistant.DevAssistantOptions>()
+    ?? new Store.Application.DevAssistant.DevAssistantOptions());
+builder.Services.AddSingleton<Store.Application.DevAssistant.IApiSurfaceSource>(
+    new ReflectionApiSurfaceSource(typeof(Program).Assembly));
 builder.Services.AddStoreApplication();
 
 // Local media storage for admin uploads (product images, etc.).

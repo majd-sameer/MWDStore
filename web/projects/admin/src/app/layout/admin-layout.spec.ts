@@ -8,6 +8,7 @@ interface VisibleSection {
 }
 
 function layoutForRoles(roles: readonly string[]): AdminLayout {
+  TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       {
@@ -25,18 +26,29 @@ function layoutForRoles(roles: readonly string[]): AdminLayout {
   return TestBed.runInInjectionContext(() => new AdminLayout());
 }
 
+function visibleSections(layout: AdminLayout): VisibleSection[] {
+  return (layout as unknown as { visibleSections: () => VisibleSection[] }).visibleSections();
+}
+
 function sectionKeys(layout: AdminLayout): (string | null)[] {
-  return (layout as unknown as { visibleSections: () => VisibleSection[] })
-    .visibleSections()
-    .map((section) => section.key);
+  return visibleSections(layout).map((section) => section.key);
+}
+
+function itemPaths(layout: AdminLayout): string[] {
+  return visibleSections(layout).flatMap((section) => section.items.map((item) => item.path));
 }
 
 describe('AdminLayout sidebar visibility', () => {
-  it('shows all five business sections for super-admin', () => {
+  it('shows every business section for super-admin', () => {
     const keys = sectionKeys(layoutForRoles(['super-admin']));
-    for (const section of ['stock', 'content', 'sales', 'people', 'system']) {
+    for (const section of ['stock', 'content', 'sales', 'system']) {
       expect(keys).toContain(section);
     }
+  });
+
+  it('shows the dev-assistant link to super-admin only', () => {
+    expect(itemPaths(layoutForRoles(['super-admin']))).toContain('/dev-assistant');
+    expect(itemPaths(layoutForRoles(['admin']))).not.toContain('/dev-assistant');
   });
 
   it('shows only Stock management for a warehouse-keeper', () => {

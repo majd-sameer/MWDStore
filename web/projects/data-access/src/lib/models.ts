@@ -1649,3 +1649,152 @@ export interface AdminDashboardDto {
   lowStock: AdminLowStock[];
   actionQueue: OrderSummaryDto[];
 }
+
+// ---------------------------------------------------------------------------
+// Developer Assistant portal (`/api/admin/dev-assistant`)
+//
+// Mirrors Store.Application/DevAssistant/AssistantReply.cs one-to-one (hard
+// rule 5). Replies are ordered lists of typed content blocks discriminated on
+// `type`; every block carries a plain-text `summary` so an older client can
+// render a graceful fallback for unknown block types (FR-UI-7).
+// ---------------------------------------------------------------------------
+
+export interface DevAssistantQueryRequest {
+  text: string;
+  /** Resolved subjects of up to the last 3 turns, most recent last (spec 3.6). */
+  contextSubjects?: string[] | null;
+}
+
+/** Identifies exactly which deployed build is answering. */
+export interface DevAssistantFingerprint {
+  assemblyVersion: string;
+  modelHash: string;
+  builtAt: string;
+}
+
+export interface DevAssistantBlockBase {
+  type: string;
+  summary: string;
+}
+
+export interface DevAssistantTextBlock extends DevAssistantBlockBase {
+  type: 'text';
+  text: string;
+}
+
+export interface DevAssistantStepWarning {
+  severity: 'info' | 'warning' | 'critical';
+  ruleId: string;
+  text: string;
+  docRef: string | null;
+}
+
+export interface DevAssistantChecklistStep {
+  layer: string;
+  filePath: string | null;
+  verified: boolean;
+  description: string;
+  command: string | null;
+  warnings: DevAssistantStepWarning[];
+}
+
+export interface DevAssistantChecklistBlock extends DevAssistantBlockBase {
+  type: 'checklist';
+  title: string;
+  interactive: boolean;
+  steps: DevAssistantChecklistStep[];
+}
+
+export interface DevAssistantPropertyRow {
+  name: string;
+  clrType: string | null;
+  sqlType: string | null;
+  maxLength: number | null;
+  nullable: boolean | null;
+  defaultValue: string | null;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+  foreignKeyPrincipal: string | null;
+  isIndexed: boolean;
+  isUnique: boolean;
+  isSensitive: boolean;
+}
+
+export interface DevAssistantRelationRow {
+  direction: 'outgoing' | 'incoming';
+  name: string;
+  relatedEntity: string;
+  cardinality: string;
+  deleteBehavior: string | null;
+}
+
+export interface DevAssistantPropertyGridBlock extends DevAssistantBlockBase {
+  type: 'propertyGrid';
+  entityName: string;
+  tableName: string;
+  markers: string[];
+  isBilingual: boolean;
+  rows: DevAssistantPropertyRow[];
+  relations: DevAssistantRelationRow[];
+}
+
+export interface DevAssistantEndpointRow {
+  verb: string;
+  route: string;
+  action: string;
+  policy: string | null;
+  audited: boolean;
+}
+
+export interface DevAssistantEndpointMatrixBlock extends DevAssistantBlockBase {
+  type: 'endpointMatrix';
+  area: string;
+  rows: DevAssistantEndpointRow[];
+}
+
+export interface DevAssistantCalloutBlock extends DevAssistantBlockBase {
+  type: 'callout';
+  severity: 'info' | 'warning' | 'critical';
+  ruleId: string | null;
+  text: string;
+  docRef: string | null;
+}
+
+export interface DevAssistantSuggestionChip {
+  label: string;
+  query: string;
+}
+
+export interface DevAssistantSuggestionsBlock extends DevAssistantBlockBase {
+  type: 'suggestions';
+  items: DevAssistantSuggestionChip[];
+}
+
+export type DevAssistantBlock =
+  | DevAssistantTextBlock
+  | DevAssistantChecklistBlock
+  | DevAssistantPropertyGridBlock
+  | DevAssistantEndpointMatrixBlock
+  | DevAssistantCalloutBlock
+  | DevAssistantSuggestionsBlock;
+
+export interface DevAssistantReply {
+  intent: string;
+  subject: string | null;
+  hit: boolean;
+  subjectCarriedOver: boolean;
+  fingerprint: DevAssistantFingerprint;
+  blocks: DevAssistantBlock[];
+}
+
+export interface DevAssistantCapability {
+  intent: string;
+  description: string;
+  examples: string[];
+}
+
+export interface DevAssistantCapabilities {
+  fingerprint: DevAssistantFingerprint;
+  capabilities: DevAssistantCapability[];
+  notices: string[];
+}

@@ -304,7 +304,7 @@ Endpoints: `AuthController` (`/api/auth/register|login|refresh|logout|xsrf`); pr
 
 Roles (`Store.Api/Infrastructure/AppRoles.cs`): `super-admin`, `admin`, `sales-manager`, `sales`, `warehouse-keeper`, `content-writer`, `customer`. `AppRoles.Staff` = the six non-customer roles — this is the split that also separates the admin **Users** screen (staff) from the **Customers** screen (everyone else).
 
-Authorization is pure role-based policies (`Store.Api/Infrastructure/AuthPolicies.cs`, registered by `AddStorePolicies`). Policy names are `area:<name>`: `catalog, content, moderation, media, inventory, fulfillment, shipments-view, sales, orders-view, vendors, marketing, taxes, payments, reports, settings, users`. `super-admin` and `admin` are in every policy; e.g. Catalog adds `warehouse-keeper`, Content/Moderation add `content-writer`, Sales adds `sales`/`sales-manager`, and Taxes/Reports/Settings/Users are admin-only.
+Authorization is pure role-based policies (`Store.Api/Infrastructure/AuthPolicies.cs`, registered by `AddStorePolicies`). Policy names are `area:<name>`: `catalog, content, moderation, media, inventory, fulfillment, shipments-view, sales, orders-view, vendors, marketing, taxes, payments, reports, settings, users, dev-assistant`. `super-admin` and `admin` are in every operational policy; e.g. Catalog adds `warehouse-keeper`, Content/Moderation add `content-writer`, Sales adds `sales`/`sales-manager`, and Taxes/Reports/Settings/Users are admin-only. The one exception is `dev-assistant` (the Developer Assistant portal, §15): **super-admin only**, because it reveals the complete schema and route/policy topology.
 
 **Mirror rule:** the admin app's `AREA` map in `web/projects/admin/src/app/core/roles.ts` duplicates this table for menu/guard purposes. Any policy change must touch both files.
 
@@ -320,7 +320,7 @@ Authorization is pure role-based policies (`Store.Api/Infrastructure/AuthPolicie
 
 ### 7.5 Configuration keys (complete list)
 
-The backend binds exactly four configuration sections — there are no ad-hoc `Configuration["..."]` reads:
+The backend binds exactly five configuration sections — there are no ad-hoc `Configuration["..."]` reads:
 
 | Key | Purpose | Where set |
 |---|---|---|
@@ -328,6 +328,7 @@ The backend binds exactly four configuration sections — there are no ad-hoc `C
 | `Jwt:Key` (≥ 32 chars), `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiryMinutes`, `Jwt:RefreshTokenDays` | token signing/validation | Key in git-ignored file; the rest default in `appsettings.json` (`MyStore` / `MyStoreClients` / 60 / 14) |
 | `AdminUser:Email`, `AdminUser:FullName`, `AdminUser:Password` | bootstrap super-admin seeding | Password in git-ignored file — **if absent, admin seeding is silently skipped** |
 | `Payments:StorefrontBaseUrl` | payment return URLs | per environment |
+| `DevAssistant:Enabled` | kill switch for the Developer Assistant portal (§15) — `false` makes its endpoints 404 without a code change | defaults to `true`; set per environment when needed |
 
 ---
 
@@ -508,6 +509,7 @@ Root: `web/projects/admin/`. No SSR — plain SPA behind login.
 - **Roles ↔ areas:** `app/core/roles.ts` defines the role list (`super-admin, admin, sales-manager, sales, warehouse-keeper, content-writer`) and the `AREA` map (catalog, content, moderation, inventory, fulfillment, sales/orders, vendors, marketing, taxes, payments, settings, users → allowed roles). **This map mirrors the API's `AuthPolicies`** — change them together or menu items will appear that the API then 403s (or vice versa).
 - **Feature screens** (`app/features/`): dashboard (ng2-charts), products (list + form incl. variations/options/media), categories, brands, vendors, orders (list + detail with shipments), customers, users, moderation (reviews/comments), inventory (stock-out + log), warehouses, tax, shipping rates, promotions, payments (per-provider config forms), CMS (pages, menus, news, content blocks, site content), system (settings, locations, localization, logs, audit log).
 - **Shared components** (`app/shared/`): `multi-lang-input` (the Arabic/English paired editor — use it for any new bilingual field), `rich-text-editor`, `status-pill`, `filter-dropdown`, `date-range`, `table-skeleton`, `table-footer`, `page-header`, `field-error`, `order-status`.
+- **Developer Assistant portal** (`app/features/dev-assistant/`, route `/dev-assistant`, **super-admin only**): a chat-style surface that answers structural questions about the deployed build deterministically — schema (`propertyGrid`), routes (`endpointMatrix`), change-path checklists with the §18 hard rules attached, relations, file locations and concept explanations. Answers are computed server-side from the EF model + reflection over `Store.Api` + a curated knowledge base (`Store.Application/DevAssistant/`, endpoints `/api/admin/dev-assistant/query|capabilities`) — no AI, no row data, ever. Fully bilingual like the rest of the admin: the engine understands Arabic queries (Arabic lexemes/synonyms with deterministic letter-folding) and composes answers in the active language (`culture` param / `Accept-Language`), with code identifiers kept in English and the UI mirroring under RTL. Every answer is stamped with the snapshot fingerprint of the running binary; new entities become queryable automatically on the next process start. Kill switch: `DevAssistant:Enabled` (§7.5). Full specification: `docs/DEV-ASSISTANT-PORTAL-SPEC.md` (note: the spec's original English-only non-goal was later superseded by this bilingual implementation, as was its dark-terminal theme — the portal uses the admin's own token palette).
 - On boot an app initializer runs a blocking silent `refresh()` so deep links land authenticated or redirect cleanly to login.
 
 ---

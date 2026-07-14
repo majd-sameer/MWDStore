@@ -7,6 +7,10 @@
 // classes here modernizes the whole console without touching each feature.
 // =============================================================================
 
+// Developer Assistant portal — dark terminal theme, fully scoped under
+// `.dev-assistant-theme` (see the partial's header). Must precede @import rules.
+@use "app/features/dev-assistant/dev-assistant-theme";
+
 // Bootstrap Icons (sidebar / topbar glyphs) -------------------------------------
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
