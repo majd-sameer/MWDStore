@@ -6,10 +6,7 @@ using Store.Application.Auth;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Verifies the issued JWT validates against the configured key/issuer/audience and carries the expected
-/// subject, email and role claims.
-/// </summary>
+
 public class JwtTokenServiceTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

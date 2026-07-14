@@ -6,10 +6,7 @@ using Store.Domain;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Listing behavior: base visibility filter, search matching, price/category/brand
-/// filters, sort, pagination clamp and facets.
-/// </summary>
+
 public class CatalogListingTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

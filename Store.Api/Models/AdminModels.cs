@@ -76,10 +76,8 @@ public sealed class ProductUpsertRequest
     [Required]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>English overlay for <see cref="Name"/> (optional; blank clears it).</summary>
     public string? NameEn { get; set; }
 
-    /// <summary>Optional; generated from <see cref="Name"/> when omitted.</summary>
     public string? Slug { get; set; }
 
     public string? ShortDescription { get; set; }

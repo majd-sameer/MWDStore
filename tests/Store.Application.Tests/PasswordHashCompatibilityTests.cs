@@ -4,11 +4,7 @@ using Store.Domain;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Demonstrates that the default ASP.NET Core Identity <see cref="PasswordHasher{TUser}"/> — the one
-/// SimplCommerce uses — verifies hashes regardless of the iteration count baked into the stored hash.
-/// This is why a future Phase-6 import of SimplCommerce users authenticates with no code change.
-/// </summary>
+
 public class PasswordHashCompatibilityTests
 {
     private static readonly User User = new() { Id = 1, UserName = "buyer@example.com" };

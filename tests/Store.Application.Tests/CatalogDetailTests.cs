@@ -5,11 +5,7 @@ using Store.Domain;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Product-detail behavior:
-/// attributes, categories, variations (child products linked via <c>ProductLink</c> type Super,
-/// options ordered by SortIndex) and related/cross-sell products.
-/// </summary>
+
 public class CatalogDetailTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

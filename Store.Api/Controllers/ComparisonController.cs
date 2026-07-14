@@ -9,7 +9,6 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's product comparison list (max 4 products).</summary>
 [ApiController]
 [Authorize]
 [Route("api/comparison")]

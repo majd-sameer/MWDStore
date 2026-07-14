@@ -5,11 +5,7 @@ using static Store.Application.Tests.CheckoutTestSupport;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Warehouse stock administration: clamp at
-/// zero, mirror the delta onto <c>Product.StockQuantity</c>, audit, and fire back-in-stock on the 0→positive
-/// crossing.
-/// </summary>
+
 public class InventoryStockServiceTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

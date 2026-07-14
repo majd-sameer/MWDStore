@@ -6,7 +6,6 @@ using Store.Application.ShoppingCart;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's shopping cart.</summary>
 [ApiController]
 [Authorize]
 [Route("api/cart")]
@@ -16,7 +15,6 @@ public sealed class CartController : ControllerBase
 
     public CartController(ICartService cart) => _cart = cart;
 
-    /// <summary>The current cart with computed sub-total and discount; optionally validates a coupon.</summary>
     [HttpGet]
     public async Task<ActionResult<CartModel>> Get(
         [FromQuery] string? couponCode, CancellationToken cancellationToken)

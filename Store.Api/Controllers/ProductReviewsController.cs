@@ -8,10 +8,7 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>
-/// Public product reviews: anyone reads approved reviews; signed-in customers submit reviews that
-/// land in moderation as Pending (status 1).
-/// </summary>
+
 [ApiController]
 [Route("api/products/{productId:long}/reviews")]
 public sealed class ProductReviewsController : ControllerBase

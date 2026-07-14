@@ -3,8 +3,7 @@ using Store.Data;
 
 namespace Store.Application.Tests;
 
-/// <summary>A <see cref="TimeProvider"/> whose "now" is frozen, so the time-boxed special-price
-/// window in the pricing service is deterministic.</summary>
+
 public sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
 {
     private readonly DateTimeOffset _now = now;
@@ -14,7 +13,6 @@ public sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
 
 internal static class TestDb
 {
-    /// <summary>A fresh isolated in-memory <see cref="StoreDbContext"/>.</summary>
     public static StoreDbContext New()
     {
         var options = new DbContextOptionsBuilder<StoreDbContext>()

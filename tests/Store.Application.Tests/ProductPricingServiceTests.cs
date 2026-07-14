@@ -2,9 +2,6 @@ using Store.Application.Catalog.Pricing;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Sample cases for <c>ProductPricingService.CalculateProductPrice</c>.
-/// </summary>
 public class ProductPricingServiceTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

@@ -9,7 +9,6 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>The signed-in customer's recently viewed products.</summary>
 [ApiController]
 [Authorize]
 [Route("api/recently-viewed")]

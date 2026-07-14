@@ -10,7 +10,6 @@ using Store.Data;
 
 namespace Store.Api.Controllers;
 
-/// <summary>Public storefront catalog: product search, category listings, product detail, categories and brands.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/catalog")]
@@ -33,11 +32,9 @@ public sealed class CatalogController : ControllerBase
         _localization = localization;
     }
 
-    /// <summary>Overlays English product fields onto a listing when the request asks for English.</summary>
     private Task LocalizeAsync(ProductListResult result, CancellationToken cancellationToken) =>
         LocalizeProductsAsync(result.Products, cancellationToken);
 
-    /// <summary>Overlays English name/short-description onto a set of list items when English is requested.</summary>
     private async Task LocalizeProductsAsync(
         IList<ProductListItem> products, CancellationToken cancellationToken)
     {
@@ -61,7 +58,6 @@ public sealed class CatalogController : ControllerBase
         }
     }
 
-    /// <summary>Curated signature products for the home rail (published + in-catalog, sorted).</summary>
     [HttpGet("signature")]
     public async Task<ActionResult<IList<ProductListItem>>> Signature(
         [FromQuery] int take = 8, CancellationToken cancellationToken = default)
@@ -71,7 +67,6 @@ public sealed class CatalogController : ControllerBase
         return Ok(products);
     }
 
-    /// <summary>Search/browse products with optional query, brand/category facets, price range, sort and paging.</summary>
     [HttpGet("products")]
     public async Task<ActionResult<ProductListResult>> Search(
         [FromQuery] ProductListOptions options, CancellationToken cancellationToken)
@@ -93,7 +88,6 @@ public sealed class CatalogController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Products within a category.</summary>
     [HttpGet("categories/{categoryId:long}/products")]
     public async Task<ActionResult<ProductListResult>> ByCategory(
         long categoryId, [FromQuery] ProductListOptions options, CancellationToken cancellationToken)
@@ -190,7 +184,6 @@ public sealed class CatalogController : ControllerBase
         return Ok(brands);
     }
 
-    /// <summary>Count of active vendors (reform &amp; rehabilitation centers), for the home hero stat.</summary>
     [HttpGet("vendors/count")]
     public async Task<ActionResult<int>> VendorCount(CancellationToken cancellationToken)
     {

@@ -3,7 +3,6 @@ using Store.Domain;
 
 namespace Store.Application.Tests;
 
-/// <summary>Seeding helpers shared by the cart and order totals tests.</summary>
 internal static class CheckoutTestSupport
 {
     public const long CustomerId = 1;
@@ -32,7 +31,6 @@ internal static class CheckoutTestSupport
         LatestUpdatedById = 1
     };
 
-    /// <summary>Adds a checkout with the given (product, quantity) lines and returns its id.</summary>
     public static Guid AddCheckout(
         StoreDbContext db,
         IEnumerable<(Product Product, int Quantity)> lines,
@@ -64,7 +62,6 @@ internal static class CheckoutTestSupport
         return checkout.Id;
     }
 
-    /// <summary>A US tax rate acting as a wildcard over state/zip.</summary>
     public static void AddTaxRate(StoreDbContext db, long taxClassId, decimal rate, string countryId = "US")
     {
         db.Set<TaxClass>().Add(new TaxClass { Id = taxClassId, Name = "Class " + taxClassId });

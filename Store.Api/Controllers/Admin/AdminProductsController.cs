@@ -12,18 +12,12 @@ using Store.Domain;
 
 namespace Store.Api.Controllers.Admin;
 
-/// <summary>
-/// Admin product management: scalars + SEO, categories, media (by uploaded media id),
-/// attribute values, options, variations (child products linked via <c>ProductLinkType.Super</c>
-/// with option combinations, matched by name) and related/cross-sell links.
-/// Deletes are soft (sets <c>IsDeleted</c>).
-/// </summary>
+
 [ApiController]
 [Authorize(Policy = AuthPolicies.Catalog)]
 [Route("api/admin/products")]
 public sealed class AdminProductsController : ControllerBase
 {
-    /// <summary>PascalCase to stay byte-compatible with existing option-value rows.</summary>
     private static readonly JsonSerializerOptions OptionValueJson = new() { PropertyNamingPolicy = null };
 
     private const string EntityType = LocalizedEntity.Product;
@@ -593,7 +587,6 @@ public sealed class AdminProductsController : ControllerBase
     private Task<LocalizedOverlay> LoadEnglishAsync(long id, CancellationToken cancellationToken) =>
         _localization.GetOverlayAsync(EntityType, new[] { id }, EnCulture, cancellationToken);
 
-    /// <summary>Upserts (or clears) the English overlay for the product's 7 localizable fields.</summary>
     private async Task WriteEnglishAsync(long id, ProductUpsertRequest request, CancellationToken cancellationToken)
     {
         await _localizedWriter.SetAsync(EntityType, id, LocalizedProperty.Name, EnCulture, request.NameEn, cancellationToken);

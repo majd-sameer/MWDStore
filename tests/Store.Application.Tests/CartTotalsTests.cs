@@ -7,11 +7,6 @@ using static Store.Application.Tests.CheckoutTestSupport;
 
 namespace Store.Application.Tests;
 
-/// <summary>
-/// Cart mutation and totals math:
-/// add merges quantities, sub-total is summed at the regular price, and coupon + catalog savings are
-/// folded into a single discount.
-/// </summary>
 public class CartTotalsTests
 {
     private static readonly DateTimeOffset Now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);

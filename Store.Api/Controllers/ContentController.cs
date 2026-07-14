@@ -10,7 +10,6 @@ using Store.Domain;
 
 namespace Store.Api.Controllers;
 
-/// <summary>Public content: CMS pages by slug, news listing/detail, content blocks and the contact form.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api")]
