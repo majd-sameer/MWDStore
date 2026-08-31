@@ -1,0 +1,254 @@
+# Madfoat.com Payment Method — Technical Reference
+
+How the **MadfoatCom** payment method is implemented in MyStore, what talks to what, and why each
+piece exists. Written for a developer who has to maintain, extend, or debug the integration.
+
+> **TL;DR** — MadfoatCom is a real integration against **PayTabs' Hosted Payment Page (HPP)** API,
+> served from Madfoat's **white-label PayTabs instance**. The shopper is redirected to a
+> Madfoat-branded page hosted by PayTabs, pays there, and is redirected back. Our server never sees
+> card data. Settlement never trusts the browser: it always re-queries PayTabs for the authoritative
+> transaction status.
+
+---
+
+## 1. The environment (hard-won facts)
+
+| Fact | Value | Why it matters |
+|---|---|---|
+| API origin | `https://madfoat-secure.paytabs.com` | This is a **white-label shard**. The profile's keys are *unknown* to every standard PayTabs region (`secure.paytabs.com`, `secure-jordan.paytabs.com`, …) — calling any of them returns `{"code":1,"message":"Authentication failed"}`, which looks like a bad key but means **wrong host**. |
+| Merchant dashboard | `https://madfoat-merchant.paytabs.com/merchant/login` | Rule of thumb: swap `-merchant` for `-secure` to get the API host. |
+| Profile | ID **47255** ("crc"), merchant 1897, **Test mode** | Test mode still makes live API calls; "sandbox" means test cards only, not a simulated flow. |
+| Currency | **JOD only** | Any other currency fails with `code 206 "Currency not available"`. JOD is a three-decimal currency (`20.000`). |
+| API keys | Dashboard → **Developers → API Keys** | A key is scoped by permission. Use a Standard key with **Query** enabled (the one titled *"Test API Key"*). A key without Query can create pages but settlement fails with `"Transaction Query not permitted with this key"`. SDK/Mobile keys do not work for server API calls. |
+| Test card | `4111 1111 1111 1111`, any future expiry, CVV `123` | Authorises in test mode. |
+
+**Secrets policy:** the server key is not only an API credential — it is also the HMAC key for
+signature verification. It exists **only** in the `PaymentProvider.AdditionalSettings` JSON in the
+database (entered through the admin UI), never in source, config files, or docs.
+
+---
+
+## 2. Code map
+
+### Backend (`Store.Application` / `Store.Api`)
+
+| File | Role |
+|---|---|
+| `Store.Application/Payments/PayTabs/PayTabsRegions.cs` | Region code → API origin map. `MADFOAT` (the default) → `https://madfoat-secure.paytabs.com`; the seven standard PayTabs regions are also listed for portability. |
+| `Store.Application/Payments/PayTabs/PayTabsModels.cs` | Request/response records (`PayTabsPageRequest`, `PayTabsPage`, `PayTabsTransaction`), `PayTabsResponseStatus` constants, `PayTabsException`. |
+| `Store.Application/Payments/PayTabs/IPayTabsClient.cs` / `PayTabsClient.cs` | HTTP client. Singleton over one long-lived `HttpClient`. Two operations: `CreateHostedPageAsync` (`POST /payment/request`) and `QueryTransactionAsync` (`POST /payment/query`). |
+| `Store.Application/Payments/PayTabs/PayTabsSignature.cs` | Both signature-verification schemes (see §5). Security-critical. |
+| `Store.Application/Payments/GatewaySettings.cs` | Parses provider `AdditionalSettings` JSON → typed settings (`PayTabsProfileId`, `PayTabsServerKey`, `PayTabsRegion`, …). |
+| `Store.Application/Payments/GatewayPaymentService.cs` | Orchestration: `CreatePayTabsPageAsync` (initiate) and `SettlePayTabsTransactionAsync` (settle). Provider id constant `MadfoatCom`. |
+| `Store.Api/Controllers/PaymentsController.cs` | The three public endpoints: `paytabs/return`, `paytabs/verify`, `paytabs/callback`. |
+| `tests/Store.Application.Tests/PayTabsSignatureTests.cs` | 22 tests pinning the signature schemes against digests computed by an **independent** implementation (Node `crypto`) — they assert agreement with PayTabs' spec, not self-consistency. |
+
+### Frontend (`web/`)
+
+| File | Role |
+|---|---|
+| `projects/storefront/.../checkout/payment-madfoatcom-return.{ts,html,scss}` | Landing page after the gateway redirect (`/payment/madfoatcom/return`). Reads `tranRef` from the query, calls the verify endpoint, shows paid/failed, then navigates on. |
+| `projects/admin/.../payments/payment-madfoatcom-form.{ts,html}` | Admin config form (route `payments/MadfoatCom`, registered **before** the generic `payments/:id`). Serialises to the provider's `additionalSettings` JSON. |
+| `projects/data-access` (`models.ts`, `payments.service.ts`) | `PayTabsVerifyRequest` + `paytabsVerify()` → `POST /api/payments/paytabs/verify`. |
+
+### Configuration
+
+Provider row `PaymentProvider.Id = 'MadfoatCom'`, with `AdditionalSettings` shaped like:
+
+```json
+{
+  "profileId": "47255",
+  "serverKey": "<from dashboard — key WITH Query permission>",
+  "clientKey": "<from dashboard — unused by HPP, kept for future browser-side flows>",
+  "region": "MADFOAT",
+  "currency": "JOD",
+  "isSandbox": true,
+  "paymentFee": 0
+}
+```
+
+`Payments:PublicApiBaseUrl` (in `appsettings.*.json`) is the origin PayTabs redirects/calls back to.
+On localhost the IPN callback is **omitted automatically** (see §4, step 3).
+
+---
+
+## 3. The payment cycle
+
+```mermaid
+sequenceDiagram
+    participant B as Shopper's browser
+    participant SF as Storefront (Angular)
+    participant API as Store.Api
+    participant PT as PayTabs (madfoat-secure)
+
+    B->>SF: Confirm & pay (method = MadfoatCom)
+    SF->>API: POST /api/payments/initiate {orderId, method, returnUrl}
+    API->>API: create Payment row (PendingExecution), order → PendingPayment
+    API->>PT: POST /payment/request (profile_id, cart, amounts, return, callback)
+    PT-->>API: { tran_ref, redirect_url }
+    API->>API: store tran_ref on Payment.GatewayTransactionId
+    API-->>SF: { redirectUrl, isSandbox:false }
+    SF->>B: window.location = redirect_url
+    B->>PT: Hosted payment page — card entry (never touches our servers)
+    PT->>API: browser form-POST to /api/payments/paytabs/return (+ signature)
+    API->>API: verify return signature (log-only), extract tranRef
+    API-->>B: 302 → /payment/madfoatcom/return?tranRef=…
+    B->>SF: verify page loads
+    SF->>API: POST /api/payments/paytabs/verify { tranRef }
+    API->>PT: POST /payment/query { profile_id, tran_ref }
+    PT-->>API: { payment_result: { response_status: "A", … } }
+    API->>API: Payment → Succeeded, Order → PaymentReceived (idempotent)
+    API-->>SF: { approved: true }
+    SF->>B: show "paid", then navigate to returnUrl
+
+    Note over PT,API: In parallel (public servers only): PayTabs POSTs the signed IPN to /api/payments/paytabs/callback, which settles through the same query path.
+```
+
+---
+
+## 4. Step-by-step, with the decisions that matter
+
+### Step 1 — Initiate (`GatewayPaymentService.CreatePayTabsPageAsync`)
+
+- Guard rails first: order must exist, belong to the caller, and be `New`/`PendingPayment`; the
+  provider must be enabled and hold a profile id + server key.
+- A `Payment` row is created **before** calling PayTabs, so a failed gateway call leaves an
+  auditable `PendingExecution` attempt and the order stays retryable.
+- **`cart_id` is `"{orderId}-{paymentId}"`** — unique per attempt. PayTabs rejects a `cart_id` it
+  has already seen, so using the order id alone would block a shopper retrying after a decline.
+- `profile_id` is coerced to an **integer** (`PayTabsClient.ParseProfileId`) — sending it as a
+  string is a classic cause of auth failures.
+- Amounts are rounded to the currency's minor units (3 for JOD) — excess precision is rejected.
+- `customer_details`/`shipping_details` are projected from the order's shipping address.
+  **`state` is deliberately omitted**: PayTabs normalises it to a 2-letter code, our governorate
+  names are Arabic, and with `hide_shipping` the page never displays it — sending it can only cause
+  a validation failure. (PayTabs' own page asks the shopper for State/Region if its rules need it.)
+- `paypage_lang` follows the request culture (`ar`/`en`).
+- The returned `tran_ref` is persisted on `Payment.GatewayTransactionId`. This is the join key for
+  everything that follows — and because PayTabs issues it and it is unguessable, presenting it also
+  proves the caller took part in this payment.
+
+### Step 2 — Authentication to PayTabs (`PayTabsClient.PostAsync`)
+
+The server key goes **verbatim** into the `authorization` header — no `Bearer` scheme. That fails
+.NET's typed-header validation, hence `TryAddWithoutValidation`. PayTabs reports validation errors
+as `{code, message}` JSON with *either* 200 or 4xx, so the body is always read and the HTTP status
+alone is never the verdict.
+
+### Step 3 — Return vs. callback URLs
+
+Two distinct legs with different trust levels:
+
+- **`return`** — where PayTabs form-POSTs the *shopper's browser*. No SPA route can accept a
+  cross-origin POST, so it targets the API (`/api/payments/paytabs/return`), which redirects on to
+  the storefront. A localhost return URL is accepted by PayTabs (it only has to work in the
+  shopper's browser).
+- **`callback`** — PayTabs' server-to-server IPN (`/api/payments/paytabs/callback`). PayTabs
+  **validates this URL at page-creation time and rejects loopback hosts** with
+  `code 210 "Invalid Callback URL"`. Since PayTabs' servers could never reach localhost anyway, the
+  callback is **omitted entirely when `PublicApiBaseUrl` is a loopback address**
+  (`GatewayPaymentService.IsLoopback`) and settlement rides on the return leg alone. On a public
+  deployment it is sent, giving a settlement path that works even if the shopper closes the tab.
+
+### Step 4 — Return endpoint (`PaymentsController.PayTabsReturn`)
+
+Accepts POST (normal) and GET (some redirect variants). It:
+
+1. Reads the gateway's fields — from the form body when present, otherwise from the query string
+   **excluding our own `orderId`/`returnUrl` parameters** (PayTabs never signed those; folding them
+   in would make every legitimate signature fail).
+2. Verifies the return signature — **for logging only**. A mismatch logs a warning but still
+   redirects, because this endpoint changes no state and settlement re-queries PayTabs regardless.
+   A forged return therefore buys an attacker nothing.
+3. 302-redirects the browser to the storefront verify page with `tranRef`.
+
+### Step 5 — Settlement (`GatewayPaymentService.SettlePayTabsTransactionAsync`)
+
+Single funnel used by both the storefront verify call and the IPN. Rules:
+
+- **Always re-query PayTabs** (`POST /payment/query`). The browser redirect is
+  attacker-controllable and the IPN body is only as trustworthy as its signature; PayTabs' own
+  answer is the only thing settlement acts on. This requires the key's **Query** permission.
+- **Idempotent**: if the payment is already `Succeeded`, return success without touching anything —
+  the return page and the IPN routinely race.
+- Status mapping (`payment_result.response_status`):
+
+  | Status | Meaning | Action |
+  |---|---|---|
+  | `A` (Authorised), `H` (Hold) | Paid | Payment → `Succeeded`, Order → `PaymentReceived` |
+  | `P` (Pending) | Undecided (async method / shopper mid-flow) | **Change nothing** — a later IPN or revisit can still settle; failing now would strand an order about to be paid |
+  | `D`/`C`/`V`/`E`/`X` (Declined/Cancelled/Voided/Error/Expired) | Failed | Payment → `Failed` with PayTabs' message; **order stays `PendingPayment`** so the shopper can retry (same or different method) |
+
+### Step 6 — IPN callback (`PaymentsController.PayTabsCallback`)
+
+- Reads the **raw** request body, verifies the `signature` HTTP header (HMAC of those exact bytes),
+  and returns **400** on mismatch — this endpoint *does* gate on the signature because it has no
+  browser context at all.
+- On a valid signature it extracts `tran_ref` and settles through the same funnel (still
+  re-querying — a valid signature proves PayTabs sent it, not that the body says "paid").
+- Returns 200 for anything it cannot act on (unconfigured provider, missing tran_ref) so PayTabs
+  stops retrying.
+
+---
+
+## 5. Signature verification (`PayTabsSignature`)
+
+PayTabs uses **two different schemes**, both HMAC-SHA256 keyed with the **server key**:
+
+1. **Callback / IPN** — digest of the **raw request body bytes**, sent in the `signature` HTTP
+   header. Hash before any JSON parse/re-serialise round trip: the digest covers bytes, not JSON
+   semantics.
+2. **Return** — digest of a canonical string rebuilt from the posted fields, sent as a `signature`
+   *form field*. The canonical string reproduces PayTabs' PHP reference exactly:
+   - `array_filter`: drop `null`, `""` **and the literal string `"0"`** (PHP falsiness — the
+     easiest thing to get wrong in a port);
+   - `ksort`: ordinal key sort;
+   - `http_build_query`/`urlencode`: space → `+`, `~` and `/` escaped, `-` `_` `.` left alone,
+     UTF-8 bytes as upper-case percent-hex;
+   - the `signature` field itself is excluded from the digest.
+
+Both verifiers compare in constant time (`CryptographicOperations.FixedTimeEquals` over decoded
+bytes), return `false` (never throw) on malformed hex, and **fail closed** when no server key is
+configured. The unit tests pin all of this against independently computed digests — in the first
+live transaction the return signature verified on the first attempt.
+
+---
+
+## 6. Error catalogue (observed, not theoretical)
+
+| Response | Real meaning | Fix |
+|---|---|---|
+| `code 1` — "Authentication failed. Check authentication header." | **Wrong API host** for this profile (white-label vs. regional), or genuinely wrong/SDK key. PayTabs rejects the key before even looking at the profile — a bogus profile id produces the byte-identical error. | Use `https://madfoat-secure.paytabs.com`; use a Standard (not SDK) key. |
+| `code 206` — "Currency not available" | Profile not enabled for that currency. | Use `JOD`. |
+| `code 210` — "Invalid Callback URL" | Callback URL is loopback/unreachable — validated at page creation. | Automatic: callback omitted on localhost. On servers, `PublicApiBaseUrl` must be the public HTTPS origin. |
+| `code 1` — "Transaction Query not permitted with this key" | Key lacks the **Query** permission. Pages get created; settlement fails. | Use the key with Query enabled (dashboard → Developers → API Keys). |
+| Verify returns 400 "Payment not found for this transaction." | `tranRef` matches no stored `Payment.GatewayTransactionId`. | Expected for forged/unknown refs. |
+
+---
+
+## 7. Testing it locally
+
+1. API on `https://localhost:7142`, storefront on `:4200` (see `CLAUDE.md`).
+2. Admin → **Payments → MadfoatCom**: enable, set profile id + server key (Query-enabled key),
+   region `MADFOAT`, currency `JOD`.
+3. Storefront: add to cart → checkout → select **MadfoatCom** → Confirm & pay → you land on the
+   Madfoat-branded hosted page (yellow **TEST MODE** badge).
+4. Pay with `4111 1111 1111 1111`, future expiry, CVV `123` (fill State/Region if the page asks).
+5. You are redirected back through `/api/payments/paytabs/return` →
+   `/payment/madfoatcom/return` → verify → order shows **Payment received**.
+6. Cross-check in the merchant dashboard: Transactions list shows the `TST…` ref with status **A**.
+
+Run the signature test suite with
+`dotnet test --filter "FullyQualifiedName~PayTabsSignatureTests"` (part of the standard 142).
+
+---
+
+## 8. Extending
+
+- **New white-label or region:** add one entry to `PayTabsRegions.BaseUrls` and to the `REGIONS`
+  list in the admin form. Everything else keys off the stored region code.
+- **Refunds/voids:** the key already carries the permissions; add operations to `IPayTabsClient`
+  (`/payment/request` with `tran_type: "refund"` + `tran_ref`) and drive them from the admin order
+  screen.
+- **Browser-side flows (Payment SDK / managed form):** that is what the stored `clientKey` is for;
+  the HPP flow never uses it.
