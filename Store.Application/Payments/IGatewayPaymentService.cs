@@ -20,8 +20,17 @@ public interface IGatewayPaymentService
     /// the order to <c>PendingPayment</c>, and returns the URL to send the shopper to (the gateway
     /// hosted page, or — in sandbox — a simulated one).
     /// </summary>
+    /// <param name="language">
+    /// Preferred language for the gateway's hosted page (<c>en</c> / <c>ar</c>); null falls back to
+    /// English. Only the gateways that host their own page act on it.
+    /// </param>
     Task<Result<GatewayInitiationResult>> InitiatePaymentAsync(
-        string method, long orderId, long customerId, string returnUrl, CancellationToken cancellationToken = default);
+        string method,
+        long orderId,
+        long customerId,
+        string returnUrl,
+        string? language = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Handles the gateway callback / return: verifies the signature (skipped in sandbox), marks the
@@ -38,6 +47,17 @@ public interface IGatewayPaymentService
     /// </summary>
     Task<Result<GatewayPaymentResult>> SettleStripeSessionAsync(
         string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Settles a PayTabs (MadfoatCom) hosted-page payment from its transaction reference, re-querying
+    /// PayTabs for the authoritative status instead of trusting the browser return or the callback
+    /// body. Used by both the storefront return page and the server-to-server IPN; idempotent —
+    /// re-settling an already-paid transaction just returns the existing result. The <c>tran_ref</c>
+    /// (issued by PayTabs and stored on the pending payment) identifies the payment, so no customer
+    /// identity is required.
+    /// </summary>
+    Task<Result<GatewayPaymentResult>> SettlePayTabsTransactionAsync(
+        string tranRef, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Where to send the shopper after initiating a payment.</summary>

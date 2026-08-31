@@ -25,7 +25,8 @@ public sealed class AdminPaymentsController : ControllerBase
         ("Stripe", "Stripe", false),
         ("Braintree", "Braintree", false),
         ("PaypalExpress", "Paypal Express", false),
-        ("MEPS", "MEPS (Middle East Payment Services)", false)
+        ("MEPS", "MEPS (Middle East Payment Services)", false),
+        ("MadfoatCom", "MadfoatCom", false)
     ];
 
     private readonly StoreDbContext _db;

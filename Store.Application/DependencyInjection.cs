@@ -10,6 +10,7 @@ using Store.Application.Inventory;
 using Store.Application.Localization;
 using Store.Application.Orders;
 using Store.Application.Payments;
+using Store.Application.Payments.PayTabs;
 using Store.Application.Payments.Stripe;
 using Store.Application.Pricing.Coupons;
 using Store.Application.Shipping;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IGatewayPaymentService, GatewayPaymentService>();
         services.TryAddSingleton<IStripeClient, StripeClient>();
+        services.TryAddSingleton<IPayTabsClient, PayTabsClient>();
         // Host (Store.Api) binds this from configuration; fall back to defaults when it doesn't.
         services.TryAddSingleton(new PaymentsOptions());
 

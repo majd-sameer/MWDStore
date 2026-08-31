@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Store.Application.Payments.PayTabs;
 
 namespace Store.Application.Payments;
 
@@ -17,7 +18,7 @@ public sealed record GatewaySettings
 {
     /// <summary>Credential keys any of the standard providers may store.</summary>
     private static readonly string[] CredentialKeys =
-        ["clientId", "clientSecret", "secretKey", "privateKey", "publicKey", "merchantId", "terminalId"];
+        ["clientId", "clientSecret", "secretKey", "privateKey", "publicKey", "merchantId", "terminalId", "serverKey"];
 
     /// <summary>Keys (in priority order) used as the HMAC signing secret for callbacks.</summary>
     private static readonly string[] SecretKeys = ["secretKey", "clientSecret", "privateKey"];
@@ -52,6 +53,34 @@ public sealed record GatewaySettings
     public bool HasStripeKeys =>
         !string.IsNullOrWhiteSpace(StripePublishableKey) && !string.IsNullOrWhiteSpace(StripeSecretKey);
 
+    /// <summary>PayTabs merchant profile id (numeric, from the PayTabs dashboard); empty for other providers.</summary>
+    public string PayTabsProfileId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// PayTabs profile server key. Authenticates API calls <b>and</b> keys the HMAC on both the return
+    /// and callback signatures, so it is the one PayTabs credential that must never leave the server.
+    /// </summary>
+    public string PayTabsServerKey { get; init; } = string.Empty;
+
+    /// <summary>
+    /// PayTabs client key. Only needed by the browser-side integrations (Managed/Own Form); the hosted
+    /// page flow never uses it. Stored so switching integration types later doesn't need new config.
+    /// </summary>
+    public string PayTabsClientKey { get; init; } = string.Empty;
+
+    /// <summary>
+    /// PayTabs region code (<c>ARE</c>, <c>SAU</c>, <c>JOR</c>, …). Picks the API domain; the wrong one
+    /// fails as an authentication error rather than a routing one.
+    /// </summary>
+    public string PayTabsRegion { get; init; } = PayTabsRegions.Default;
+
+    /// <summary>True when the profile id and server key are both present, so the live HPP flow can run.</summary>
+    public bool HasPayTabsKeys =>
+        !string.IsNullOrWhiteSpace(PayTabsProfileId) && !string.IsNullOrWhiteSpace(PayTabsServerKey);
+
+    /// <summary>The PayTabs API origin for the configured region.</summary>
+    public string PayTabsBaseUrl => PayTabsRegions.BaseUrl(PayTabsRegion);
+
     /// <summary>Parses the provider's settings JSON, tolerant of camel/Pascal casing.</summary>
     public static GatewaySettings Parse(string? additionalSettings)
     {
@@ -65,8 +94,13 @@ public sealed record GatewaySettings
             using var doc = JsonDocument.Parse(additionalSettings);
             var root = doc.RootElement;
             var currency = FirstNonEmpty(root, ["currency", "Currency"]);
+            var region = FirstNonEmpty(root, ["region", "Region"]);
             return new GatewaySettings
             {
+                PayTabsProfileId = FirstNonEmptyScalar(root, ["profileId", "ProfileId", "profile_id"]),
+                PayTabsServerKey = FirstNonEmpty(root, ["serverKey", "ServerKey", "server_key"]),
+                PayTabsClientKey = FirstNonEmpty(root, ["clientKey", "ClientKey", "client_key"]),
+                PayTabsRegion = PayTabsRegions.IsKnown(region) ? region.Trim() : PayTabsRegions.Default,
                 IsSandbox = GetBool(root, "isSandbox", "IsSandbox", defaultValue: true),
                 PaymentFee = GetDecimal(root, "paymentFee", "PaymentFee"),
                 HasCredentials = CredentialKeys.Any(k => !string.IsNullOrWhiteSpace(GetString(root, k))),
@@ -81,6 +115,39 @@ public sealed record GatewaySettings
         {
             return new GatewaySettings();
         }
+    }
+
+    /// <summary>
+    /// Like <see cref="FirstNonEmpty"/> but also accepts a JSON number. PayTabs' profile id is numeric,
+    /// and whether it lands in the settings blob quoted or bare depends on who wrote it (the admin form
+    /// writes a string; hand-edited or seeded JSON often doesn't).
+    /// </summary>
+    private static string FirstNonEmptyScalar(JsonElement root, string[] names)
+    {
+        foreach (var name in names)
+        {
+            foreach (var candidate in new[] { name, Pascal(name) })
+            {
+                if (!root.TryGetProperty(candidate, out var el))
+                {
+                    continue;
+                }
+
+                var value = el.ValueKind switch
+                {
+                    JsonValueKind.String => el.GetString(),
+                    JsonValueKind.Number => el.GetRawText(),
+                    _ => null
+                };
+
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return value.Trim();
+                }
+            }
+        }
+
+        return string.Empty;
     }
 
     private static string FirstNonEmpty(JsonElement root, string[] names)

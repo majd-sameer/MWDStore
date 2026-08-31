@@ -140,6 +140,17 @@ export const routes: Routes = [
       ),
   },
   {
+    // MadfoatCom (PayTabs) return landing. PayTabs form-POSTs the API, which verifies and
+    // redirects here with the tran_ref; this page settles server-side, then forwards the
+    // shopper to their account or the public track page.
+    path: 'payment/madfoatcom/return',
+    title: 'Confirming payment',
+    loadComponent: () =>
+      import('./features/checkout/payment-madfoatcom-return').then(
+        (m) => m.PaymentMadfoatcomReturn,
+      ),
+  },
+  {
     // Public order tracking by number + email (no sign-in required).
     path: 'track-order',
     title: 'Track your order',

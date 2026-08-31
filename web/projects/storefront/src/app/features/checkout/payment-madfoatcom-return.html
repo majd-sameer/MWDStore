@@ -1,0 +1,19 @@
+
+    <main class="wrap return">
+      <section class="card">
+        @if (state() === 'verifying') {
+          <span class="spinner" aria-hidden="true"></span>
+          <h1 class="title">{{ 'madfoatcom_return.verifying' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.verifying_sub' | translate }}</p>
+        } @else if (state() === 'paid') {
+          <span class="ic ok"><lib-icon name="check" [size]="40" /></span>
+          <h1 class="title">{{ 'madfoatcom_return.paid' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.redirecting' | translate }}</p>
+        } @else {
+          <span class="ic bad"><lib-icon name="lock" [size]="40" /></span>
+          <h1 class="title">{{ 'madfoatcom_return.failed' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.redirecting' | translate }}</p>
+        }
+      </section>
+    </main>
+  

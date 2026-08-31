@@ -301,6 +301,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'payments/MadfoatCom',
+        title: 'Configure MadfoatCom · MadeWithDetermination Admin',
+        canActivate: [roleGuard(...AREA.payments)],
+        loadComponent: () =>
+          import('./features/payments/payment-madfoatcom-form').then(
+            (m) => m.AdminPaymentMadfoatcomForm,
+          ),
+      },
+      {
         path: 'payments/:id',
         title: 'Configure provider · MadeWithDetermination Admin',
         canActivate: [roleGuard(...AREA.payments)],

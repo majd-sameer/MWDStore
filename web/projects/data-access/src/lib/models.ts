@@ -310,6 +310,12 @@ export interface StripeVerifyRequest {
   sessionId: string;
 }
 
+/** Request to settle a MadfoatCom payment from its PayTabs transaction reference. */
+export interface PayTabsVerifyRequest {
+  /** The PayTabs `tran_ref` (`TST…`) the API forwards to the return page. */
+  tranRef: string;
+}
+
 export interface PlaceOrderRequest {
   shippingAddress: AddressDto;
   billingAddress?: AddressDto;

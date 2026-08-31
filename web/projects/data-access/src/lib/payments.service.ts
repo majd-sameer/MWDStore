@@ -9,6 +9,7 @@ import type {
   GuestPaymentInitiateRequest,
   PaymentInitiateRequest,
   PaymentMethodDto,
+  PayTabsVerifyRequest,
   StripeVerifyRequest,
 } from './models';
 
@@ -58,6 +59,17 @@ export class PaymentsService {
   stripeVerify(body: StripeVerifyRequest): Observable<GatewayPaymentResult> {
     return this.http.post<GatewayPaymentResult>(
       `${API_ROOT}/payments/stripe/verify`,
+      body,
+    );
+  }
+
+  /**
+   * POST /api/payments/paytabs/verify — settle a MadfoatCom payment by PayTabs transaction
+   * reference (anonymous). The API re-queries PayTabs, so the browser is never the source of truth.
+   */
+  paytabsVerify(body: PayTabsVerifyRequest): Observable<GatewayPaymentResult> {
+    return this.http.post<GatewayPaymentResult>(
+      `${API_ROOT}/payments/paytabs/verify`,
       body,
     );
   }

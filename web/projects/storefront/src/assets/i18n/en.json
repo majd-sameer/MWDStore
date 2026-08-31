@@ -329,6 +329,14 @@
     "paid": "Payment successful — thank you!",
     "declined": "Payment was declined."
   },
+  "madfoatcom_return": {
+    "verifying": "Confirming your payment…",
+    "verifying_sub": "Please wait while we confirm your payment with MadfoatCom.",
+    "paid": "Payment successful — thank you!",
+    "failed": "We couldn't confirm your payment.",
+    "canceled": "Payment was not completed.",
+    "redirecting": "Taking you back…"
+  },
   "stripe_return": {
     "verifying": "Confirming your payment…",
     "verifying_sub": "Please wait while we confirm your payment with Stripe.",

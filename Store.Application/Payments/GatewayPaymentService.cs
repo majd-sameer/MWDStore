@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Store.Application.Common;
 using Store.Application.Orders;
+using Store.Application.Payments.PayTabs;
 using Store.Application.Payments.Stripe;
 using Store.Data;
 using Store.Domain;
@@ -26,9 +27,16 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     /// <summary>Provider id of the Stripe gateway (matches the seeded <c>PaymentProvider</c> row).</summary>
     private const string Stripe = "Stripe";
 
+    /// <summary>
+    /// Provider id of the MadfoatCom gateway, which runs on PayTabs' Hosted Payment Page (matches the
+    /// seeded <c>PaymentProvider</c> row).
+    /// </summary>
+    public const string MadfoatCom = "MadfoatCom";
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IStripeClient _stripe;
+    private readonly IPayTabsClient _payTabs;
     private readonly PaymentsOptions _options;
     private readonly ILogger<GatewayPaymentService> _logger;
 
@@ -36,18 +44,25 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         StoreDbContext db,
         TimeProvider timeProvider,
         IStripeClient stripe,
+        IPayTabsClient payTabs,
         PaymentsOptions options,
         ILogger<GatewayPaymentService> logger)
     {
         _db = db;
         _timeProvider = timeProvider;
         _stripe = stripe;
+        _payTabs = payTabs;
         _options = options;
         _logger = logger;
     }
 
     public async Task<Result<GatewayInitiationResult>> InitiatePaymentAsync(
-        string method, long orderId, long customerId, string returnUrl, CancellationToken cancellationToken = default)
+        string method,
+        long orderId,
+        long customerId,
+        string returnUrl,
+        string? language = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(method) || string.Equals(method, CashOnDelivery, StringComparison.OrdinalIgnoreCase))
         {
@@ -103,6 +118,15 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         if (string.Equals(method, Stripe, StringComparison.OrdinalIgnoreCase) && settings.HasStripeKeys)
         {
             return await CreateStripeCheckoutAsync(order, payment, settings, returnUrl, cancellationToken);
+        }
+
+        // MadfoatCom is a real PayTabs integration, not a stub: it always registers the transaction
+        // with PayTabs and redirects to the page PayTabs returns. A demo profile is still a live API
+        // call — "sandbox" there means test cards, not a simulated flow — so IsSandbox=false is
+        // returned regardless, telling the storefront to redirect rather than show the local mock.
+        if (string.Equals(method, MadfoatCom, StringComparison.OrdinalIgnoreCase))
+        {
+            return await CreatePayTabsPageAsync(order, payment, settings, returnUrl, language, cancellationToken);
         }
 
         // TODO(payments): call the gateway "create session / register order" API with a signed request
@@ -278,6 +302,212 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
                 "Could not start the Stripe payment. Check the gateway keys and currency.");
         }
     }
+
+    public async Task<Result<GatewayPaymentResult>> SettlePayTabsTransactionAsync(
+        string tranRef, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tranRef))
+        {
+            return Result.Fail<GatewayPaymentResult>("Missing PayTabs transaction reference.");
+        }
+
+        // The tran_ref was stored on the payment at initiation, so it both locates the payment and
+        // proves the caller initiated it (PayTabs issues it and it is unguessable).
+        var payment = await _db.Payments
+            .Include(p => p.Order)
+            .ThenInclude(o => o.OrderHistories)
+            .Where(p => p.PaymentMethod == MadfoatCom && p.GatewayTransactionId == tranRef)
+            .OrderByDescending(p => p.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (payment == null)
+        {
+            return Result.Fail<GatewayPaymentResult>("Payment not found for this transaction.");
+        }
+
+        var order = payment.Order;
+
+        // Idempotent: the return page and the IPN routinely settle the same transaction at once.
+        if (payment.Status == PaymentStatus.Succeeded)
+        {
+            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, payment.GatewayTransactionId));
+        }
+
+        var settingsResult = await LoadEnabledSettingsAsync(MadfoatCom, cancellationToken);
+        if (!settingsResult.Success)
+        {
+            return Result.Fail<GatewayPaymentResult>(settingsResult.Error!);
+        }
+
+        var settings = settingsResult.Value!;
+        if (!settings.HasPayTabsKeys)
+        {
+            return Result.Fail<GatewayPaymentResult>("MadfoatCom is not configured.");
+        }
+
+        PayTabsTransaction transaction;
+        try
+        {
+            // Always re-query: the browser return is attacker-controllable and the IPN body is only as
+            // trustworthy as its signature, so PayTabs' own answer is the only thing settlement acts on.
+            transaction = await _payTabs.QueryTransactionAsync(
+                settings.PayTabsBaseUrl,
+                settings.PayTabsProfileId,
+                settings.PayTabsServerKey,
+                tranRef,
+                cancellationToken);
+        }
+        catch (PayTabsException ex)
+        {
+            _logger.LogError(
+                ex, "Failed to query PayTabs transaction {TranRef} for order {OrderId}.", tranRef, order.Id);
+            return Result.Fail<GatewayPaymentResult>("Could not verify the payment with MadfoatCom.");
+        }
+
+        var now = _timeProvider.GetUtcNow();
+
+        if (transaction.IsApproved)
+        {
+            payment.Status = PaymentStatus.Succeeded;
+            payment.FailureMessage = null;
+            payment.LatestUpdatedOn = now;
+            SetOrderStatus(order, OrderStatus.PaymentReceived, now, "MadfoatCom payment received.");
+            await _db.SaveChangesAsync(cancellationToken);
+            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, tranRef));
+        }
+
+        // Still undecided — an asynchronous method, or the shopper hasn't finished paying. Change
+        // nothing, so a later IPN (or the shopper coming back) can still settle it. Marking this
+        // failed would strand an order that is about to be paid.
+        if (transaction.IsPending)
+        {
+            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, false, tranRef));
+        }
+
+        // Declined / cancelled / voided / expired: fail this attempt only. The order stays
+        // PendingPayment so the shopper can retry, here or with another method.
+        payment.Status = PaymentStatus.Failed;
+        payment.FailureMessage = string.IsNullOrWhiteSpace(transaction.ResponseMessage)
+            ? $"MadfoatCom payment was not completed (status {transaction.ResponseStatus})."
+            : transaction.ResponseMessage;
+        payment.LatestUpdatedOn = now;
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, false, tranRef));
+    }
+
+    /// <summary>
+    /// Registers the order with PayTabs and returns their hosted payment page. Unlike the stub
+    /// gateways this always talks to PayTabs for real — a demo profile is still a live API call.
+    /// </summary>
+    private async Task<Result<GatewayInitiationResult>> CreatePayTabsPageAsync(
+        Order order,
+        Payment payment,
+        GatewaySettings settings,
+        string returnUrl,
+        string? language,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.HasPayTabsKeys)
+        {
+            return Result.Fail<GatewayInitiationResult>(
+                "MadfoatCom is not configured — set the PayTabs profile ID and server key.");
+        }
+
+        var apiBase = _options.PublicApiBaseUrl.TrimEnd('/');
+        var returnArg = Uri.EscapeDataString(string.IsNullOrWhiteSpace(returnUrl) ? "/account" : returnUrl);
+
+        // PayTabs form-POSTs the shopper's browser to `return`, which no SPA route can accept, so it
+        // lands on the API and is redirected on to the storefront from there. `callback` is the
+        // server-to-server IPN and only fires when this origin is publicly reachable.
+        var payTabsReturn = $"{apiBase}/api/payments/paytabs/return?orderId={order.Id}&returnUrl={returnArg}";
+        var payTabsCallback = $"{apiBase}/api/payments/paytabs/callback";
+
+        var party = await BuildPayTabsPartyAsync(order.Id, cancellationToken);
+
+        try
+        {
+            var page = await _payTabs.CreateHostedPageAsync(
+                new PayTabsPageRequest(
+                    BaseUrl: settings.PayTabsBaseUrl,
+                    ProfileId: settings.PayTabsProfileId,
+                    ServerKey: settings.PayTabsServerKey,
+                    // Unique per attempt: PayTabs rejects a cart_id it has already seen, so reusing the
+                    // order id alone would block a shopper retrying after a declined card.
+                    CartId: $"{order.Id}-{payment.Id}",
+                    CartDescription: $"Order #{order.Id}",
+                    Currency: settings.Currency.ToUpperInvariant(),
+                    Amount: payment.Amount,
+                    ReturnUrl: payTabsReturn,
+                    CallbackUrl: payTabsCallback,
+                    Language: NormalizeLanguage(language),
+                    Customer: party,
+                    Shipping: party),
+                cancellationToken);
+
+            // Persist the tran_ref so the return page and the IPN can locate and settle this payment.
+            payment.GatewayTransactionId = page.TranRef;
+            payment.LatestUpdatedOn = _timeProvider.GetUtcNow();
+            await _db.SaveChangesAsync(cancellationToken);
+
+            return Result.Ok(new GatewayInitiationResult(
+                payment.Id, order.Id, MadfoatCom, page.RedirectUrl, IsSandbox: false));
+        }
+        catch (PayTabsException ex)
+        {
+            _logger.LogError(
+                ex, "PayTabs page creation failed for order {OrderId} (code {Code}).", order.Id, ex.Code);
+            return Result.Fail<GatewayInitiationResult>(
+                "Could not start the MadfoatCom payment. Check the PayTabs profile ID, server key, region and currency.");
+        }
+    }
+
+    /// <summary>
+    /// The shopper's details for PayTabs' <c>customer_details</c>, read from the order's shipping
+    /// address. Returns null when the order has no address, in which case PayTabs collects what it
+    /// needs on its own page.
+    /// </summary>
+    private async Task<PayTabsParty?> BuildPayTabsPartyAsync(long orderId, CancellationToken cancellationToken)
+    {
+        var details = await _db.Orders
+            .AsNoTracking()
+            .Where(o => o.Id == orderId)
+            .Select(o => new
+            {
+                o.ShippingAddress.ContactName,
+                o.ShippingAddress.Phone,
+                o.ShippingAddress.AddressLine1,
+                o.ShippingAddress.City,
+                o.ShippingAddress.ZipCode,
+                o.ShippingAddress.CountryId,
+                // Guests have no account email; the one they gave at checkout lives on the order.
+                Email = o.GuestEmail ?? o.Customer.Email
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (details == null)
+        {
+            return null;
+        }
+
+        return new PayTabsParty(
+            Name: details.ContactName,
+            Email: details.Email,
+            Phone: details.Phone,
+            Street1: details.AddressLine1,
+            City: details.City,
+            // Deliberately omitted. PayTabs normalises `state` to a two-letter code, our governorate
+            // names are Arabic (see Store.Migrator/12_localize_governorates.sql), and with
+            // hide_shipping the page never shows an address — so sending it can only cause a
+            // validation failure, never help.
+            State: null,
+            // Country.Id is already the ISO 3166-1 alpha-2 code PayTabs expects.
+            Country: details.CountryId,
+            Zip: details.ZipCode);
+    }
+
+    /// <summary>Maps a request culture onto the two languages PayTabs' hosted page supports.</summary>
+    private static string NormalizeLanguage(string? language) =>
+        (language ?? string.Empty).StartsWith("ar", StringComparison.OrdinalIgnoreCase) ? "ar" : "en";
 
     private async Task<Result<GatewaySettings>> LoadEnabledSettingsAsync(string method, CancellationToken cancellationToken)
     {
