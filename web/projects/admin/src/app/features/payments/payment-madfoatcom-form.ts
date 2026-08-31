@@ -39,6 +39,7 @@ const MADFOATCOM_PROVIDER_ID = 'MadfoatCom';
  * an authentication error rather than a routing one — hence an explicit choice, not a guess.
  */
 const REGIONS = [
+  { code: 'MADFOAT', label: 'Madfoat white-label (madfoat-secure.paytabs.com)' },
   { code: 'ARE', label: 'United Arab Emirates (secure.paytabs.com)' },
   { code: 'SAU', label: 'Saudi Arabia (secure.paytabs.sa)' },
   { code: 'EGY', label: 'Egypt (secure-egypt.paytabs.com)' },
@@ -69,8 +70,8 @@ const MADFOATCOM_DEFAULTS: MadfoatcomConfig = {
   profileId: '',
   serverKey: '',
   clientKey: '',
-  region: 'ARE',
-  currency: 'AED',
+  region: 'MADFOAT',
+  currency: 'JOD',
   isSandbox: true,
   paymentFee: 0,
 };
@@ -86,8 +87,8 @@ function parseConfig(additionalSettings: string | null): MadfoatcomConfig {
       profileId: readKey(raw, 'profileId', 'ProfileId', 'profile_id'),
       serverKey: readKey(raw, 'serverKey', 'ServerKey', 'server_key'),
       clientKey: readKey(raw, 'clientKey', 'ClientKey', 'client_key'),
-      region: readKey(raw, 'region', 'Region') || 'ARE',
-      currency: (readKey(raw, 'currency', 'Currency') || 'AED').toUpperCase(),
+      region: readKey(raw, 'region', 'Region') || 'MADFOAT',
+      currency: (readKey(raw, 'currency', 'Currency') || 'JOD').toUpperCase(),
       isSandbox: (raw['isSandbox'] ?? raw['IsSandbox'] ?? true) !== false,
       paymentFee: typeof fee === 'number' || typeof fee === 'string' ? fee : 0,
     };
@@ -124,8 +125,8 @@ export class AdminPaymentMadfoatcomForm {
   protected readonly profileId = signal('');
   protected readonly serverKey = signal('');
   protected readonly clientKey = signal('');
-  protected readonly region = signal('ARE');
-  protected readonly currency = signal('AED');
+  protected readonly region = signal('MADFOAT');
+  protected readonly currency = signal('JOD');
   protected readonly isSandbox = signal(true);
   protected readonly paymentFee = signal<number | string>(0);
   protected readonly saving = signal(false);
@@ -160,8 +161,8 @@ export class AdminPaymentMadfoatcomForm {
       profileId: this.profileId().trim(),
       serverKey: this.serverKey().trim(),
       clientKey: this.clientKey().trim(),
-      region: this.region().trim() || 'ARE',
-      currency: (this.currency().trim() || 'AED').toUpperCase(),
+      region: this.region().trim() || 'MADFOAT',
+      currency: (this.currency().trim() || 'JOD').toUpperCase(),
       isSandbox: this.isSandbox(),
       paymentFee: Number(this.paymentFee()) || 0,
     };

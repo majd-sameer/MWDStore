@@ -23,7 +23,6 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.FullName).HasMaxLength(450);
         builder.Property(e => e.NormalizedEmail).HasMaxLength(256);
         builder.Property(e => e.NormalizedUserName).HasMaxLength(256);
-        builder.Property(e => e.RefreshTokenHash).HasMaxLength(450);
         builder.Property(e => e.UserName).HasMaxLength(256);
 
         builder.HasOne(d => d.DefaultBillingAddress).WithMany(p => p.UserDefaultBillingAddresses).HasForeignKey(d => d.DefaultBillingAddressId);

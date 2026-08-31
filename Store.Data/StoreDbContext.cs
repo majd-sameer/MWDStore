@@ -57,6 +57,7 @@ public class StoreDbContext : IdentityDbContext<User, Role, long, UserClaim, Use
     // IdentityDbContext<...>.
     public DbSet<StateOrProvince> StateOrProvinces => Set<StateOrProvince>();
     public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+    public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
     public DbSet<Vendor> Vendors => Set<Vendor>();
     public DbSet<Widget> Widgets => Set<Widget>();
     public DbSet<WidgetInstance> WidgetInstances => Set<WidgetInstance>();

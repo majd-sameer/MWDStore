@@ -418,9 +418,11 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
 
         // PayTabs form-POSTs the shopper's browser to `return`, which no SPA route can accept, so it
         // lands on the API and is redirected on to the storefront from there. `callback` is the
-        // server-to-server IPN and only fires when this origin is publicly reachable.
+        // server-to-server IPN: PayTabs validates it at page creation and rejects a loopback host
+        // outright (code 210 "Invalid Callback URL"), so it is omitted entirely in local development —
+        // where it could never be delivered anyway — and settlement rides on the return leg alone.
         var payTabsReturn = $"{apiBase}/api/payments/paytabs/return?orderId={order.Id}&returnUrl={returnArg}";
-        var payTabsCallback = $"{apiBase}/api/payments/paytabs/callback";
+        var payTabsCallback = IsLoopback(apiBase) ? null : $"{apiBase}/api/payments/paytabs/callback";
 
         var party = await BuildPayTabsPartyAsync(order.Id, cancellationToken);
 
@@ -504,6 +506,10 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             Country: details.CountryId,
             Zip: details.ZipCode);
     }
+
+    /// <summary>True when <paramref name="baseUrl"/> points at this machine and no gateway could reach it.</summary>
+    private static bool IsLoopback(string baseUrl) =>
+        Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.IsLoopback;
 
     /// <summary>Maps a request culture onto the two languages PayTabs' hosted page supports.</summary>
     private static string NormalizeLanguage(string? language) =>

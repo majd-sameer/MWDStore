@@ -12,12 +12,15 @@ namespace Store.Application.Payments.PayTabs;
 /// </remarks>
 public static class PayTabsRegions
 {
-    /// <summary>UAE — the region the bundled demo profile (crc / onlinepay.ae) belongs to.</summary>
-    public const string Default = "ARE";
+    /// <summary>Madfoat's white-label instance — where the bundled demo profile (crc) lives.</summary>
+    public const string Default = "MADFOAT";
 
     /// <summary>Region code → API origin. Aliases are included so either spelling resolves.</summary>
     private static readonly Dictionary<string, string> BaseUrls = new(StringComparer.OrdinalIgnoreCase)
     {
+        // White-label deployments are their own shard: a profile on one is unknown to every regional
+        // host (the standard regions reject its server key as an authentication failure).
+        ["MADFOAT"] = "https://madfoat-secure.paytabs.com",
         ["ARE"] = "https://secure.paytabs.com",
         ["UAE"] = "https://secure.paytabs.com",
         ["SAU"] = "https://secure.paytabs.sa",

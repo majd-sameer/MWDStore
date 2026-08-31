@@ -27,10 +27,6 @@ public class User : IdentityUser<long>
 
     public long? DefaultBillingAddressId { get; set; }
 
-    public string? RefreshTokenHash { get; set; }
-
-    public DateTimeOffset? RefreshTokenExpiresAt { get; set; }
-
     public string? Culture { get; set; }
 
     public string? ExtensionData { get; set; }
@@ -58,6 +54,8 @@ public class User : IdentityUser<long>
     public ICollection<UserLogin> UserLogins { get; set; } = [];
 
     public ICollection<UserToken> UserTokens { get; set; } = [];
+
+    public ICollection<UserRefreshToken> RefreshTokens { get; set; } = [];
 
     public UserAddress? DefaultBillingAddress { get; set; }
 

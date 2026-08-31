@@ -6,6 +6,7 @@ using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Auditing;
 using Store.Application.Auth;
+using Store.Data;
 using Store.Domain;
 
 namespace Store.Api.Controllers;
@@ -20,7 +21,15 @@ namespace Store.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
+    /// <summary>
+    /// Ceiling on concurrent signed-in sessions per user; issuing beyond it evicts the oldest.
+    /// Generous enough that no real shopper hits it, small enough that a credential-stuffing loop
+    /// cannot grow the token table unboundedly for one account.
+    /// </summary>
+    private const int MaxSessionsPerUser = 20;
+
     private readonly UserManager<User> _userManager;
+    private readonly StoreDbContext _db;
     private readonly IJwtTokenService _tokenService;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IAntiforgery _antiforgery;
@@ -29,6 +38,7 @@ public sealed class AuthController : ControllerBase
 
     public AuthController(
         UserManager<User> userManager,
+        StoreDbContext db,
         IJwtTokenService tokenService,
         IRefreshTokenService refreshTokenService,
         IAntiforgery antiforgery,
@@ -36,6 +46,7 @@ public sealed class AuthController : ControllerBase
         IAuditService auditService)
     {
         _userManager = userManager;
+        _db = db;
         _tokenService = tokenService;
         _refreshTokenService = refreshTokenService;
         _antiforgery = antiforgery;
@@ -127,10 +138,11 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Exchanges the httpOnly refresh cookie for a new access token, rotating the refresh token in the
-    /// process (the presented token is invalidated and replaced). Authenticated purely by the cookie —
-    /// no bearer required — which is why this endpoint relies on the cookie's SameSite=Strict attribute
-    /// (not antiforgery) for CSRF protection, so it keeps working on a cold page load and cross-origin.
+    /// Exchanges the httpOnly refresh cookie for a new access token, rotating the presented refresh
+    /// token in the process (that token is invalidated and replaced; the user's other sessions keep
+    /// theirs). Authenticated purely by the cookie — no bearer required — which is why this endpoint
+    /// relies on the cookie's SameSite=Strict attribute (not antiforgery) for CSRF protection, so it
+    /// keeps working on a cold page load and cross-origin.
     /// </summary>
     [HttpPost("refresh")]
     [IgnoreAntiforgeryToken]
@@ -142,21 +154,26 @@ public sealed class AuthController : ControllerBase
         }
 
         var hash = _refreshTokenService.Hash(raw);
-        var user = await _userManager.Users
-            .FirstOrDefaultAsync(u => u.RefreshTokenHash == hash && !u.IsDeleted);
+        var token = await _db.UserRefreshTokens
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.TokenHash == hash);
 
-        if (user is null
-            || user.RefreshTokenExpiresAt is null
-            || user.RefreshTokenExpiresAt <= _timeProvider.GetUtcNow())
+        if (token is null || token.ExpiresAt <= _timeProvider.GetUtcNow() || token.User.IsDeleted)
         {
+            if (token is not null)
+            {
+                _db.UserRefreshTokens.Remove(token);
+                await _db.SaveChangesAsync();
+            }
+
             AuthCookies.ClearRefreshToken(Response);
             return Unauthorized(new { error = "Invalid or expired refresh token." });
         }
 
-        return await IssueTokenAsync(user);
+        return await IssueTokenAsync(token.User, rotating: token);
     }
 
-    /// <summary>Revokes the current refresh token server-side and clears the auth cookies.</summary>
+    /// <summary>Revokes this session's refresh token server-side and clears the auth cookies.</summary>
     [HttpPost("logout")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Logout()
@@ -164,12 +181,11 @@ public sealed class AuthController : ControllerBase
         if (Request.Cookies.TryGetValue(AuthCookies.RefreshToken, out var raw) && !string.IsNullOrEmpty(raw))
         {
             var hash = _refreshTokenService.Hash(raw);
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokenHash == hash);
-            if (user is not null)
+            var token = await _db.UserRefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == hash);
+            if (token is not null)
             {
-                user.RefreshTokenHash = null;
-                user.RefreshTokenExpiresAt = null;
-                await _userManager.UpdateAsync(user);
+                _db.UserRefreshTokens.Remove(token);
+                await _db.SaveChangesAsync();
             }
         }
 
@@ -189,17 +205,42 @@ public sealed class AuthController : ControllerBase
         return NoContent();
     }
 
-    private async Task<ActionResult<AuthResponse>> IssueTokenAsync(User user)
+    private async Task<ActionResult<AuthResponse>> IssueTokenAsync(User user, UserRefreshToken? rotating = null)
     {
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.CreateToken(user.Id, user.UserName, user.Email, roles);
 
-        // Rotate the refresh token: store only its hash, hand the raw value to the client via cookie.
+        // A fresh refresh token per issuance: a new row on login (each browser/device holds its own
+        // session), or a replacement for the presented row on refresh. Only the hash is stored.
         var refresh = _refreshTokenService.Issue();
-        user.RefreshTokenHash = refresh.Hash;
-        user.RefreshTokenExpiresAt = refresh.ExpiresAt;
-        user.LatestUpdatedOn = _timeProvider.GetUtcNow();
-        await _userManager.UpdateAsync(user);
+        var now = _timeProvider.GetUtcNow();
+
+        if (rotating is not null)
+        {
+            _db.UserRefreshTokens.Remove(rotating);
+        }
+
+        // Housekeeping while we're here: drop this user's expired tokens, and if they still have a
+        // full house of live sessions, evict the oldest to make room for the one being issued.
+        var rotatingId = rotating?.Id ?? 0;
+        var existing = await _db.UserRefreshTokens
+            .Where(t => t.UserId == user.Id && t.Id != rotatingId)
+            .OrderByDescending(t => t.CreatedOn)
+            .ToListAsync();
+        foreach (var stale in existing.Where(t => t.ExpiresAt <= now)
+                     .Union(existing.Where(t => t.ExpiresAt > now).Skip(MaxSessionsPerUser - 1)))
+        {
+            _db.UserRefreshTokens.Remove(stale);
+        }
+
+        _db.UserRefreshTokens.Add(new UserRefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = refresh.Hash,
+            ExpiresAt = refresh.ExpiresAt,
+            CreatedOn = now
+        });
+        await _db.SaveChangesAsync();
 
         AuthCookies.SetRefreshToken(Response, refresh.RawToken, refresh.ExpiresAt);
         IssueXsrfCookie();
