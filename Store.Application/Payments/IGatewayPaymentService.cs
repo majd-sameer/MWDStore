@@ -58,6 +58,17 @@ public interface IGatewayPaymentService
     /// </summary>
     Task<Result<GatewayPaymentResult>> SettlePayTabsTransactionAsync(
         string tranRef, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sweeps MadfoatCom attempts that no one ever came back for and decides them from the gateway's
+    /// own answer, so settlement never hangs on the shopper's browser or on an IPN being deliverable.
+    /// Each attempt past the grace period is re-queried; one still undecided past
+    /// <see cref="PaymentsOptions.PendingPaymentTimeout"/> is voided and its order canceled and
+    /// restocked. Safe to run on a timer — it is idempotent and only ever looks at attempts whose
+    /// order is still awaiting payment.
+    /// </summary>
+    /// <returns>How many attempts this pass decided (settled, failed or voided).</returns>
+    Task<int> ReconcilePendingPayTabsPaymentsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Where to send the shopper after initiating a payment.</summary>

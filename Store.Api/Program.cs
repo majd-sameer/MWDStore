@@ -62,6 +62,8 @@ builder.Services.AddSingleton(
 builder.Services.AddSingleton<Store.Application.DevAssistant.IApiSurfaceSource>(
     new ReflectionApiSurfaceSource(typeof(Program).Assembly));
 builder.Services.AddStoreApplication();
+// Settles MadfoatCom payments whose shopper never came back, and voids the ones nobody completed.
+builder.Services.AddHostedService<PaymentReconciliationService>();
 
 // Local media storage for admin uploads (product images, etc.).
 builder.Services.AddSingleton<IMediaStorage, LocalMediaStorage>();

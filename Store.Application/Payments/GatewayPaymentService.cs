@@ -33,10 +33,14 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     /// </summary>
     public const string MadfoatCom = "MadfoatCom";
 
+    /// <summary>Attempts one reconciliation pass looks at, so a backlog can't hold a transaction open.</summary>
+    private const int ReconciliationBatchSize = 100;
+
     private readonly StoreDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly IStripeClient _stripe;
     private readonly IPayTabsClient _payTabs;
+    private readonly IOrderService _orders;
     private readonly PaymentsOptions _options;
     private readonly ILogger<GatewayPaymentService> _logger;
 
@@ -45,6 +49,7 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         TimeProvider timeProvider,
         IStripeClient stripe,
         IPayTabsClient payTabs,
+        IOrderService orders,
         PaymentsOptions options,
         ILogger<GatewayPaymentService> logger)
     {
@@ -52,6 +57,7 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         _timeProvider = timeProvider;
         _stripe = stripe;
         _payTabs = payTabs;
+        _orders = orders;
         _options = options;
         _logger = logger;
     }
@@ -304,45 +310,58 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     }
 
     public async Task<Result<GatewayPaymentResult>> SettlePayTabsTransactionAsync(
-        string tranRef, CancellationToken cancellationToken = default)
+        string tranRef, CancellationToken cancellationToken = default) =>
+        (await SettlePayTabsAsync(tranRef, cancellationToken)).Result;
+
+    /// <summary>
+    /// The settlement body. Also used by the reconciliation sweep, which additionally needs to know
+    /// whether PayTabs actually <i>decided</i> the transaction: an attempt PayTabs still calls pending
+    /// is the only kind the sweep may eventually void.
+    /// </summary>
+    private async Task<(Result<GatewayPaymentResult> Result, bool Decided)> SettlePayTabsAsync(
+        string tranRef, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(tranRef))
         {
-            return Result.Fail<GatewayPaymentResult>("Missing PayTabs transaction reference.");
+            return (Result.Fail<GatewayPaymentResult>("Missing PayTabs transaction reference."), false);
         }
 
-        // The tran_ref was stored on the payment at initiation, so it both locates the payment and
-        // proves the caller initiated it (PayTabs issues it and it is unguessable).
-        var payment = await _db.Payments
+        // The tran_ref was stored on the payment at initiation, so it both locates the attempt and
+        // proves the caller initiated it (PayTabs issues it and it is unguessable). Every row written
+        // for the transaction is loaded — the attempt, plus any settlement row already recorded.
+        var rows = await _db.Payments
             .Include(p => p.Order)
             .ThenInclude(o => o.OrderHistories)
             .Where(p => p.PaymentMethod == MadfoatCom && p.GatewayTransactionId == tranRef)
-            .OrderByDescending(p => p.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .OrderBy(p => p.Id)
+            .ToListAsync(cancellationToken);
 
-        if (payment == null)
+        if (rows.Count == 0)
         {
-            return Result.Fail<GatewayPaymentResult>("Payment not found for this transaction.");
+            return (Result.Fail<GatewayPaymentResult>("Payment not found for this transaction."), false);
         }
 
-        var order = payment.Order;
+        var attempt = rows.FirstOrDefault(p => p.Status == PaymentStatus.PendingExecution) ?? rows[0];
+        var order = attempt.Order;
 
-        // Idempotent: the return page and the IPN routinely settle the same transaction at once.
-        if (payment.Status == PaymentStatus.Succeeded)
+        // Idempotent: the return page, the IPN and the sweep routinely settle the same transaction at
+        // once, and a recorded success is the final word — re-querying could only duplicate the row.
+        var settled = rows.FirstOrDefault(p => p.Status == PaymentStatus.Succeeded);
+        if (settled != null)
         {
-            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, payment.GatewayTransactionId));
+            return (Result.Ok(new GatewayPaymentResult(settled.Id, order.Id, true, tranRef)), true);
         }
 
         var settingsResult = await LoadEnabledSettingsAsync(MadfoatCom, cancellationToken);
         if (!settingsResult.Success)
         {
-            return Result.Fail<GatewayPaymentResult>(settingsResult.Error!);
+            return (Result.Fail<GatewayPaymentResult>(settingsResult.Error!), false);
         }
 
         var settings = settingsResult.Value!;
         if (!settings.HasPayTabsKeys)
         {
-            return Result.Fail<GatewayPaymentResult>("MadfoatCom is not configured.");
+            return (Result.Fail<GatewayPaymentResult>("MadfoatCom is not configured."), false);
         }
 
         PayTabsTransaction transaction;
@@ -361,38 +380,200 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         {
             _logger.LogError(
                 ex, "Failed to query PayTabs transaction {TranRef} for order {OrderId}.", tranRef, order.Id);
-            return Result.Fail<GatewayPaymentResult>("Could not verify the payment with MadfoatCom.");
+            return (Result.Fail<GatewayPaymentResult>("Could not verify the payment with MadfoatCom."), false);
         }
 
         var now = _timeProvider.GetUtcNow();
 
         if (transaction.IsApproved)
         {
-            payment.Status = PaymentStatus.Succeeded;
-            payment.FailureMessage = null;
-            payment.LatestUpdatedOn = now;
-            SetOrderStatus(order, OrderStatus.PaymentReceived, now, "MadfoatCom payment received.");
+            var payment = RecordSettlement(attempt, PaymentStatus.Succeeded, null, now);
+
+            if (order.OrderStatus == OrderStatus.Canceled)
+            {
+                // The money landed after the timeout had already canceled the order and put the stock
+                // back. Record it — it is real and refundable — but don't resurrect an order whose
+                // stock is gone; this needs a human, so it is logged as an error and noted on the order.
+                _logger.LogError(
+                    "MadfoatCom transaction {TranRef} was approved after order {OrderId} had been canceled by the payment timeout. The payment needs a refund or the order needs reinstating.",
+                    tranRef, order.Id);
+                AddOrderNote(
+                    order, now,
+                    "MadfoatCom payment confirmed after the order was canceled by the payment timeout — refund or reinstate manually.");
+            }
+            else
+            {
+                SetOrderStatus(order, OrderStatus.PaymentReceived, now, "MadfoatCom payment received.");
+            }
+
             await _db.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, tranRef));
+            return (Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, tranRef)), true);
         }
 
-        // Still undecided — an asynchronous method, or the shopper hasn't finished paying. Change
-        // nothing, so a later IPN (or the shopper coming back) can still settle it. Marking this
-        // failed would strand an order that is about to be paid.
+        // Still undecided — an asynchronous method, or the shopper hasn't finished paying. Record
+        // nothing, so a later IPN, the shopper coming back, or the next sweep can still settle it.
+        // Writing a failure here would strand an order that is about to be paid.
         if (transaction.IsPending)
         {
-            return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, false, tranRef));
+            return (Result.Ok(new GatewayPaymentResult(attempt.Id, order.Id, false, tranRef)), false);
         }
 
         // Declined / cancelled / voided / expired: fail this attempt only. The order stays
         // PendingPayment so the shopper can retry, here or with another method.
-        payment.Status = PaymentStatus.Failed;
-        payment.FailureMessage = string.IsNullOrWhiteSpace(transaction.ResponseMessage)
-            ? $"MadfoatCom payment was not completed (status {transaction.ResponseStatus})."
-            : transaction.ResponseMessage;
-        payment.LatestUpdatedOn = now;
+        var failure = RecordSettlement(
+            attempt,
+            PaymentStatus.Failed,
+            string.IsNullOrWhiteSpace(transaction.ResponseMessage)
+                ? $"MadfoatCom payment was not completed (status {transaction.ResponseStatus})."
+                : transaction.ResponseMessage,
+            now);
+
         await _db.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, false, tranRef));
+        return (Result.Ok(new GatewayPaymentResult(failure.Id, order.Id, false, tranRef)), true);
+    }
+
+    public async Task<int> ReconcilePendingPayTabsPaymentsAsync(CancellationToken cancellationToken = default)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var queryBefore = now - _options.ReconciliationGrace;
+        var voidBefore = now - _options.PendingPaymentTimeout;
+
+        // Two guards, both load-bearing. The order must still be awaiting payment — that retires an
+        // attempt the moment its order moves on (paid, or canceled by this very sweep), including the
+        // rows this sweep just wrote. And no settlement row may already carry this tran_ref — that
+        // leaves a declined attempt alone so the shopper can retry the order with a fresh transaction.
+        var attempts = await _db.Payments
+            .Include(p => p.Order)
+            .ThenInclude(o => o.OrderHistories)
+            .Where(p => p.PaymentMethod == MadfoatCom
+                && p.Status == PaymentStatus.PendingExecution
+                && p.CreatedOn <= queryBefore
+                && p.Order.OrderStatus == OrderStatus.PendingPayment
+                && !_db.Payments.Any(s =>
+                    s.OrderId == p.OrderId
+                    && s.Id != p.Id
+                    && s.PaymentMethod == MadfoatCom
+                    && s.Status != PaymentStatus.PendingExecution
+                    && s.GatewayTransactionId == p.GatewayTransactionId))
+            .OrderBy(p => p.Id)
+            .Take(ReconciliationBatchSize)
+            .ToListAsync(cancellationToken);
+
+        if (attempts.Count == 0)
+        {
+            return 0;
+        }
+
+        // Only an order's newest attempt may be voided. A shopper who abandons one hosted page and
+        // starts again leaves an older attempt behind that ages past the timeout while they are still
+        // paying on the newer one — voiding that stale row would cancel an order mid-payment. The
+        // newest attempt is looked up rather than read off the batch, because the live one is exactly
+        // the row the grace filter holds back.
+        var orderIds = attempts.Select(a => a.OrderId).Distinct().ToList();
+        var newestAttempts = (await _db.Payments
+            .Where(p => p.PaymentMethod == MadfoatCom
+                && p.Status == PaymentStatus.PendingExecution
+                && orderIds.Contains(p.OrderId))
+            .GroupBy(p => p.OrderId)
+            .Select(g => g.Max(p => p.Id))
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
+
+        var decided = 0;
+
+        foreach (var attempt in attempts)
+        {
+            var timedOut = attempt.CreatedOn <= voidBefore && newestAttempts.Contains(attempt.Id);
+
+            if (!string.IsNullOrWhiteSpace(attempt.GatewayTransactionId))
+            {
+                var (result, gatewayDecided) = await SettlePayTabsAsync(
+                    attempt.GatewayTransactionId!, cancellationToken);
+
+                if (gatewayDecided)
+                {
+                    decided++;
+                    continue;
+                }
+
+                // Undecided. Void only on PayTabs' own word that it is still pending: when the query
+                // itself failed we may simply be unable to reach them, and cancelling a shopper's
+                // order over a network blip is far worse than leaving it for the next sweep.
+                if (!result.Success)
+                {
+                    _logger.LogWarning(
+                        "Could not reconcile MadfoatCom payment {PaymentId} for order {OrderId}: {Error}",
+                        attempt.Id, attempt.OrderId, result.Error);
+                    continue;
+                }
+            }
+
+            // Either PayTabs still calls it pending, or the page was never created (no tran_ref) so
+            // there is nothing to ask about. Past the timeout both mean the shopper is not coming back.
+            if (!timedOut)
+            {
+                continue;
+            }
+
+            await VoidTimedOutAttemptAsync(attempt, now, cancellationToken);
+            decided++;
+        }
+
+        return decided;
+    }
+
+    /// <summary>
+    /// Closes out an attempt nobody ever completed: the payment is voided and the order canceled and
+    /// restocked, so an abandoned checkout can't hold stock indefinitely.
+    /// </summary>
+    private async Task VoidTimedOutAttemptAsync(
+        Payment attempt, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var order = attempt.Order;
+        var minutes = _options.PendingPaymentTimeout.TotalMinutes.ToString("0", CultureInfo.InvariantCulture);
+
+        RecordSettlement(
+            attempt,
+            PaymentStatus.Voided,
+            $"Voided after {minutes} minutes with no result from MadfoatCom.",
+            now);
+
+        SetOrderStatus(
+            order, OrderStatus.Canceled, now, "MadfoatCom payment timed out; order canceled and stock restored.");
+
+        // CancelOrderAsync restocks each tracked line and saves — the settlement row and the history
+        // entry above ride along in that same SaveChanges.
+        await _orders.CancelOrderAsync(order, cancellationToken);
+
+        _logger.LogInformation(
+            "Voided timed-out MadfoatCom payment {PaymentId} and canceled order {OrderId}.",
+            attempt.Id, order.Id);
+    }
+
+    /// <summary>
+    /// Records the gateway's verdict as a <b>new</b> row in <c>Payment</c> rather than overwriting the
+    /// attempt. The attempt row keeps <see cref="PaymentStatus.PendingExecution"/> as the record of
+    /// "the shopper was sent to the gateway"; the row added here carries the outcome, its message and
+    /// the same <c>tran_ref</c>, so the payments log reads attempt → outcome for each transaction.
+    /// </summary>
+    private Payment RecordSettlement(Payment attempt, int status, string? failureMessage, DateTimeOffset now)
+    {
+        var settlement = new Payment
+        {
+            OrderId = attempt.OrderId,
+            Amount = attempt.Amount,
+            PaymentFee = attempt.PaymentFee,
+            PaymentMethod = attempt.PaymentMethod,
+            GatewayTransactionId = attempt.GatewayTransactionId,
+            Status = status,
+            FailureMessage = failureMessage,
+            CreatedOn = now,
+            LatestUpdatedOn = now
+        };
+
+        _db.Payments.Add(settlement);
+        attempt.LatestUpdatedOn = now;
+        return settlement;
     }
 
     /// <summary>
@@ -538,6 +719,20 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             OrderId = order.Id,
             OldStatus = oldStatus,
             NewStatus = newStatus,
+            Note = note,
+            CreatedOn = now,
+            CreatedById = order.CustomerId
+        });
+    }
+
+    /// <summary>Appends a history entry without moving the order — used to flag it for a human.</summary>
+    private static void AddOrderNote(Order order, DateTimeOffset now, string note)
+    {
+        order.OrderHistories.Add(new OrderHistory
+        {
+            OrderId = order.Id,
+            OldStatus = order.OrderStatus,
+            NewStatus = order.OrderStatus,
             Note = note,
             CreatedOn = now,
             CreatedById = order.CustomerId

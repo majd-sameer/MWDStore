@@ -41,6 +41,8 @@ database (entered through the admin UI), never in source, config files, or docs.
 | `Store.Application/Payments/GatewaySettings.cs` | Parses provider `AdditionalSettings` JSON → typed settings (`PayTabsProfileId`, `PayTabsServerKey`, `PayTabsRegion`, …). |
 | `Store.Application/Payments/GatewayPaymentService.cs` | Orchestration: `CreatePayTabsPageAsync` (initiate) and `SettlePayTabsTransactionAsync` (settle). Provider id constant `MadfoatCom`. |
 | `Store.Api/Controllers/PaymentsController.cs` | The three public endpoints: `paytabs/return`, `paytabs/verify`, `paytabs/callback`. |
+| `Store.Api/Infrastructure/PaymentReconciliationService.cs` | Timer that runs `ReconcilePendingPayTabsPaymentsAsync` (§4, step 7) so settlement never depends on the shopper's browser or on a deliverable IPN. |
+| `tests/Store.Application.Tests/PayTabsSettlementTests.cs` | 12 tests over settlement and the sweep: settlement rows, idempotency, the timeout void + restock, and the "don't void when PayTabs is unreachable" rule. |
 | `tests/Store.Application.Tests/PayTabsSignatureTests.cs` | 22 tests pinning the signature schemes against digests computed by an **independent** implementation (Node `crypto`) — they assert agreement with PayTabs' spec, not self-consistency. |
 
 ### Frontend (`web/`)
@@ -70,6 +72,15 @@ Provider row `PaymentProvider.Id = 'MadfoatCom'`, with `AdditionalSettings` shap
 `Payments:PublicApiBaseUrl` (in `appsettings.*.json`) is the origin PayTabs redirects/calls back to.
 On localhost the IPN callback is **omitted automatically** (see §4, step 3).
 
+The rest of the `Payments` section tunes the reconciliation sweep (§4, step 7):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `PendingPaymentTimeoutMinutes` | `30` | How long an attempt may stay undecided before it is voided (Payment status **40**) and its order canceled + restocked. |
+| `ReconciliationIntervalSeconds` | `60` | How often the sweep runs (floored at 10 s). |
+| `ReconciliationGraceMinutes` | `2` | How long an attempt is left alone before the sweep queries it, so it doesn't race a shopper still on the hosted page. |
+| `ReconciliationEnabled` | `true` | Kill switch — off leaves settlement to the return leg and the IPN alone. |
+
 ---
 
 ## 3. The payment cycle
@@ -97,11 +108,12 @@ sequenceDiagram
     SF->>API: POST /api/payments/paytabs/verify { tranRef }
     API->>PT: POST /payment/query { profile_id, tran_ref }
     PT-->>API: { payment_result: { response_status: "A", … } }
-    API->>API: Payment → Succeeded, Order → PaymentReceived (idempotent)
+    API->>API: add settlement Payment row (Succeeded), Order → PaymentReceived (idempotent)
     API-->>SF: { approved: true }
     SF->>B: show "paid", then navigate to returnUrl
 
     Note over PT,API: In parallel (public servers only): PayTabs POSTs the signed IPN to /api/payments/paytabs/callback, which settles through the same query path.
+    Note over API,PT: And on a timer, for shoppers who never came back: the reconciliation sweep queries the same way, voiding what is still undecided at the timeout (§4, step 7).
 ```
 
 ---
@@ -147,7 +159,8 @@ Two distinct legs with different trust levels:
   **validates this URL at page-creation time and rejects loopback hosts** with
   `code 210 "Invalid Callback URL"`. Since PayTabs' servers could never reach localhost anyway, the
   callback is **omitted entirely when `PublicApiBaseUrl` is a loopback address**
-  (`GatewayPaymentService.IsLoopback`) and settlement rides on the return leg alone. On a public
+  (`GatewayPaymentService.IsLoopback`) — settlement then rides on the return leg plus the reconciliation
+  sweep (§4, step 7), which is exactly why that sweep exists. On a public
   deployment it is sent, giving a settlement path that works even if the shopper closes the tab.
 
 ### Step 4 — Return endpoint (`PaymentsController.PayTabsReturn`)
@@ -164,20 +177,31 @@ Accepts POST (normal) and GET (some redirect variants). It:
 
 ### Step 5 — Settlement (`GatewayPaymentService.SettlePayTabsTransactionAsync`)
 
-Single funnel used by both the storefront verify call and the IPN. Rules:
+Single funnel used by the storefront verify call, the IPN, **and** the reconciliation sweep (step 7).
+Rules:
 
 - **Always re-query PayTabs** (`POST /payment/query`). The browser redirect is
   attacker-controllable and the IPN body is only as trustworthy as its signature; PayTabs' own
   answer is the only thing settlement acts on. This requires the key's **Query** permission.
-- **Idempotent**: if the payment is already `Succeeded`, return success without touching anything —
-  the return page and the IPN routinely race.
+- **Two rows per transaction.** The verdict is written as a *new* `Payment` row rather than
+  overwriting the attempt: the attempt row keeps `PendingExecution` (-10) as the record of "the
+  shopper was sent to the gateway", and the row added here carries the outcome, PayTabs' message and
+  the same `tran_ref`. The payments log therefore reads **attempt → outcome** per transaction, and a
+  retry after a decline adds its own pair.
+- **Idempotent**: if a `Succeeded` row already exists for the `tran_ref`, return it without querying
+  or writing — the return page, the IPN and the sweep routinely race.
 - Status mapping (`payment_result.response_status`):
 
   | Status | Meaning | Action |
   |---|---|---|
-  | `A` (Authorised), `H` (Hold) | Paid | Payment → `Succeeded`, Order → `PaymentReceived` |
-  | `P` (Pending) | Undecided (async method / shopper mid-flow) | **Change nothing** — a later IPN or revisit can still settle; failing now would strand an order about to be paid |
-  | `D`/`C`/`V`/`E`/`X` (Declined/Cancelled/Voided/Error/Expired) | Failed | Payment → `Failed` with PayTabs' message; **order stays `PendingPayment`** so the shopper can retry (same or different method) |
+  | `A` (Authorised), `H` (Hold) | Paid | Settlement row `Succeeded` (20), Order → `PaymentReceived` |
+  | `P` (Pending) | Undecided (async method / shopper mid-flow) | **Write nothing** — a later IPN, revisit or sweep can still settle; failing now would strand an order about to be paid |
+  | `D`/`C`/`V`/`E`/`X` (Declined/Cancelled/Voided/Error/Expired) | Failed | Settlement row `Failed` (10) with PayTabs' message; **order stays `PendingPayment`** so the shopper can retry (same or different method) |
+
+One deliberate exception: if a query comes back approved for an order the timeout (step 7) has
+already canceled, the `Succeeded` row is still recorded — the money is real — but the canceled order
+is **not** reinstated, since its stock has gone back. That case logs an error and adds an order-history
+note for a human to refund or reinstate.
 
 ### Step 6 — IPN callback (`PaymentsController.PayTabsCallback`)
 
@@ -188,6 +212,34 @@ Single funnel used by both the storefront verify call and the IPN. Rules:
   re-querying — a valid signature proves PayTabs sent it, not that the body says "paid").
 - Returns 200 for anything it cannot act on (unconfigured provider, missing tran_ref) so PayTabs
   stops retrying.
+
+### Step 7 — Reconciliation sweep (`GatewayPaymentService.ReconcilePendingPayTabsPaymentsAsync`)
+
+Runs on a timer from `Store.Api/Infrastructure/PaymentReconciliationService.cs`, and exists because
+**neither the return leg nor the IPN is guaranteed**: a shopper can pay and close the tab instantly,
+and the IPN is not requested at all on localhost and can be blocked or dropped on a real host.
+Without it such a payment sits at `PendingExecution` forever with the money taken — and an abandoned
+checkout holds its stock indefinitely.
+
+Each pass picks up MadfoatCom attempts that are still `PendingExecution`, older than the grace
+period, whose **order is still `PendingPayment`**, and for which no settlement row already carries the
+same `tran_ref`. For each one:
+
+1. Re-query through the step-5 funnel. Approved or declined → a settlement row is written and the
+   attempt is done.
+2. Still `P` (or no `tran_ref` at all, i.e. page creation failed) **and past the timeout** →
+   settlement row `Voided` (**40**), order → `Canceled` (80) via `IOrderService.CancelOrderAsync`,
+   which **restocks** every stock-tracked line.
+3. If the *query itself* failed (PayTabs unreachable), nothing is voided — cancelling a shopper's
+   order over a network blip is worse than waiting for the next pass.
+
+Only an order's **newest** attempt can be voided. A shopper who abandons one hosted page and starts
+again leaves a stale attempt that ages past the timeout while they are still paying on the new one;
+voiding it would cancel the order mid-payment.
+
+Tuned by the `Payments` config keys in §2 (defaults: query after 2 min, void after 30 min, sweep
+every 60 s). Assumes a single API process; scaling out would want a lease so two instances don't
+sweep the same rows. `tests/Store.Application.Tests/PayTabsSettlementTests.cs` pins all of it.
 
 ---
 

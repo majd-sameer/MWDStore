@@ -13,7 +13,7 @@ gateway internals in `Madfoat.com-steps.md`.
 
 On localhost the integration deliberately **omits the IPN callback URL** (PayTabs rejects loopback
 callbacks with `code 210`, and could never deliver to one anyway), so settlement rides on the
-browser return leg alone. On UAT, with a **public HTTPS origin**, the callback is sent and PayTabs'
+browser return leg plus the reconciliation sweep. On UAT, with a **public HTTPS origin**, the callback is sent and PayTabs'
 servers will POST signed IPNs to your API. UAT is therefore the first place the *production-shaped*
 settlement path (return **and** IPN, racing, idempotent) actually runs.
 
