@@ -267,10 +267,47 @@ public sealed class OrderService : IOrderService
         });
     }
 
-    public async Task CancelOrderAsync(Order order, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Cancels an order and gives back the stock it was holding.
+    ///
+    /// <para>
+    /// An order is what reserves stock in this system: <see cref="CreateOrderAsync"/> takes the units
+    /// at placement, and this is the only way they come back. That makes it critical that it runs
+    /// <b>once</b> — a second cancel would mint inventory that does not exist — so an already-canceled
+    /// order is a no-op. The give-back mirrors <c>StampOnlineSaleAsync</c>: the product's denormalized
+    /// count, the warehouse row it came out of, and a reversing history entry.
+    /// </para>
+    /// <para>
+    /// Because the no-op turns on the order's status, this method — not the caller — is what moves the
+    /// order to <c>Canceled</c>. Pass <paramref name="note"/> to have the transition recorded on the
+    /// order's history at the same time.
+    /// </para>
+    /// </summary>
+    public async Task CancelOrderAsync(
+        Order order, string? note = null, CancellationToken cancellationToken = default)
     {
+        if (order.OrderStatus == OrderStatus.Canceled)
+        {
+            return;
+        }
+
+        var now = _timeProvider.GetUtcNow();
+
+        if (note != null)
+        {
+            order.OrderHistories.Add(new OrderHistory
+            {
+                OrderId = order.Id,
+                OldStatus = order.OrderStatus,
+                NewStatus = OrderStatus.Canceled,
+                Note = note,
+                CreatedOn = now,
+                CreatedById = order.CustomerId
+            });
+        }
+
         order.OrderStatus = OrderStatus.Canceled;
-        order.LatestUpdatedOn = _timeProvider.GetUtcNow();
+        order.LatestUpdatedOn = now;
 
         var orderItems = await _db.Set<OrderItem>()
             .Include(x => x.Product)
@@ -279,13 +316,49 @@ public sealed class OrderService : IOrderService
 
         foreach (var item in orderItems)
         {
-            if (item.Product.StockTrackingIsEnabled)
+            if (!item.Product.StockTrackingIsEnabled)
             {
-                item.Product.StockQuantity += item.Quantity;
+                continue;
             }
+
+            item.Product.StockQuantity += item.Quantity;
+            await StampSaleReversalAsync(item.ProductId, item.Quantity, order, now, cancellationToken);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Puts a canceled order's units back on the warehouse row and records the reversal. The
+    /// counterpart to <see cref="StampOnlineSaleAsync"/> — without it, canceling drifts
+    /// <c>Product.StockQuantity</c> away from the sum of the per-warehouse <c>Stock</c> rows and
+    /// leaves the original sale standing in history as if it had shipped.
+    /// </summary>
+    private async Task StampSaleReversalAsync(
+        long productId, int quantity, Order order, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var stock = await _db.Set<Stock>()
+            .Where(s => s.ProductId == productId)
+            .OrderByDescending(s => s.Quantity)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (stock is null)
+        {
+            return;
+        }
+
+        stock.Quantity += quantity;
+
+        _db.Set<StockHistory>().Add(new StockHistory
+        {
+            ProductId = productId,
+            WarehouseId = stock.WarehouseId,
+            // Positive with no reason: a return of stock, not a stock-out (see StockHistory.Reason).
+            AdjustedQuantity = quantity,
+            Note = $"Order #{order.Id} canceled — stock returned.",
+            PerformedById = null,
+            CreatedById = order.CustomerId,
+            CreatedOn = now,
+        });
     }
 
     public async Task<Result<OrderRetryResult>> RetryPaymentAsync(
@@ -359,7 +432,7 @@ public sealed class OrderService : IOrderService
 
         if (holdsStock)
         {
-            await CancelOrderAsync(order, cancellationToken);
+            await CancelOrderAsync(order, cancellationToken: cancellationToken);
         }
         else
         {

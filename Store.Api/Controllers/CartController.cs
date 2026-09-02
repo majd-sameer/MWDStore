@@ -24,34 +24,51 @@ public sealed class CartController : ControllerBase
         return Ok(cart ?? new CartModel { CustomerId = User.GetUserId(), CouponCode = couponCode });
     }
 
-    /// <summary>Adds a product (merges into the existing line when present).</summary>
+    /// <summary>
+    /// Adds a product, merging into the existing line when present. Stock caps the line rather than
+    /// rejecting the request: a partial add succeeds and reports the cap on
+    /// <see cref="CartModel.Adjustment"/>. Only an add that could take nothing is a 400.
+    /// </summary>
     [HttpPost("items")]
     public async Task<ActionResult<CartModel>> AddItem(AddToCartRequest request, CancellationToken cancellationToken)
     {
         var customerId = User.GetUserId();
         var result = await _cart.AddToCartAsync(customerId, request.ProductId, request.Quantity, cancellationToken);
-        if (!result.Success)
-        {
-            return BadRequest(new { error = result.ErrorMessage, code = result.ErrorCode });
-        }
-
-        var cart = await _cart.GetCartDetailsAsync(customerId, null, cancellationToken);
-        return Ok(cart);
+        return await RespondAsync(customerId, result, cancellationToken);
     }
 
-    /// <summary>Sets the quantity of an existing cart line.</summary>
+    /// <summary>Sets the quantity of an existing cart line (capped by stock, like the add).</summary>
     [HttpPut("items/{cartItemId:long}")]
     public async Task<ActionResult<CartModel>> UpdateItem(
         long cartItemId, UpdateCartItemRequest request, CancellationToken cancellationToken)
     {
         var customerId = User.GetUserId();
-        var updated = await _cart.UpdateQuantityAsync(customerId, cartItemId, request.Quantity, cancellationToken);
-        if (!updated)
+        var result = await _cart.UpdateQuantityAsync(customerId, cartItemId, request.Quantity, cancellationToken);
+        return await RespondAsync(customerId, result, cancellationToken);
+    }
+
+    /// <summary>
+    /// Turns a cart write into its response: the refreshed cart, carrying the stock adjustment when
+    /// the write was capped. A line the shopper no longer owns is a 404; everything else is a 400.
+    /// </summary>
+    private async Task<ActionResult<CartModel>> RespondAsync(
+        long customerId, CartLineResult result, CancellationToken cancellationToken)
+    {
+        if (!result.Success)
         {
-            return NotFound(new { error = "Cart item not found or quantity invalid." });
+            var body = new { error = result.ErrorMessage, code = result.ErrorCode, available = result.AvailableQuantity };
+            return result.ErrorCode == "not-found" ? NotFound(body) : BadRequest(body);
         }
 
-        var cart = await _cart.GetCartDetailsAsync(customerId, null, cancellationToken);
+        var cart = await _cart.GetCartDetailsAsync(customerId, null, cancellationToken)
+            ?? new CartModel { CustomerId = customerId };
+
+        if (result.WasCapped)
+        {
+            cart.Adjustment = new CartLineAdjustment(
+                result.ProductId, result.RequestedQuantity, result.Quantity, result.AvailableQuantity ?? result.Quantity);
+        }
+
         return Ok(cart);
     }
 

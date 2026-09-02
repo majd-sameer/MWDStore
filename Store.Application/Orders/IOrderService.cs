@@ -21,7 +21,7 @@ public interface IOrderService
         CancellationToken cancellationToken = default);
 
     /// <summary>Cancels an order and restocks each stock-tracked line.</summary>
-    Task CancelOrderAsync(Order order, CancellationToken cancellationToken = default);
+    Task CancelOrderAsync(Order order, string? note = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Preflight for "pay again" on an order whose payment failed. Checks every line is still

@@ -220,11 +220,25 @@ export interface CartItemModel {
   availableQuantity: number;
 }
 
+/**
+ * Reports that a cart write was cut short by stock: the shopper asked for `requestedQuantity` but the
+ * line holds `appliedQuantity`, which is all there is. Set on the cart returned from an add/update,
+ * never on a plain read.
+ */
+export interface CartLineAdjustment {
+  productId: number;
+  requestedQuantity: number;
+  appliedQuantity: number;
+  availableQuantity: number;
+}
+
 export interface CartModel {
   customerId: number;
   couponCode: string | null;
   couponValidationErrorMessage: string | null;
   items: CartItemModel[] | null;
+  /** Present only when the write that returned this cart was capped by stock. */
+  adjustment?: CartLineAdjustment | null;
   subTotal: number;
   discount: number;
 }

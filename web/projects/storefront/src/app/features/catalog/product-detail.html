@@ -138,17 +138,28 @@
             <div class="alert alert-secondary">{{ 'product.call_for_pricing_long' | translate }}</div>
           } @else {
             <div class="pdp-buy">
-              <lib-stepper [(value)]="quantity" [min]="1" [max]="maxQty()" />
+              <lib-stepper
+                [(value)]="quantity"
+                [min]="1"
+                [max]="maxQty()"
+                [disabled]="allStockInBag()"
+              />
               <button
                 libButton
                 variant="success"
                 size="lg"
                 class="pdp-add"
-                [disabled]="!canOrder() || adding()"
+                [disabled]="!canOrder() || allStockInBag() || adding()"
                 (click)="addToCart(p)"
               >
                 <lib-icon name="bag" [size]="18" class="me-2" />
-                {{ (canOrder() ? 'product.add' : 'product.out_of_stock') | translate }}
+                @if (!canOrder()) {
+                  {{ 'product.out_of_stock' | translate }}
+                } @else if (allStockInBag()) {
+                  {{ 'product.all_in_bag' | translate }}
+                } @else {
+                  {{ 'product.add' | translate }}
+                }
               </button>
               <button type="button" class="pdp-wish" [class.is-on]="wished()"
                 [attr.aria-pressed]="wished()" [attr.aria-label]="'product.wishlist' | translate"

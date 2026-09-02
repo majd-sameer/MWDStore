@@ -206,13 +206,19 @@ public class OrderRetryPaymentTests
 
     // ---- the cart the shopper lands on -----------------------------------
 
+    /// <summary>
+    /// A line goes bad <i>after</i> it is in the bag — the add path itself refuses a withdrawn product
+    /// and caps a short one, so this is the only way an unbuyable line can exist: the shopper put it
+    /// there while it was fine and the world moved on (someone else bought the stock, staff pulled the
+    /// product). Such lines stay visible but must not be priced.
+    /// </summary>
     [Fact]
     public async Task Cart_ShowsUnavailableLinesButLeavesThemOutOfTheTotals()
     {
         using var db = TestDb.New();
         var kept = NewProduct(1, "Kept", 10m);
-        var withdrawn = NewProduct(2, "Withdrawn", 20m, published: false);
-        var short_ = NewProduct(3, "Short", 30m, stockTracking: true, stock: 1);
+        var withdrawn = NewProduct(2, "Withdrawn", 20m);
+        var short_ = NewProduct(3, "Short", 30m, stockTracking: true, stock: 2);
         db.Products.AddRange(kept, withdrawn, short_);
         await db.SaveChangesAsync();
 
@@ -220,6 +226,11 @@ public class OrderRetryPaymentTests
         await cartService.AddToCartAsync(CustomerId, 1, 2);
         await cartService.AddToCartAsync(CustomerId, 2, 1);
         await cartService.AddToCartAsync(CustomerId, 3, 2);
+
+        // ...and then the world moves on.
+        withdrawn.IsPublished = false;
+        short_.StockQuantity = 1;
+        await db.SaveChangesAsync();
 
         var cart = (await cartService.GetCartDetailsAsync(CustomerId))!;
 

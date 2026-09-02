@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -461,10 +462,7 @@ export class Checkout {
           this.cart.reload();
           this.afterOrderPlaced(order);
         },
-        error: () => {
-          this.placing.set(false);
-          this.toast.error(this.translate.instant('common.error'));
-        },
+        error: (error: unknown) => this.onPlaceOrderFailed(error),
       });
       return;
     }
@@ -485,11 +483,25 @@ export class Checkout {
         this.cart.clearGuest();
         this.afterOrderPlaced(order);
       },
-      error: () => {
-        this.placing.set(false);
-        this.toast.error(this.translate.instant('common.error'));
-      },
+      error: (error: unknown) => this.onPlaceOrderFailed(error),
     });
+  }
+
+  /**
+   * Placement failed. A 400 here is the server refusing the order on its merits — almost always
+   * because stock moved between filling the bag and paying (someone else's order took the last of
+   * it, or an admin pulled the product). The bag is reloaded so the shopper sees the new
+   * availability rather than being told "something went wrong" and left staring at stale numbers.
+   */
+  private onPlaceOrderFailed(error: unknown): void {
+    this.placing.set(false);
+    const isRejected = error instanceof HttpErrorResponse && error.status === 400;
+    if (isRejected) {
+      this.cart.reload();
+    }
+    this.toast.error(
+      this.translate.instant(isRejected ? 'checkout.stock_changed' : 'common.error'),
+    );
   }
 
   /** Online gateways (everything except Cash on Delivery) go through initiate → pay → callback. */

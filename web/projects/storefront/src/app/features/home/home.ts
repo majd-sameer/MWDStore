@@ -24,6 +24,7 @@ import { MissionBand } from './sections/mission-band';
 import { StoryRail } from './sections/story-rail';
 import { ValuesRow } from './sections/values-row';
 import { CtaBand } from './sections/cta-band';
+import { announceCartAdd, announceCartError } from '../../core/cart-messages';
 
 /**
  * Home page per supported-doc/HOME-PAGE.md: hero → trust strip → categories →
@@ -115,8 +116,8 @@ export class Home {
 
   protected add(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: () => this.toast.success(this.translate.instant('product.added')),
-      error: () => this.toast.error(this.translate.instant('common.error')),
+      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }
 }

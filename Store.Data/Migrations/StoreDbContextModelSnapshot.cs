@@ -386,6 +386,9 @@ namespace Store.Data.Migrations
 
                     b.HasIndex(new[] { "ProductId" }, "IX_ShoppingCart_CartItem_ProductId");
 
+                    b.HasIndex(new[] { "CustomerId", "ProductId" }, "UX_ShoppingCart_CartItem_Customer_Product")
+                        .IsUnique();
+
                     b.ToTable("CartItem", (string)null);
                 });
 

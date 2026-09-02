@@ -12,10 +12,12 @@ import {
   CartService,
   type CalculatedProductPrice,
   type CartItemModel,
+  type CartLineAdjustment,
   type CartModel,
   type UpdateCartItemRequest,
 } from 'data-access';
-import { concatMap, finalize, from, Observable, of, tap } from 'rxjs';
+import { concatMap, finalize, from, Observable, of, tap, throwError } from 'rxjs';
+import { cartWriteError } from './cart-messages';
 
 /** Minimal product shape needed to add to the cart and render a guest line. */
 export interface CartProduct {
@@ -116,7 +118,15 @@ export class CartStore {
     }
   }
 
-  /** Adds a product (or increments its line). Server-backed when signed in, local for guests. */
+  /**
+   * Adds a product, raising the existing line rather than adding a second one.
+   *
+   * Stock is a ceiling in both modes. Signed in, the server enforces it (and it counts stock that
+   * other shoppers' unpaid orders are holding, which the browser cannot know); as a guest the same
+   * rule is applied here against the product snapshot so the bag never shows a quantity checkout
+   * would refuse. A request that stock cuts short still succeeds and reports `cart.adjustment`;
+   * one that can take nothing fails with an {@link CartWriteError}.
+   */
   add(product: CartProduct, quantity = 1): Observable<CartModel> {
     if (this.auth.isAuthenticated()) {
       return this.cartService
@@ -126,16 +136,40 @@ export class CartStore {
 
     const lines = [...this.guestLines()];
     const existing = lines.findIndex((l) => l.productId === product.id);
+    const current = existing >= 0 ? lines[existing].quantity : 0;
+    const cap = this.guestCap(product.stockTrackingIsEnabled ?? false, product.stockQuantity);
+
+    if (!product.isAllowToOrder) {
+      return throwError(() => cartWriteError('unavailable', cap));
+    }
+    if (cap !== null && current >= cap) {
+      return throwError(() => cartWriteError('out-of-stock', cap));
+    }
+
+    const target = cap === null ? current + quantity : Math.min(current + quantity, cap);
     if (existing >= 0) {
-      lines[existing] = { ...lines[existing], quantity: lines[existing].quantity + quantity };
+      lines[existing] = { ...lines[existing], quantity: target };
     } else {
-      lines.push(this.toGuestLine(product, quantity));
+      lines.push(this.toGuestLine(product, target));
     }
     this.setGuest(lines);
-    return of(this.buildGuestCart(lines));
+
+    const adjustment: CartLineAdjustment | null =
+      target < current + quantity
+        ? {
+            productId: product.id,
+            requestedQuantity: quantity,
+            appliedQuantity: target,
+            availableQuantity: cap ?? target,
+          }
+        : null;
+    return of(this.buildGuestCart(lines, adjustment));
   }
 
-  /** Sets the quantity of a line. `id` is the cart-item id when signed in, else the product id. */
+  /**
+   * Sets the quantity of a line, capped by stock the same way {@link add} is. `id` is the cart-item
+   * id when signed in, else the product id.
+   */
   update(id: number, request: UpdateCartItemRequest): Observable<CartModel> {
     if (this.auth.isAuthenticated()) {
       return this.cartService
@@ -143,12 +177,34 @@ export class CartStore {
         .pipe(tap((cart) => this.applyServerCart(cart)));
     }
 
-    const quantity = request.quantity ?? 1;
+    const requested = request.quantity ?? 1;
+    const line = this.guestLines().find((l) => l.productId === id);
+    const cap = line ? this.guestCap(line.stockTrackingIsEnabled, line.stockQuantity) : null;
+    if (cap === 0) {
+      return throwError(() => cartWriteError('out-of-stock', 0));
+    }
+
+    const target = cap === null ? requested : Math.min(requested, cap);
     const lines = this.guestLines().map((l) =>
-      l.productId === id ? { ...l, quantity } : l,
+      l.productId === id ? { ...l, quantity: target } : l,
     );
     this.setGuest(lines);
-    return of(this.buildGuestCart(lines));
+
+    const adjustment: CartLineAdjustment | null =
+      target < requested
+        ? {
+            productId: id,
+            requestedQuantity: requested,
+            appliedQuantity: target,
+            availableQuantity: cap ?? target,
+          }
+        : null;
+    return of(this.buildGuestCart(lines, adjustment));
+  }
+
+  /** The stock ceiling for a guest line, or null when the product is not stock-tracked. */
+  private guestCap(tracksStock: boolean, stockQuantity: number | null): number | null {
+    return tracksStock ? Math.max(0, stockQuantity ?? 0) : null;
   }
 
   /** Removes a line. `id` is the cart-item id when signed in, else the product id. */
@@ -234,7 +290,10 @@ export class CartStore {
     };
   }
 
-  private buildGuestCart(lines: readonly GuestLine[]): CartModel {
+  private buildGuestCart(
+    lines: readonly GuestLine[],
+    adjustment: CartLineAdjustment | null = null,
+  ): CartModel {
     const items: CartItemModel[] = lines.map((l) => ({
       // No server id for guest lines — use the product id so the cart/drawer
       // UIs (which call update/remove with item.id) round-trip correctly.
@@ -263,6 +322,7 @@ export class CartStore {
       couponCode: null,
       couponValidationErrorMessage: null,
       items,
+      adjustment,
       subTotal: items
         .filter((i) => i.isAvailable)
         .reduce((sum, i) => sum + i.calculatedProductPrice.price * i.quantity, 0),

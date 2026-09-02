@@ -6,12 +6,15 @@ namespace Store.Application.ShoppingCart;
 /// </summary>
 public interface ICartService
 {
-    /// <summary>Adds a product to the cart, incrementing the quantity if the line already exists.</summary>
-    Task<AddToCartResult> AddToCartAsync(
+    /// <summary>
+    /// Adds a product to the cart, folding into the existing line when there is one. Stock caps the
+    /// result — see <see cref="CartLineResult"/>.
+    /// </summary>
+    Task<CartLineResult> AddToCartAsync(
         long customerId, long productId, int quantity, CancellationToken cancellationToken = default);
 
-    /// <summary>Sets the quantity of an existing cart line (must be &gt; 0). Returns false if not found/invalid.</summary>
-    Task<bool> UpdateQuantityAsync(
+    /// <summary>Sets the quantity of an existing cart line (must be &gt; 0), capped by stock.</summary>
+    Task<CartLineResult> UpdateQuantityAsync(
         long customerId, long cartItemId, int quantity, CancellationToken cancellationToken = default);
 
     /// <summary>Removes a cart line owned by the customer. Returns false if not found.</summary>

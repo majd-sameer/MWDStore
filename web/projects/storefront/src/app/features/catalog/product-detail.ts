@@ -35,6 +35,7 @@ import {
 import { CartStore, type CartProduct } from '../../core/cart.store';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
+import { announceCartAdd, announceCartError } from '../../core/cart-messages';
 
 /**
  * Product page: breadcrumb, gradient gallery, origin/title/rating, price with
@@ -174,7 +175,12 @@ export class ProductDetail {
     return p.isAllowToOrder && inStock;
   });
 
-  /** Upper bound for the quantity stepper (tracked stock, else generous cap). */
+  /**
+   * Upper bound for the quantity stepper: what is in stock, **less whatever the bag already holds**
+   * of this exact product (or variation). Without that subtraction the stepper happily offers all 5
+   * of a 5-in-stock product to a shopper whose bag already has 4, and the add then silently caps —
+   * this way the ceiling the shopper sees is the one that will actually apply.
+   */
   protected readonly maxQty = computed(() => {
     const p = this.product.value();
     const source = this.selectedVariation() ?? p;
@@ -183,7 +189,29 @@ export class ProductDetail {
     }
     const tracksStock =
       'stockTrackingIsEnabled' in source ? source.stockTrackingIsEnabled : false;
-    return tracksStock && source.stockQuantity > 0 ? source.stockQuantity : 99;
+    if (!tracksStock || source.stockQuantity <= 0) {
+      return 99;
+    }
+    const inBag =
+      this.cart.items().find((item) => item.productId === source.id)?.quantity ?? 0;
+    return Math.max(1, source.stockQuantity - inBag);
+  });
+
+  /** True once the bag holds every unit in stock — the add button has nothing left to add. */
+  protected readonly allStockInBag = computed(() => {
+    const p = this.product.value();
+    const source = this.selectedVariation() ?? p;
+    if (!source) {
+      return false;
+    }
+    const tracksStock =
+      'stockTrackingIsEnabled' in source ? source.stockTrackingIsEnabled : false;
+    if (!tracksStock) {
+      return false;
+    }
+    const inBag =
+      this.cart.items().find((item) => item.productId === source.id)?.quantity ?? 0;
+    return inBag >= Math.max(0, source.stockQuantity);
   });
 
   constructor() {
@@ -375,21 +403,21 @@ export class ProductDetail {
       : product;
     this.adding.set(true);
     this.cart.add(cartProduct, this.quantity()).subscribe({
-      next: () => {
+      next: (cart) => {
         this.adding.set(false);
-        this.toast.success(this.translate.instant('product.added'));
+        announceCartAdd(this.toast, this.translate, cart);
       },
-      error: () => {
+      error: (error) => {
         this.adding.set(false);
-        this.toast.error(this.translate.instant('common.error'));
+        announceCartError(this.toast, this.translate, error);
       },
     });
   }
 
   protected quickAdd(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: () => this.toast.success(this.translate.instant('product.added')),
-      error: () => this.toast.error(this.translate.instant('common.error')),
+      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }
 

@@ -60,11 +60,11 @@ public class CartTotalsTests
         await service.AddToCartAsync(CustomerId, 1, 2);
         var itemId = db.Set<CartItem>().Single().Id;
 
-        Assert.True(await service.UpdateQuantityAsync(CustomerId, itemId, 7));
+        Assert.True((await service.UpdateQuantityAsync(CustomerId, itemId, 7)).Success);
         Assert.Equal(7, db.Set<CartItem>().Single().Quantity);
 
-        Assert.False(await service.UpdateQuantityAsync(CustomerId, itemId, 0));   // invalid quantity
-        Assert.False(await service.UpdateQuantityAsync(999, itemId, 3));          // wrong owner
+        Assert.False((await service.UpdateQuantityAsync(CustomerId, itemId, 0)).Success);   // invalid quantity
+        Assert.False((await service.UpdateQuantityAsync(999, itemId, 3)).Success);          // wrong owner
     }
 
     [Fact]

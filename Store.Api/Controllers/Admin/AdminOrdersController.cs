@@ -121,7 +121,7 @@ public sealed class AdminOrdersController : ControllerBase
             return NotFound();
         }
 
-        await _orderService.CancelOrderAsync(order, cancellationToken);
+        await _orderService.CancelOrderAsync(order, "Canceled by staff; stock returned.", cancellationToken);
         return await Get(id, cancellationToken);
     }
 }

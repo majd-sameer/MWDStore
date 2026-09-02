@@ -38,11 +38,13 @@
                 <div class="line-unit tabular-nums">{{ item.calculatedProductPrice.price | money }}</div>
               </div>
 
+              <!-- An over-stock line is exactly the one the shopper needs to turn DOWN, so the
+                   stepper stays live on it — see canAdjust(). -->
               <lib-stepper
                 [value]="item.quantity"
                 [min]="1"
-                [max]="item.productStockQuantity || 99"
-                [disabled]="busy() || !item.isAvailable"
+                [max]="maxQty(item)"
+                [disabled]="busy() || !canAdjust(item)"
                 (valueChange)="changeQty(item, $event)"
               />
 

@@ -595,12 +595,11 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     private async Task CancelTimedOutOrderAsync(
         Order order, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        SetOrderStatus(
-            order, OrderStatus.Canceled, now, "MadfoatCom payment timed out; order canceled and stock restored.");
-
-        // CancelOrderAsync restocks each tracked line and saves — any settlement row and the history
-        // entry above ride along in that same SaveChanges.
-        await _orders.CancelOrderAsync(order, cancellationToken);
+        // CancelOrderAsync owns the move to Canceled — it restocks exactly once and refuses to run on
+        // an order that already gave its stock back, so it must see the status the order is still in.
+        // It records the note below and saves; any settlement row rides along in that same SaveChanges.
+        await _orders.CancelOrderAsync(
+            order, "MadfoatCom payment timed out; order canceled and stock restored.", cancellationToken);
     }
 
     /// <summary>

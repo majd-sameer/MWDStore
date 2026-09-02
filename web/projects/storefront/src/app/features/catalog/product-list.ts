@@ -31,6 +31,7 @@ import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
 import { ProductCardSignature } from '../../shared/product-card-signature';
 import { CategoryLabelPipe } from '../../shared/category-label.pipe';
+import { announceCartAdd, announceCartError } from '../../core/cart-messages';
 
 const PAGE_SIZE = 12;
 
@@ -306,8 +307,8 @@ export class ProductList {
 
   protected add(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: () => this.toast.success(this.translate.instant('product.added')),
-      error: () => this.toast.error(this.translate.instant('common.error')),
+      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }
 }
