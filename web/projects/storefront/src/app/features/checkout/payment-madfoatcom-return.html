@@ -1,19 +1,107 @@
+<main class="wrap return">
+  <section class="card" [attr.data-state]="state()" [attr.aria-busy]="isVerifying()">
+    <p class="brand">
+      <lib-icon name="shield" [size]="14" />
+      <span>{{ 'madfoatcom_return.secured' | translate }}</span>
+    </p>
 
-    <main class="wrap return">
-      <section class="card">
-        @if (state() === 'verifying') {
-          <span class="spinner" aria-hidden="true"></span>
-          <h1 class="title">{{ 'madfoatcom_return.verifying' | translate }}</h1>
-          <p class="sub">{{ 'madfoatcom_return.verifying_sub' | translate }}</p>
-        } @else if (state() === 'paid') {
-          <span class="ic ok"><lib-icon name="check" [size]="40" /></span>
-          <h1 class="title">{{ 'madfoatcom_return.paid' | translate }}</h1>
-          <p class="sub">{{ 'madfoatcom_return.redirecting' | translate }}</p>
+    <!-- The whole outcome block is one live region: the medallion, heading and sub-line all swap
+         together, so assistive tech should hear them as a single announcement. -->
+    <div class="status" role="status" aria-live="polite" aria-atomic="true">
+      <span class="medallion" aria-hidden="true">
+        @if (isVerifying()) {
+          <span class="spinner"></span>
         } @else {
-          <span class="ic bad"><lib-icon name="lock" [size]="40" /></span>
-          <h1 class="title">{{ 'madfoatcom_return.failed' | translate }}</h1>
-          <p class="sub">{{ 'madfoatcom_return.redirecting' | translate }}</p>
+          <lib-icon [name]="icon()" [size]="38" />
         }
-      </section>
-    </main>
-  
+      </span>
+
+      @switch (state()) {
+        @case ('verifying') {
+          <h1 class="title" #heading tabindex="-1">{{ 'madfoatcom_return.verifying' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.verifying_sub' | translate }}</p>
+        }
+        @case ('paid') {
+          <h1 class="title" #heading tabindex="-1">{{ 'madfoatcom_return.paid' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.paid_sub' | translate }}</p>
+        }
+        @case ('canceled') {
+          <h1 class="title" #heading tabindex="-1">{{ 'madfoatcom_return.canceled' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.canceled_sub' | translate }}</p>
+        }
+        @default {
+          <h1 class="title" #heading tabindex="-1">{{ 'madfoatcom_return.failed' | translate }}</h1>
+          <p class="sub">{{ 'madfoatcom_return.failed_sub' | translate }}</p>
+        }
+      }
+    </div>
+
+    @if (orderId || tranRef) {
+      <dl class="rows">
+        @if (orderId) {
+          <div class="row">
+            <dt>{{ 'madfoatcom_return.order' | translate }}</dt>
+            <dd class="tabular-nums">#{{ orderId }}</dd>
+          </div>
+        }
+        @if (tranRef) {
+          <div class="row">
+            <dt>{{ 'madfoatcom_return.reference' | translate }}</dt>
+            <dd class="ref">
+              <code class="ref-val">{{ tranRef }}</code>
+              <button type="button" class="copy" (click)="copyRef()">
+                @if (copied()) {
+                  <lib-icon name="check" [size]="13" />
+                  <span>{{ 'madfoatcom_return.copied' | translate }}</span>
+                } @else {
+                  <span>{{ 'madfoatcom_return.copy' | translate }}</span>
+                }
+              </button>
+            </dd>
+          </div>
+        }
+      </dl>
+    }
+
+    @if (!isVerifying()) {
+      <div class="actions">
+        @if (state() === 'paid') {
+          <button libButton variant="dark" block type="button" (click)="leave()">
+            {{ 'madfoatcom_return.continue_now' | translate }}
+          </button>
+        } @else {
+          <button libButton variant="dark" block type="button" (click)="leave(recoveryUrl())">
+            {{ 'madfoatcom_return.try_again' | translate }}
+          </button>
+          <button
+            libButton
+            variant="secondary"
+            [outline]="true"
+            block
+            type="button"
+            (click)="leave('/shop')"
+          >
+            {{ 'madfoatcom_return.keep_shopping' | translate }}
+          </button>
+        }
+      </div>
+
+      @if (state() === 'paid') {
+        <p class="countdown">
+          <span class="meter" aria-hidden="true"><span class="meter-fill"></span></span>
+          {{ 'madfoatcom_return.redirect_in' | translate: { seconds: countdown() } }}
+        </p>
+      } @else {
+        <p class="note">
+          <lib-icon name="clock" [size]="14" />
+          <span>{{
+            (state() === 'canceled'
+              ? 'madfoatcom_return.canceled_note'
+              : 'madfoatcom_return.failed_note'
+            ) | translate
+          }}</span>
+        </p>
+      }
+    }
+  </section>
+</main>

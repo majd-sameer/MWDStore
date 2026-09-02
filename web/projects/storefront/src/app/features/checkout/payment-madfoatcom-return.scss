@@ -1,58 +1,335 @@
+// Payment-result page for MadfoatCom (PayTabs). One card, four outcomes.
+//
+// Every outcome-dependent colour hangs off a single `--st` custom property set by the card's
+// `data-state`, so the medallion, the top strip, the note and the meter all recolour together and
+// nothing has to be restated per state.
 
-    :host {
-      display: block;
-    }
-    .return {
-      padding-block: 70px;
-      display: flex;
-      justify-content: center;
-    }
-    .card {
-      inline-size: 100%;
-      max-inline-size: 460px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--r-lg);
-      padding: 40px 28px;
-      text-align: center;
-    }
-    .title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-block: 18px 6px;
-    }
-    .sub {
-      color: var(--ink-2);
-      margin: 0;
-    }
-    .ic {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      inline-size: 76px;
-      block-size: 76px;
-      border-radius: 50%;
-      color: #fff;
-    }
-    .ic.ok {
-      background: var(--green);
-      box-shadow: var(--sh-green);
-    }
-    .ic.bad {
-      background: var(--danger, #b0492c);
-    }
-    .spinner {
-      display: inline-block;
-      inline-size: 46px;
-      block-size: 46px;
-      border: 4px solid var(--line-strong);
-      border-block-start-color: var(--green);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  
+:host {
+  display: block;
+}
+
+.return {
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(40px, 9vw, 80px);
+}
+
+.card {
+  // Neutral-positive while we are still asking the gateway; the two bad outcomes override it.
+  --st: var(--green);
+  --st-soft: color-mix(in srgb, var(--st) 12%, transparent);
+  --st-faint: color-mix(in srgb, var(--st) 6%, transparent);
+
+  position: relative;
+  overflow: hidden;
+  inline-size: 100%;
+  max-inline-size: 520px;
+  padding: clamp(30px, 6vw, 44px) clamp(22px, 5vw, 38px) clamp(26px, 5vw, 36px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+// State strip across the top edge — the first thing read at a glance, before any text.
+.card::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 4px;
+  background: linear-gradient(to right, transparent, var(--st), transparent);
+}
+
+.card[data-state="paid"] {
+  --st: var(--green);
+}
+.card[data-state="canceled"] {
+  --st: var(--accent);
+}
+.card[data-state="failed"] {
+  --st: #c0492c;
+}
+// The clay red goes muddy against the dark canvas — lift it just enough to keep the tick/cross and
+// the top strip legible.
+:host-context([data-bs-theme="dark"]) .card[data-state="failed"] {
+  --st: #e2704f;
+}
+
+// -----------------------------------------------------------------------------
+// Gateway reassurance line
+// -----------------------------------------------------------------------------
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 clamp(20px, 4vw, 28px);
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// -----------------------------------------------------------------------------
+// Outcome
+// -----------------------------------------------------------------------------
+.medallion {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 92px;
+  block-size: 92px;
+  border-radius: 50%;
+  background: var(--st-soft);
+  color: var(--st);
+  box-shadow: 0 0 0 10px var(--st-faint);
+  animation: medallion-in 0.42s cubic-bezier(0.22, 1.3, 0.5, 1) both;
+}
+
+// One ripple out of the medallion on a resolved result — a beat of feedback, not a loop.
+.card:not([data-state="verifying"]) .medallion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--st);
+  animation: medallion-ripple 0.9s ease-out 0.15s both;
+}
+
+// Draw the tick / cross rather than snapping it in.
+.medallion ::ng-deep path {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: stroke-draw 0.5s ease-out 0.18s forwards;
+}
+
+.spinner {
+  inline-size: 46px;
+  block-size: 46px;
+  border: 4px solid var(--line-strong);
+  border-block-start-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.title {
+  margin-block: 22px 8px;
+  font-size: clamp(1.3rem, 4vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+// The heading is focused programmatically when the result lands; only show a ring for real
+// keyboard focus, never for that hand-off.
+.title:focus {
+  outline: none;
+}
+.title:focus-visible {
+  outline: 2px solid var(--st);
+  outline-offset: 4px;
+  border-radius: var(--r-sm);
+}
+
+.sub {
+  margin: 0 auto;
+  max-inline-size: 42ch;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+// -----------------------------------------------------------------------------
+// Order / transaction reference — what support will ask for
+// -----------------------------------------------------------------------------
+.rows {
+  margin-block: clamp(22px, 4vw, 28px) 0;
+  padding: 4px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  text-align: start;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--line);
+}
+.row:last-child {
+  border-block-end: 0;
+}
+
+.row dt {
+  color: var(--ink-3);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.row dd {
+  margin: 0;
+  min-inline-size: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ref {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// The reference is the string support asks for, so it wraps rather than truncating — an elided
+// `TST24092812…` would be worse than useless on a narrow screen.
+.ref-val {
+  color: var(--ink);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+  direction: ltr; // transaction references are always Latin, even in Arabic
+  unicode-bidi: isolate;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.copy:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+// -----------------------------------------------------------------------------
+// Next steps
+// -----------------------------------------------------------------------------
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-start: clamp(22px, 4vw, 28px);
+}
+
+// Auto-forward is only ever offered on success, and always with the clock in plain sight.
+.countdown {
+  margin-block: 16px 0;
+  color: var(--ink-3);
+  font-size: 0.8rem;
+}
+
+.meter {
+  display: block;
+  overflow: hidden;
+  inline-size: 100%;
+  block-size: 3px;
+  margin-block-end: 10px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.meter-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  inline-size: 100%;
+  background: var(--st);
+  // Animating the logical inline-size (not a transform) makes the bar drain from the end in both
+  // LTR and RTL without a direction-specific origin.
+  animation: meter-drain 6s linear forwards; // matches AUTO_FORWARD_SECONDS
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-block: 18px 0;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  background: var(--st-soft);
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: start;
+}
+.note lib-icon {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--st);
+}
+
+// -----------------------------------------------------------------------------
+// Motion
+// -----------------------------------------------------------------------------
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes medallion-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+}
+
+@keyframes medallion-ripple {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes meter-drain {
+  from {
+    inline-size: 100%;
+  }
+  to {
+    inline-size: 0%;
+  }
+}
+
+// The spinner still needs to say "working", so it keeps a slow turn; everything decorative stops.
+@media (prefers-reduced-motion: reduce) {
+  .medallion,
+  .medallion::after,
+  .medallion ::ng-deep path {
+    animation: none;
+  }
+  .medallion ::ng-deep path {
+    stroke-dashoffset: 0;
+  }
+  .spinner {
+    animation-duration: 2.4s;
+  }
+  .meter-fill {
+    animation: none;
+    inline-size: 0;
+  }
+}

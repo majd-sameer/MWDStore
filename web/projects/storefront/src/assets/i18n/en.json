@@ -336,11 +336,25 @@
   },
   "madfoatcom_return": {
     "verifying": "Confirming your payment…",
-    "verifying_sub": "Please wait while we confirm your payment with MadfoatCom.",
+    "verifying_sub": "Please wait while we confirm your payment with MadfoatCom. Don't close this page.",
     "paid": "Payment successful — thank you!",
+    "paid_sub": "Your payment went through and your order is confirmed.",
     "failed": "We couldn't confirm your payment.",
+    "failed_sub": "Your order is saved and still unpaid, so nothing is lost — you can pay for it again whenever you're ready.",
     "canceled": "Payment was not completed.",
-    "redirecting": "Taking you back…"
+    "canceled_sub": "You left the payment page before it finished. Your order is waiting for you, unchanged.",
+    "redirecting": "Taking you back…",
+    "secured": "Secured by MadfoatCom",
+    "order": "Order",
+    "reference": "Reference",
+    "copy": "Copy",
+    "copied": "Copied",
+    "redirect_in": "Taking you to your order in {{seconds}}s",
+    "continue_now": "Continue now",
+    "try_again": "Go to your order to pay again",
+    "keep_shopping": "Keep shopping",
+    "canceled_note": "Nothing has been charged. You can pay for this order from your order page at any time.",
+    "failed_note": "If your card was charged, quote the reference above to our support team and we will sort it out."
   },
   "stripe_return": {
     "verifying": "Confirming your payment…",
