@@ -137,17 +137,27 @@ public sealed class CartService : ICartService
                 Quantity = x.Quantity,
                 ProductStockQuantity = x.Product.StockQuantity,
                 ProductStockTrackingIsEnabled = x.Product.StockTrackingIsEnabled,
-                IsProductAvailableToOrder = x.Product.IsAllowToOrder && x.Product.IsPublished && !x.Product.IsDeleted
+                IsProductAvailableToOrder = x.Product.IsAllowToOrder && x.Product.IsPublished && !x.Product.IsDeleted,
+                IsAvailable = x.Product.IsAllowToOrder && x.Product.IsPublished && !x.Product.IsDeleted
+                    && (!x.Product.StockTrackingIsEnabled || x.Product.StockQuantity >= x.Quantity),
+                AvailableQuantity = x.Product.StockTrackingIsEnabled
+                    ? Math.Max(0, x.Product.StockQuantity)
+                    : x.Quantity
             })
             .ToList();
 
-        cart.SubTotal = cart.Items.Sum(x => x.Quantity * (x.CalculatedProductPrice.OldPrice ?? x.ProductPrice));
+        // Only buyable lines are priced. An out-of-stock or withdrawn line stays in the cart so the
+        // shopper can see what happened to it — typically because their failed order was returned to
+        // the cart — but charging for it, or discounting it, would be a lie.
+        var buyable = cart.Items.Where(x => x.IsAvailable).ToList();
+
+        cart.SubTotal = buyable.Sum(x => x.Quantity * (x.CalculatedProductPrice.OldPrice ?? x.ProductPrice));
 
         if (!string.IsNullOrWhiteSpace(cart.CouponCode))
         {
             var cartInfo = new CartInfoForCoupon
             {
-                Items = cart.Items.Select(x => new CartItemForCoupon { ProductId = x.ProductId, Quantity = x.Quantity }).ToList()
+                Items = buyable.Select(x => new CartItemForCoupon { ProductId = x.ProductId, Quantity = x.Quantity }).ToList()
             };
 
             var couponResult = await _couponService.ValidateAsync(customerId, cart.CouponCode, cartInfo, cancellationToken);
@@ -161,7 +171,7 @@ public sealed class CartService : ICartService
             }
         }
 
-        cart.Discount += cart.Items
+        cart.Discount += buyable
             .Where(x => x.CalculatedProductPrice.OldPrice.HasValue)
             .Sum(x => x.Quantity * (x.CalculatedProductPrice.OldPrice!.Value - x.CalculatedProductPrice.Price));
 

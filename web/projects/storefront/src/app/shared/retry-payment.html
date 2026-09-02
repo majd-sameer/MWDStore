@@ -1,0 +1,13 @@
+
+    @if (canRetry()) {
+      <button
+        libButton
+        variant="dark"
+        size="sm"
+        type="button"
+        [disabled]="busy()"
+        (click)="retry()"
+      >
+        {{ (busy() ? 'account.retry_working' : 'account.retry_payment') | translate }}
+      </button>
+    }

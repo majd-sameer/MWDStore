@@ -13,6 +13,16 @@
       <div class="card">
         <div class="card-body">
           <app-order-detail-view [order]="order.value()" />
+          @if (order.value(); as detail) {
+            <div class="d-flex justify-content-end mt-3">
+              <app-retry-payment
+                [orderId]="detail.id"
+                [orderStatus]="detail.orderStatus"
+                [paymentMethod]="detail.paymentMethod"
+                [orderTotal]="detail.orderTotal"
+              />
+            </div>
+          }
         </div>
       </div>
     }

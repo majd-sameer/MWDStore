@@ -139,8 +139,21 @@ public sealed record OrderAddressDto(
 
 public sealed record OrderSummaryDto(
     long Id, string? TrackingNumber, DateTimeOffset CreatedOn, int OrderStatus, string OrderStatusName,
-    decimal OrderTotal, int ItemCount, string? CreatedBy = null, string? ModifiedBy = null);
+    decimal OrderTotal, int ItemCount, string? PaymentMethod = null,
+    string? CreatedBy = null, string? ModifiedBy = null);
 
+
+/// <summary>
+/// What the storefront should do after a "pay again" preflight: start a new payment for the order
+/// (<paramref name="CanPay"/>), or go to the cart, where the order's lines now sit and
+/// <paramref name="UnavailableItems"/> are shown as no longer buyable (<paramref name="MovedToCart"/>).
+/// </summary>
+public sealed record OrderRetryPaymentDto(
+    long OrderId, bool CanPay, bool MovedToCart, IReadOnlyList<OrderRetryItemDto> UnavailableItems);
+
+/// <summary>A line that could not be re-ordered. <paramref name="Reason"/> is <c>out-of-stock</c> or <c>unavailable</c>.</summary>
+public sealed record OrderRetryItemDto(
+    long ProductId, string ProductName, int RequestedQuantity, int AvailableQuantity, string Reason);
 
 public sealed record OrderTrackingDto(
     long Id, string? TrackingNumber, DateTimeOffset CreatedOn, int OrderStatus, string OrderStatusName,

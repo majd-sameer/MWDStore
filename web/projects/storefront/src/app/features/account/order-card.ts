@@ -5,6 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageService, MoneyPipe } from 'core';
 import type { OrderSummaryDto } from 'data-access';
 import { Icon, Tag } from 'ui';
+import { RetryPayment } from '../../shared/retry-payment';
 import { statusLabel } from './order-status';
 import { TrackBar } from './track-bar';
 
@@ -16,7 +17,7 @@ import { TrackBar } from './track-bar';
 @Component({
   selector: 'app-order-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, Icon, Tag, TrackBar],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, Icon, Tag, TrackBar, RetryPayment],
   host: { class: 'order-card' },
   templateUrl: './order-card.html',
   styleUrl: './order-card.scss',

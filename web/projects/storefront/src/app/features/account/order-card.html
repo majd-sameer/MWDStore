@@ -18,8 +18,16 @@
         {{ 'account.items' | translate: { count: order().itemCount } }} ·
         <strong class="tabular-nums">{{ order().orderTotal | money }}</strong>
       </span>
-      <a class="oc-view" routerLink="/track-order" [queryParams]="{ number: order().trackingNumber }">
-        {{ 'account.view' | translate }} <lib-icon name="arrowEnd" [size]="15" />
-      </a>
+      <span class="oc-actions">
+        <app-retry-payment
+          [orderId]="order().id"
+          [orderStatus]="order().orderStatus"
+          [paymentMethod]="order().paymentMethod"
+          [orderTotal]="order().orderTotal"
+        />
+        <a class="oc-view" routerLink="/track-order" [queryParams]="{ number: order().trackingNumber }">
+          {{ 'account.view' | translate }} <lib-icon name="arrowEnd" [size]="15" />
+        </a>
+      </span>
     </div>
   

@@ -2,7 +2,12 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { API_ROOT, toQueryParams } from './http-utils';
-import type { OrderDetailDto, OrderSummaryDto, OrderTrackingDto } from './models';
+import type {
+  OrderDetailDto,
+  OrderRetryPaymentDto,
+  OrderSummaryDto,
+  OrderTrackingDto,
+} from './models';
 
 /** Current customer's order history (auth reads) + public order tracking. */
 @Injectable({ providedIn: 'root' })
@@ -29,6 +34,18 @@ export class OrderService {
         const value = id();
         return value ? `${API_ROOT}/orders/${value}` : undefined;
       }),
+    );
+  }
+
+  /**
+   * POST /api/orders/{id}/retry-payment — "pay again" preflight for an order whose payment failed.
+   * Either clears a fresh payment for the same order (`canPay`), or reports that the order went back
+   * to the cart because something is no longer buyable (`movedToCart`), listing what is missing.
+   */
+  retryPayment(orderId: number): Observable<OrderRetryPaymentDto> {
+    return this.http.post<OrderRetryPaymentDto>(
+      `${API_ROOT}/orders/${orderId}/retry-payment`,
+      {},
     );
   }
 

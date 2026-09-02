@@ -34,6 +34,20 @@ public sealed class CartItemModel
     public bool ProductStockTrackingIsEnabled { get; set; }
 
     public bool IsProductAvailableToOrder { get; set; }
+
+    /// <summary>
+    /// False when this line cannot be bought as it stands — the product was withdrawn, or stock
+    /// tracking says fewer are left than the line asks for. Such lines stay in the cart for the
+    /// shopper to see but are **excluded from <see cref="CartModel.SubTotal"/> and
+    /// <see cref="CartModel.Discount"/>**, so the totals only ever cover what is actually buyable.
+    /// </summary>
+    public bool IsAvailable { get; set; }
+
+    /// <summary>
+    /// How many of this product can be bought right now: the stock on hand for a stock-tracked
+    /// product, otherwise the line's own quantity (nothing constrains it).
+    /// </summary>
+    public long AvailableQuantity { get; set; }
 }
 
 /// <summary>

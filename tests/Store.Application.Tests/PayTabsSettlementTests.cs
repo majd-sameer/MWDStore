@@ -162,7 +162,7 @@ public class PayTabsSettlementTests
     }
 
     [Fact]
-    public async Task Settle_DeclinedQuery_RecordsFailureAndLeavesOrderPayable()
+    public async Task Settle_DeclinedQuery_RecordsFailureAndMarksOrderPaymentFailed()
     {
         using var db = TestDb.New();
         var (order, _) = await SeedAttemptAsync(db, Now.AddMinutes(-3));
@@ -173,7 +173,8 @@ public class PayTabsSettlementTests
         Assert.True(result.Success);
         Assert.False(result.Value!.Approved);
         Assert.Equal(PaymentStatus.Failed, db.Payments.OrderBy(p => p.Id).Last().Status);
-        Assert.Equal(OrderStatus.PendingPayment, order.OrderStatus);
+        // PaymentFailed is what the shopper is shown *and* a status they can pay again from.
+        Assert.Equal(OrderStatus.PaymentFailed, order.OrderStatus);
     }
 
     [Fact]
@@ -343,6 +344,42 @@ public class PayTabsSettlementTests
         Assert.Equal(0, decided);
         Assert.DoesNotContain(db.Payments, p => p.Status == PaymentStatus.Voided);
         Assert.Equal(OrderStatus.PendingPayment, order.OrderStatus);
+    }
+
+    [Fact]
+    public async Task Reconcile_CancelsAnOrderAbandonedAfterADecline()
+    {
+        using var db = TestDb.New();
+        var (order, _) = await SeedAttemptAsync(db, Now.AddMinutes(-90));
+        var gateway = NewGateway(db, new FakePayTabsClient { Status = PayTabsResponseStatus.Declined });
+
+        // The card was declined an hour and a half ago and the shopper never tried again.
+        await gateway.SettlePayTabsTransactionAsync(TranRef);
+        Assert.Equal(OrderStatus.PaymentFailed, order.OrderStatus);
+        order.LatestUpdatedOn = Now.AddMinutes(-90);
+        await db.SaveChangesAsync();
+
+        var decided = await gateway.ReconcilePendingPayTabsPaymentsAsync();
+
+        // Nothing is left pending to void, but the order must not hold its stock forever.
+        Assert.Equal(1, decided);
+        Assert.Equal(OrderStatus.Canceled, order.OrderStatus);
+        Assert.Equal(5, db.Products.Single(p => p.Id == 1).StockQuantity);
+    }
+
+    [Fact]
+    public async Task Reconcile_LeavesAFreshlyFailedOrderAlone()
+    {
+        using var db = TestDb.New();
+        var (order, _) = await SeedAttemptAsync(db, Now.AddMinutes(-3));
+        var gateway = NewGateway(db, new FakePayTabsClient { Status = PayTabsResponseStatus.Declined });
+
+        await gateway.SettlePayTabsTransactionAsync(TranRef);
+        var decided = await gateway.ReconcilePendingPayTabsPaymentsAsync();
+
+        // The shopper is still looking at the failure and may pay again in a moment.
+        Assert.Equal(0, decided);
+        Assert.Equal(OrderStatus.PaymentFailed, order.OrderStatus);
     }
 
     [Fact]

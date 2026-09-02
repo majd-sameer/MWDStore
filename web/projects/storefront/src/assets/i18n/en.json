@@ -1,9 +1,11 @@
 ﻿{
-  "brand": { "name": "Made With Determination" },
+  "brand": {
+    "name": "Made With Determination"
+  },
   "nav": {
     "shop": "Shop",
     "store": "Store",
-    "home" : "Home",
+    "home": "Home",
     "sections": "Store Sections",
     "news": "Our News",
     "new_arrivals": "New Arrivals",
@@ -226,7 +228,10 @@
     "apply": "Apply",
     "coupon_signin": "Sign in to use a coupon.",
     "decrease": "Decrease quantity",
-    "increase": "Increase quantity"
+    "increase": "Increase quantity",
+    "only_left": "Only {{count}} left in stock",
+    "not_in_total": "Not included in your total",
+    "remove_unavailable": "Remove the {{count}} unavailable item(s) to check out."
   },
   "checkout": {
     "title": "Checkout",
@@ -428,7 +433,11 @@
     "col_status": "Status",
     "col_items": "Items",
     "col_total": "Total",
-    "col_view": "View"
+    "col_view": "View",
+    "retry_payment": "Pay again",
+    "retry_working": "Starting…",
+    "retry_moved_to_cart": "{{count}} item(s) are no longer available. Your order has been moved to your bag.",
+    "retry_moved_to_cart_all": "Your order has been moved to your bag."
   },
   "orderview": {
     "product": "Product",
@@ -504,8 +513,7 @@
     "next": "Next",
     "close": "Close",
     "zoom": "Zoom to view"
-  }
-,
+  },
   "wishlist": {
     "title": "Wishlist",
     "empty": "Your wishlist is empty.",
@@ -588,7 +596,9 @@
     "err_message": "Please write your message.",
     "error": "Could not send your message."
   },
-  "recently": { "title": "Recently viewed" },
+  "recently": {
+    "title": "Recently viewed"
+  },
   "about": {
     "eyebrow": "About us",
     "hero_title": "Made with Determination — when willpower becomes a product",

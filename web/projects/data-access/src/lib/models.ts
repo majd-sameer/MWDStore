@@ -210,6 +210,14 @@ export interface CartItemModel {
   productStockQuantity: number;
   productStockTrackingIsEnabled: boolean;
   isProductAvailableToOrder: boolean;
+  /**
+   * False when the line can't be bought as it stands (withdrawn product, or fewer in stock than the
+   * line asks for). Such lines stay in the cart for the shopper to see but are left out of
+   * `subTotal`/`discount` — show them as unavailable, and don't let checkout run until they're gone.
+   */
+  isAvailable: boolean;
+  /** How many can actually be bought right now (stock on hand for stock-tracked products). */
+  availableQuantity: number;
 }
 
 export interface CartModel {
@@ -393,8 +401,32 @@ export interface OrderSummaryDto {
   orderStatusName: string | null;
   orderTotal: number;
   itemCount: number;
+  /** Provider id the order was placed with (e.g. `MadfoatCom`), needed to start a payment again. */
+  paymentMethod: string | null;
   createdBy: string | null;
   modifiedBy: string | null;
+}
+
+/**
+ * Result of the "pay again" preflight (`POST /api/orders/{id}/retry-payment`). Either the order can
+ * be paid again as it stands (`canPay`), or it went back to the cart because something is no longer
+ * buyable (`movedToCart`) — send the shopper to /cart, where `unavailableItems` are shown as
+ * unavailable and left out of the totals.
+ */
+export interface OrderRetryPaymentDto {
+  orderId: number;
+  canPay: boolean;
+  movedToCart: boolean;
+  unavailableItems: OrderRetryItemDto[];
+}
+
+/** A line that couldn't be re-ordered. `reason` is `'out-of-stock'` or `'unavailable'`. */
+export interface OrderRetryItemDto {
+  productId: number;
+  productName: string;
+  requestedQuantity: number;
+  availableQuantity: number;
+  reason: string;
 }
 
 /** A single status-change milestone for the tracking timeline. */

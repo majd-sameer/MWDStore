@@ -5,11 +5,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { OrderService } from 'data-access';
 import { Breadcrumb, type BreadcrumbItem } from 'ui';
 import { OrderDetailView } from '../../shared/order-detail-view';
+import { RetryPayment } from '../../shared/retry-payment';
 
 @Component({
   selector: 'app-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, Breadcrumb, OrderDetailView],
+  imports: [TranslatePipe, Breadcrumb, OrderDetailView, RetryPayment],
   templateUrl: './order-detail.html',
 })
 export class OrderDetail {

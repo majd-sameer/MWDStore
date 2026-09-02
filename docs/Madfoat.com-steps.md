@@ -196,7 +196,7 @@ Rules:
   |---|---|---|
   | `A` (Authorised), `H` (Hold) | Paid | Settlement row `Succeeded` (20), Order → `PaymentReceived` |
   | `P` (Pending) | Undecided (async method / shopper mid-flow) | **Write nothing** — a later IPN, revisit or sweep can still settle; failing now would strand an order about to be paid |
-  | `D`/`C`/`V`/`E`/`X` (Declined/Cancelled/Voided/Error/Expired) | Failed | Settlement row `Failed` (10) with PayTabs' message; **order stays `PendingPayment`** so the shopper can retry (same or different method) |
+  | `D`/`C`/`V`/`E`/`X` (Declined/Cancelled/Voided/Error/Expired) | Failed | Settlement row `Failed` (10) with PayTabs' message; **order → `PaymentFailed` (35)**, which is both what the shopper is shown and a status they can pay again from (step 8) |
 
 One deliberate exception: if a query comes back approved for an order the timeout (step 7) has
 already canceled, the `Succeeded` row is still recorded — the money is real — but the canceled order
@@ -222,8 +222,8 @@ Without it such a payment sits at `PendingExecution` forever with the money take
 checkout holds its stock indefinitely.
 
 Each pass picks up MadfoatCom attempts that are still `PendingExecution`, older than the grace
-period, whose **order is still `PendingPayment`**, and for which no settlement row already carries the
-same `tran_ref`. For each one:
+period, whose **order is still `PendingPayment` or `PaymentFailed`**, and for which no settlement row
+already carries the same `tran_ref`. For each one:
 
 1. Re-query through the step-5 funnel. Approved or declined → a settlement row is written and the
    attempt is done.
@@ -237,9 +237,40 @@ Only an order's **newest** attempt can be voided. A shopper who abandons one hos
 again leaves a stale attempt that ages past the timeout while they are still paying on the new one;
 voiding it would cancel the order mid-payment.
 
+A second pass then releases orders that were **abandoned after a decline**: `PendingPayment` /
+`PaymentFailed`, untouched since before the timeout, with a MadfoatCom payment, no successful one,
+and nothing left in flight (the newest payment row is a settlement, not an attempt). There is no
+pending attempt to void, so only the order is canceled and restocked. Without it a `PaymentFailed`
+order would hold its stock forever, because its attempt already carries a settlement row.
+
 Tuned by the `Payments` config keys in §2 (defaults: query after 2 min, void after 30 min, sweep
 every 60 s). Assumes a single API process; scaling out would want a lease so two instances don't
 sweep the same rows. `tests/Store.Application.Tests/PayTabsSettlementTests.cs` pins all of it.
+
+### Step 8 — Paying again (`OrderService.RetryPaymentAsync`)
+
+A declined card leaves the order at `PaymentFailed` (35), which the storefront shows with a **Pay
+again** button (`shared/retry-payment.ts`, on the account order card and order detail).
+`POST /api/orders/{id}/retry-payment` decides what happens, and it is the server that checks stock —
+never the browser:
+
+| Situation | Result |
+|---|---|
+| Every line still orderable | `canPay` — the storefront calls `/api/payments/initiate` for the **same order** and the shopper is sent back to the hosted page. `InitiatePaymentAsync` accepts `PaymentFailed` for exactly this. |
+| Anything withdrawn or short on stock | `movedToCart` — **all** lines are copied to the cart, the order is canceled (returning its stock), and the storefront navigates to `/cart` |
+
+Availability counts the order's own stock when the order still holds it (anything but `Canceled`),
+so a retry never reports its own reservation as missing. A canceled order (the timeout, or an admin)
+is never revived — its lines always go back to the cart instead.
+
+Lines that came back unavailable stay in the cart **for information only**: `CartItemModel.IsAvailable`
+is false, `CartService` leaves them out of `SubTotal` and the coupon/discount maths, and the cart page
+greys them out, shows "no longer available" or "only N left", and blocks checkout until they are
+removed. Cart quantities are *raised* to the ordered amount rather than added to it, so a
+double-clicked retry cannot double the bag. `tests/Store.Application.Tests/OrderRetryPaymentTests.cs`
+covers all of it.
+
+Guests are out of scope: the endpoint is authenticated, and a guest's cart lives in their browser.
 
 ---
 

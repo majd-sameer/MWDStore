@@ -21,7 +21,8 @@ public static class OrderMapping
         order.OrderStatus,
         OrderStatusNames.For(order.OrderStatus),
         order.OrderTotal,
-        order.OrderItems.Sum(i => i.Quantity));
+        order.OrderItems.Sum(i => i.Quantity),
+        order.PaymentMethod);
 
     /// <summary>Requires <c>OrderItems.Product</c>, <c>BillingAddress</c> and <c>ShippingAddress</c> to be loaded.</summary>
     public static OrderDetailDto ToDetail(this Order order) => new(

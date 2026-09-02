@@ -84,7 +84,9 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             return Result.Fail<GatewayInitiationResult>("Order not found.");
         }
 
-        if (order.OrderStatus is not (OrderStatus.New or OrderStatus.PendingPayment))
+        // PaymentFailed is payable again: a declined card (CVV mismatch, insufficient funds, …) leaves
+        // the order there, and the storefront's "pay again" starts a fresh attempt on the same order.
+        if (order.OrderStatus is not (OrderStatus.New or OrderStatus.PendingPayment or OrderStatus.PaymentFailed))
         {
             return Result.Fail<GatewayInitiationResult>("This order can no longer be paid.");
         }
@@ -258,11 +260,12 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, true, sessionId));
         }
 
-        // Not paid yet (abandoned / canceled / still processing). Leave the order PendingPayment so the
-        // shopper can retry; only flag the payment row as failed for this attempt.
+        // Not paid yet (abandoned / canceled / still processing). The order goes to PaymentFailed,
+        // which the shopper can still pay from — "pay again" starts a fresh attempt on the same order.
         payment.Status = PaymentStatus.Failed;
         payment.FailureMessage = "Stripe payment was not completed.";
         payment.LatestUpdatedOn = now;
+        SetOrderStatus(order, OrderStatus.PaymentFailed, now, "Stripe payment failed.");
         await _db.SaveChangesAsync(cancellationToken);
         return Result.Ok(new GatewayPaymentResult(payment.Id, order.Id, false, sessionId));
     }
@@ -418,15 +421,15 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             return (Result.Ok(new GatewayPaymentResult(attempt.Id, order.Id, false, tranRef)), false);
         }
 
-        // Declined / cancelled / voided / expired: fail this attempt only. The order stays
-        // PendingPayment so the shopper can retry, here or with another method.
-        var failure = RecordSettlement(
-            attempt,
-            PaymentStatus.Failed,
-            string.IsNullOrWhiteSpace(transaction.ResponseMessage)
-                ? $"MadfoatCom payment was not completed (status {transaction.ResponseStatus})."
-                : transaction.ResponseMessage,
-            now);
+        // Declined / cancelled / voided / expired — a wrong CVV, a rejected card, a shopper who backed
+        // out. The order goes to PaymentFailed, which is both what the shopper is shown and a status
+        // they can pay from again: "pay again" starts a fresh attempt on this same order.
+        var message = string.IsNullOrWhiteSpace(transaction.ResponseMessage)
+            ? $"MadfoatCom payment was not completed (status {transaction.ResponseStatus})."
+            : transaction.ResponseMessage;
+
+        var failure = RecordSettlement(attempt, PaymentStatus.Failed, message, now);
+        SetOrderStatus(order, OrderStatus.PaymentFailed, now, $"MadfoatCom payment failed: {message}");
 
         await _db.SaveChangesAsync(cancellationToken);
         return (Result.Ok(new GatewayPaymentResult(failure.Id, order.Id, false, tranRef)), true);
@@ -438,9 +441,9 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
         var queryBefore = now - _options.ReconciliationGrace;
         var voidBefore = now - _options.PendingPaymentTimeout;
 
-        // Two guards, both load-bearing. The order must still be awaiting payment — that retires an
-        // attempt the moment its order moves on (paid, or canceled by this very sweep), including the
-        // rows this sweep just wrote. And no settlement row may already carry this tran_ref — that
+        // Two guards, both load-bearing. The order must still be unpaid and uncanceled — that retires
+        // an attempt the moment its order moves on (paid, or canceled by this very sweep), including
+        // the rows this sweep just wrote. And no settlement row may already carry this tran_ref — that
         // leaves a declined attempt alone so the shopper can retry the order with a fresh transaction.
         var attempts = await _db.Payments
             .Include(p => p.Order)
@@ -448,7 +451,8 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             .Where(p => p.PaymentMethod == MadfoatCom
                 && p.Status == PaymentStatus.PendingExecution
                 && p.CreatedOn <= queryBefore
-                && p.Order.OrderStatus == OrderStatus.PendingPayment
+                && (p.Order.OrderStatus == OrderStatus.PendingPayment
+                    || p.Order.OrderStatus == OrderStatus.PaymentFailed)
                 && !_db.Payments.Any(s =>
                     s.OrderId == p.OrderId
                     && s.Id != p.Id
@@ -461,7 +465,8 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
 
         if (attempts.Count == 0)
         {
-            return 0;
+            // Nothing in flight, but an order abandoned after a decline still has to be released.
+            return await CancelAbandonedOrdersAsync(now, voidBefore, cancellationToken);
         }
 
         // Only an order's newest attempt may be voided. A shopper who abandons one hosted page and
@@ -519,7 +524,49 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             decided++;
         }
 
+        decided += await CancelAbandonedOrdersAsync(now, voidBefore, cancellationToken);
         return decided;
+    }
+
+    /// <summary>
+    /// Cancels orders that were left unpaid past the timeout with nothing pending left to settle —
+    /// the shopper's card was declined and they never tried again. Without this a
+    /// <c>PaymentFailed</c> order would hold its stock forever, because its attempt already carries a
+    /// settlement row and so is never voided by the pass above.
+    /// </summary>
+    private async Task<int> CancelAbandonedOrdersAsync(
+        DateTimeOffset now, DateTimeOffset voidBefore, CancellationToken cancellationToken)
+    {
+        // Deliberately narrow: only orders that actually went to the gateway (so an order an admin is
+        // managing by hand is never touched), that no payment ever succeeded for, and that have **no
+        // pending attempt at all** — an order with one is the pass above's business, and that pass
+        // refuses to act while PayTabs is unreachable, a refusal this must not undo.
+        // `LatestUpdatedOn` is the last status change, so the clock restarts whenever the shopper
+        // tries again.
+        var abandoned = await _db.Orders
+            .Include(o => o.OrderHistories)
+            .Where(o => (o.OrderStatus == OrderStatus.PendingPayment || o.OrderStatus == OrderStatus.PaymentFailed)
+                && o.LatestUpdatedOn <= voidBefore
+                && _db.Payments.Any(p => p.OrderId == o.Id && p.PaymentMethod == MadfoatCom)
+                && !_db.Payments.Any(p => p.OrderId == o.Id && p.Status == PaymentStatus.Succeeded)
+                // The newest row is the state of play — attempt rows keep PendingExecution for good,
+                // so "is anything in flight?" is answered by what was written last, not by whether a
+                // pending row exists at all.
+                && _db.Payments
+                    .Where(p => p.OrderId == o.Id && p.PaymentMethod == MadfoatCom)
+                    .OrderByDescending(p => p.Id)
+                    .Select(p => p.Status)
+                    .FirstOrDefault() != PaymentStatus.PendingExecution)
+            .OrderBy(o => o.Id)
+            .Take(ReconciliationBatchSize)
+            .ToListAsync(cancellationToken);
+
+        foreach (var order in abandoned)
+        {
+            await CancelTimedOutOrderAsync(order, now, cancellationToken);
+        }
+
+        return abandoned.Count;
     }
 
     /// <summary>
@@ -529,7 +576,6 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
     private async Task VoidTimedOutAttemptAsync(
         Payment attempt, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var order = attempt.Order;
         var minutes = _options.PendingPaymentTimeout.TotalMinutes.ToString("0", CultureInfo.InvariantCulture);
 
         RecordSettlement(
@@ -538,16 +584,23 @@ public sealed class GatewayPaymentService : IGatewayPaymentService
             $"Voided after {minutes} minutes with no result from MadfoatCom.",
             now);
 
-        SetOrderStatus(
-            order, OrderStatus.Canceled, now, "MadfoatCom payment timed out; order canceled and stock restored.");
-
-        // CancelOrderAsync restocks each tracked line and saves — the settlement row and the history
-        // entry above ride along in that same SaveChanges.
-        await _orders.CancelOrderAsync(order, cancellationToken);
+        await CancelTimedOutOrderAsync(attempt.Order, now, cancellationToken);
 
         _logger.LogInformation(
             "Voided timed-out MadfoatCom payment {PaymentId} and canceled order {OrderId}.",
-            attempt.Id, order.Id);
+            attempt.Id, attempt.OrderId);
+    }
+
+    /// <summary>Cancels a timed-out order and returns its stock, recording the reason on the order.</summary>
+    private async Task CancelTimedOutOrderAsync(
+        Order order, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        SetOrderStatus(
+            order, OrderStatus.Canceled, now, "MadfoatCom payment timed out; order canceled and stock restored.");
+
+        // CancelOrderAsync restocks each tracked line and saves — any settlement row and the history
+        // entry above ride along in that same SaveChanges.
+        await _orders.CancelOrderAsync(order, cancellationToken);
     }
 
     /// <summary>

@@ -248,6 +248,14 @@ export class CartStore {
       productStockQuantity: l.stockQuantity ?? 99,
       productStockTrackingIsEnabled: l.stockTrackingIsEnabled,
       isProductAvailableToOrder: l.isAllowToOrder,
+      // Mirrors the server's rule so both carts read the same way: unavailable lines are shown but
+      // never priced.
+      isAvailable:
+        l.isAllowToOrder &&
+        (!l.stockTrackingIsEnabled || (l.stockQuantity ?? 0) >= l.quantity),
+      availableQuantity: l.stockTrackingIsEnabled
+        ? Math.max(0, l.stockQuantity ?? 0)
+        : l.quantity,
     }));
 
     return {
@@ -255,7 +263,9 @@ export class CartStore {
       couponCode: null,
       couponValidationErrorMessage: null,
       items,
-      subTotal: items.reduce((sum, i) => sum + i.calculatedProductPrice.price * i.quantity, 0),
+      subTotal: items
+        .filter((i) => i.isAvailable)
+        .reduce((sum, i) => sum + i.calculatedProductPrice.price * i.quantity, 0),
       discount: 0,
     };
   }

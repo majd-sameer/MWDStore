@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Store.Api.Infrastructure;
 using Store.Api.Models;
 using Store.Application.Localization;
+using Store.Application.Orders;
 using Store.Data;
 
 namespace Store.Api.Controllers;
@@ -16,11 +17,13 @@ public sealed class OrdersController : ControllerBase
 {
     private readonly StoreDbContext _db;
     private readonly ILocalizationService _localization;
+    private readonly IOrderService _orders;
 
-    public OrdersController(StoreDbContext db, ILocalizationService localization)
+    public OrdersController(StoreDbContext db, ILocalizationService localization, IOrderService orders)
     {
         _db = db;
         _localization = localization;
+        _orders = orders;
     }
 
     /// <summary>The customer's orders, newest first (master orders only — excludes vendor sub-orders).</summary>
@@ -56,6 +59,34 @@ public sealed class OrdersController : ControllerBase
         var detail = await order.ToDetail()
             .LocalizeItemsAsync(_localization, RequestCulture.OverlayCultureId(Request), cancellationToken);
         return Ok(detail);
+    }
+
+    /// <summary>
+    /// "Pay again" preflight for an order whose payment failed. When every line is still orderable the
+    /// storefront is cleared to start a new payment for this same order; when anything is gone the
+    /// whole order is returned to the cart (and canceled, releasing its stock) and the storefront sends
+    /// the shopper there — the cart shows what they can still buy, with the rest listed as unavailable
+    /// and left out of the totals.
+    /// </summary>
+    [HttpPost("{id:long}/retry-payment")]
+    public async Task<ActionResult<OrderRetryPaymentDto>> RetryPayment(long id, CancellationToken cancellationToken)
+    {
+        var result = await _orders.RetryPaymentAsync(id, User.GetUserId(), cancellationToken);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        var retry = result.Value!;
+        return Ok(new OrderRetryPaymentDto(
+            retry.OrderId,
+            retry.CanPay,
+            retry.MovedToCart,
+            retry.UnavailableItems
+                .Select(i => new OrderRetryItemDto(
+                    i.ProductId, i.ProductName, i.RequestedQuantity, i.AvailableQuantity, i.Reason))
+                .ToList()));
     }
 
     /// <summary>

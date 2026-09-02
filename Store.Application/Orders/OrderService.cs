@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Store.Application.Catalog.Pricing;
 using Store.Application.Common;
+using Store.Application.Payments;
 using Store.Application.Pricing.Coupons;
 using Store.Application.Shipping;
 using Store.Application.Tax;
@@ -285,6 +286,123 @@ public sealed class OrderService : IOrderService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Result<OrderRetryResult>> RetryPaymentAsync(
+        long orderId, long customerId, CancellationToken cancellationToken = default)
+    {
+        var order = await _db.Set<Order>()
+            .Include(o => o.OrderItems).ThenInclude(i => i.Product)
+            .Include(o => o.OrderHistories)
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId, cancellationToken);
+
+        if (order == null)
+        {
+            return Result.Fail<OrderRetryResult>("Order not found.");
+        }
+
+        if (order.OrderStatus is not (OrderStatus.New or OrderStatus.PendingPayment
+            or OrderStatus.PaymentFailed or OrderStatus.Canceled))
+        {
+            return Result.Fail<OrderRetryResult>("This order can no longer be paid.");
+        }
+
+        var alreadyPaid = await _db.Set<Payment>()
+            .AnyAsync(p => p.OrderId == order.Id && p.Status == PaymentStatus.Succeeded, cancellationToken);
+        if (alreadyPaid)
+        {
+            return Result.Fail<OrderRetryResult>("This order has already been paid.");
+        }
+
+        // An order that has not been canceled still holds the stock it took at checkout, so its own
+        // quantity counts towards availability — otherwise every retry would look out of stock. A
+        // canceled one (the payment timeout, or an admin) gave its stock back, so it is measured
+        // against what is actually on the shelf now.
+        var holdsStock = order.OrderStatus != OrderStatus.Canceled;
+        var unavailable = new List<OrderRetryItem>();
+
+        foreach (var item in order.OrderItems)
+        {
+            var product = item.Product;
+
+            if (product is null || product.IsDeleted || !product.IsPublished || !product.IsAllowToOrder)
+            {
+                unavailable.Add(new OrderRetryItem(
+                    item.ProductId, product?.Name ?? string.Empty, item.Quantity, 0, "unavailable"));
+                continue;
+            }
+
+            if (!product.StockTrackingIsEnabled)
+            {
+                continue;
+            }
+
+            var available = product.StockQuantity + (holdsStock ? item.Quantity : 0);
+            if (available < item.Quantity)
+            {
+                unavailable.Add(new OrderRetryItem(
+                    item.ProductId, product.Name, item.Quantity, Math.Max(0, available), "out-of-stock"));
+            }
+        }
+
+        if (unavailable.Count == 0 && holdsStock)
+        {
+            // Nothing changed under the shopper — they can pay this order again as it stands.
+            return Result.Ok(new OrderRetryResult(order.Id, CanPay: true, MovedToCart: false, []));
+        }
+
+        // Either something is gone, or the order was already canceled and cannot be revived. Every
+        // line goes back to the cart — the unavailable ones included, which the cart shows for
+        // information and leaves out of its totals — and an order still holding stock is canceled, so
+        // that stock is released rather than double-held against the cart the shopper is about to buy.
+        await ReturnItemsToCartAsync(order, customerId, cancellationToken);
+
+        if (holdsStock)
+        {
+            await CancelOrderAsync(order, cancellationToken);
+        }
+        else
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        return Result.Ok(new OrderRetryResult(order.Id, CanPay: false, MovedToCart: true, unavailable));
+    }
+
+    /// <summary>
+    /// Copies an order's lines back into the customer's cart. Quantities are raised to the ordered
+    /// amount rather than added to it, so retrying twice can't silently double the bag.
+    /// </summary>
+    private async Task ReturnItemsToCartAsync(Order order, long customerId, CancellationToken cancellationToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var productIds = order.OrderItems.Select(i => i.ProductId).ToList();
+
+        var existing = await _db.Set<CartItem>()
+            .Where(c => c.CustomerId == customerId && productIds.Contains(c.ProductId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var item in order.OrderItems)
+        {
+            var line = existing.FirstOrDefault(c => c.ProductId == item.ProductId);
+
+            if (line == null)
+            {
+                _db.Set<CartItem>().Add(new CartItem
+                {
+                    CustomerId = customerId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    CreatedOn = now,
+                    LatestUpdatedOn = now
+                });
+            }
+            else if (line.Quantity < item.Quantity)
+            {
+                line.Quantity = item.Quantity;
+                line.LatestUpdatedOn = now;
+            }
+        }
     }
 
     public async Task<decimal> GetTaxAsync(
