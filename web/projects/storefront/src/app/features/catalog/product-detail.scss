@@ -692,3 +692,7 @@
     padding-block-end: 84px;
   }
 }
+
+.pdp-in-bag:not(:empty) {
+  margin-block-start: 14px;
+}

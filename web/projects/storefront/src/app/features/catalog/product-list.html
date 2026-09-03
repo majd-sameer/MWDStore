@@ -145,15 +145,17 @@
                           }
                         </div>
                         @if (!p.isCallForPricing) {
-                          <button
-                            type="button"
-                            class="btn btn-primary btn-sm lrow-add"
-                            [disabled]="!canOrder(p)"
-                            (click)="add(p)"
-                          >
-                            <lib-icon name="bag" [size]="16" />
-                            {{ 'shop.add_to_cart' | translate }}
-                          </button>
+                          <app-bag-qty [productId]="p.id">
+                            <button
+                              type="button"
+                              class="btn btn-primary btn-sm lrow-add"
+                              [disabled]="!canOrder(p)"
+                              (click)="add(p)"
+                            >
+                              <lib-icon name="bag" [size]="16" />
+                              {{ 'shop.add_to_cart' | translate }}
+                            </button>
+                          </app-bag-qty>
                         }
                         </div>
                       </div>

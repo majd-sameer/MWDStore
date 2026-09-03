@@ -40,16 +40,18 @@
         </div>
 
         @if (!product().isCallForPricing) {
-          <button
-            type="button"
-            class="pcs-add"
-            [class.is-disabled]="!canOrder()"
-            [disabled]="!canOrder()"
-            [attr.aria-label]="(canOrder() ? 'product.add' : 'product.out_of_stock') | translate"
-            (click)="addToCart.emit(product())"
-          >
-            <lib-icon name="plus" [size]="18" />
-          </button>
+          <app-bag-qty [productId]="product().id">
+            <button
+              type="button"
+              class="pcs-add"
+              [class.is-disabled]="!canOrder()"
+              [disabled]="!canOrder()"
+              [attr.aria-label]="(canOrder() ? 'product.add' : 'product.out_of_stock') | translate"
+              (click)="addToCart.emit(product())"
+            >
+              <lib-icon name="plus" [size]="18" />
+            </button>
+          </app-bag-qty>
         }
       </div>
     </div>

@@ -35,6 +35,7 @@ import {
 import { CartStore, type CartProduct } from '../../core/cart.store';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
+import { BagQty } from '../../shared/bag-qty';
 import { announceCartError } from '../../core/cart-messages';
 import { CartDrawerService } from '../../core/cart-drawer.service';
 
@@ -59,6 +60,7 @@ import { CartDrawerService } from '../../core/cart-drawer.service';
     Stepper,
     Tile,
     ProductCard,
+    BagQty,
   ],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
@@ -119,7 +121,7 @@ export class ProductDetail {
       this.translate.instant('product.origin_default'),
   );
 
-  private readonly selectedVariation = computed<ProductDetailVariation | null>(() => {
+  protected readonly selectedVariation = computed<ProductDetailVariation | null>(() => {
     const id = this.selectedVariationId();
     const variations = this.product.value()?.variations ?? [];
     return variations.find((variation) => variation.id === id) ?? null;

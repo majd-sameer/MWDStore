@@ -11,6 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { ProductListItem } from 'data-access';
 import { Icon, Stars, Tag, Tile } from 'ui';
 import { CategoryLabelPipe } from './category-label.pipe';
+import { BagQty } from './bag-qty';
 
 /**
  * Distinct "Signature" variant of {@link ProductCard} — same input contract, so `/shop` can swap the
@@ -20,7 +21,7 @@ import { CategoryLabelPipe } from './category-label.pipe';
 @Component({
   selector: 'app-product-card-signature',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, TranslatePipe, Icon, Stars, Tag, Tile, CategoryLabelPipe],
+  imports: [RouterLink, MoneyPipe, TranslatePipe, Icon, Stars, Tag, Tile, CategoryLabelPipe, BagQty],
   host: { class: 'product-card-signature' },
   templateUrl: './product-card-signature.html',
   styleUrl: './product-card-signature.scss',

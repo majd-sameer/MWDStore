@@ -31,6 +31,7 @@ import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
 import { ProductCardSignature } from '../../shared/product-card-signature';
 import { CategoryLabelPipe } from '../../shared/category-label.pipe';
+import { BagQty } from '../../shared/bag-qty';
 import { announceCartError } from '../../core/cart-messages';
 import { CartDrawerService } from '../../core/cart-drawer.service';
 
@@ -71,6 +72,7 @@ function toNumber(value: string | null): number | undefined {
     Stars,
     Tile,
     CategoryLabelPipe,
+    BagQty,
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',

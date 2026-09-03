@@ -167,6 +167,11 @@
                 <lib-icon name="heart" [size]="20" />
               </button>
             </div>
+
+            <!-- Already in the bag: say so, and let the shopper adjust it right here. -->
+            <div class="pdp-in-bag">
+              <app-bag-qty [productId]="selectedVariation()?.id ?? p.id" size="md" />
+            </div>
           }
 
           <!-- Mobile-only sticky buy bar: on phones the buy block sits below the gallery,

@@ -11,6 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { ProductListItem } from 'data-access';
 import { Icon, Stars, Tag, Tile } from 'ui';
 import { CategoryLabelPipe } from './category-label.pipe';
+import { BagQty } from './bag-qty';
 
 /**
  * Presentational product tile for the home rows and shop grid: gradient/image
@@ -21,7 +22,7 @@ import { CategoryLabelPipe } from './category-label.pipe';
 @Component({
   selector: 'app-product-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, TranslatePipe, Icon, Stars, Tag, Tile, CategoryLabelPipe],
+  imports: [RouterLink, MoneyPipe, TranslatePipe, Icon, Stars, Tag, Tile, CategoryLabelPipe, BagQty],
   host: { class: 'product-card' },
   templateUrl: './product-card.html',
   styleUrl: './product-card.scss',
