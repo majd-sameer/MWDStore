@@ -10,13 +10,26 @@
     }
     .account {
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 340px minmax(0, 1fr);
       gap: 2.5rem;
       align-items: start;
     }
+    /* Columns never grow past the viewport because of a wide child (rails, order
+       rows): `minmax(0, …)` + min-inline-size: 0 stop the page scrolling sideways. */
+    .profile-col,
+    .orders-col {
+      min-inline-size: 0;
+    }
     @media (max-width: 900px) {
       .account {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+      }
+      .page-title {
+        margin-block: 0.25rem 1.25rem;
+      }
+      .card-surface {
+        padding: 1.15rem;
       }
     }
     .card-surface {

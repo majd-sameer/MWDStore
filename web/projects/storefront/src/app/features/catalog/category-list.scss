@@ -41,9 +41,22 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+    /* Phones keep two-up: one giant card per row made the hub a very long
+       scroll; compact cards still give 44px+ tap targets. */
     @media (max-width: 520px) {
       .sections {
-        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .scard {
+        padding: 22px 12px 18px;
+        gap: 6px;
+      }
+      .scard-ic {
+        inline-size: 56px;
+        block-size: 56px;
+      }
+      .scard-name {
+        font-size: 0.95rem;
       }
     }
 

@@ -144,6 +144,19 @@ import { announceCartError, cartAdjustmentMessage } from '../core/cart-messages'
       min-inline-size: 2.2rem;
       font-size: 1.05rem;
     }
+    /* Narrow two-up cards (phones): take a full row under the price, label at the
+       start and the stepper at the end, so nothing is clipped by the card edge. */
+    @media (max-width: 575.98px) {
+      .bq:not(.bq-md) {
+        flex: 1 0 100%;
+        align-items: stretch;
+        gap: 0.35rem;
+      }
+      .bq:not(.bq-md) .bq-stepper {
+        display: flex;
+        justify-content: space-between;
+      }
+    }
   `,
 })
 export class BagQty {

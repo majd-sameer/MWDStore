@@ -32,6 +32,24 @@
         padding-inline-start: 0;
       }
     }
+    /* Phones: one tidy row per item instead of two cramped columns + an orphan. */
+    @media (max-width: 575.98px) {
+      .trust-inner {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding-block: 8px;
+      }
+      .trust-cell {
+        padding-block: 12px;
+      }
+      .trust-cell + .trust-cell {
+        border-block-start: 1px solid var(--line-2);
+      }
+      .trust-icon {
+        inline-size: 40px;
+        block-size: 40px;
+      }
+    }
     .trust-icon {
       display: inline-flex;
       align-items: center;

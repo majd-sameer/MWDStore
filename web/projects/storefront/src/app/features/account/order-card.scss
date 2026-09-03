@@ -42,6 +42,18 @@
       align-items: center;
       gap: 0.75rem;
     }
+    /* Phones: let the head and foot rows wrap instead of forcing the card wider
+       than the screen. */
+    @media (max-width: 575.98px) {
+      :host {
+        padding: 1rem;
+      }
+      .oc-head,
+      .oc-foot {
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+      }
+    }
     .oc-view {
       display: inline-flex;
       align-items: center;

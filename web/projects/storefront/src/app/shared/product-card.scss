@@ -107,3 +107,19 @@
       cursor: not-allowed;
     }
   
+    /* Narrow two-up cards (phones): stars only, the "No reviews yet" text wrapped onto two lines. */
+    @media (max-width: 575.98px) {
+      .pc-no-rating,
+      .pcs-no-rating {
+        font-size: 0;
+        gap: 0;
+      }
+    }
+
+    /* Two-up phone cards: let the in-bag control drop onto its own full-width row. */
+    @media (max-width: 575.98px) {
+      .pc-foot,
+      .pcs-foot {
+        flex-wrap: wrap;
+      }
+    }

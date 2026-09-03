@@ -183,6 +183,42 @@
       color: var(--ink-3);
       cursor: not-allowed;
     }
+    /* Phones: image + name on top, price and a thumb-sized stepper on a row
+       below — the three-column line clipped the price and + button at 390px. */
+    @media (max-width: 575.98px) {
+      .citem {
+        grid-template-columns: 84px 1fr;
+        gap: 12px 14px;
+        align-items: start;
+      }
+      .citem-media {
+        inline-size: 84px;
+      }
+      .citem-end {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .qty {
+        gap: 4px;
+        padding: 2px 4px;
+      }
+      .qty button {
+        inline-size: 40px;
+        block-size: 40px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+      }
+      .qty > span {
+        min-inline-size: 1.6rem;
+        text-align: center;
+      }
+      .citem-rm {
+        min-block-size: 36px;
+      }
+    }
     .cart-continue {
       padding: 18px 0;
     }

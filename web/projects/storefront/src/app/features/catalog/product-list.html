@@ -85,7 +85,7 @@
           <div [class.is-refreshing]="result.isLoading()">
             @if (r.products?.length) {
               @if (effectiveView() === 'grid') {
-                <div class="pgrid row g-3 g-md-4 row-cols-1 row-cols-sm-2 row-cols-xl-3">
+                <div class="pgrid row g-2 g-sm-3 g-md-4 row-cols-2 row-cols-xl-3">
                   @for (product of products(); track product.id) {
                     <div class="col">
                       @if (product.isSignature) {

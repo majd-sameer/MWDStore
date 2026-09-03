@@ -18,6 +18,29 @@
         grid-column: 1 / -1;
       }
     }
+    /* Phones: a single column, roomier link rows (44px tap targets), and the
+       address line no longer squeezed into a half-width column. */
+    @media (max-width: 575.98px) {
+      .site-footer {
+        margin-block-start: 3.5rem;
+        padding-block: 2.5rem 1.5rem;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+      }
+      .footer-col ul:not(.footer-social) {
+        gap: 0;
+      }
+      .footer-col ul:not(.footer-social) li > a {
+        display: flex;
+        align-items: center;
+        min-block-size: 44px;
+      }
+      .footer-loc {
+        max-inline-size: none;
+      }
+    }
     .wordmark {
       display: inline-flex;
       align-items: center;
