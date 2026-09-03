@@ -31,7 +31,8 @@ import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
 import { ProductCardSignature } from '../../shared/product-card-signature';
 import { CategoryLabelPipe } from '../../shared/category-label.pipe';
-import { announceCartAdd, announceCartError } from '../../core/cart-messages';
+import { announceCartError } from '../../core/cart-messages';
+import { CartDrawerService } from '../../core/cart-drawer.service';
 
 const PAGE_SIZE = 12;
 
@@ -81,6 +82,7 @@ export class ProductList {
   private readonly cart = inject(CartStore);
   private readonly seo = inject(SeoService);
   private readonly toast = inject(ToastService);
+  private readonly cartDrawer = inject(CartDrawerService);
   private readonly translate = inject(TranslateService);
 
   protected readonly ratingOptions = [4, 4.5];
@@ -307,7 +309,7 @@ export class ProductList {
 
   protected add(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      next: (cart) => this.cartDrawer.showAdded(cart),
       error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }

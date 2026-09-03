@@ -13,7 +13,8 @@ import {
 } from 'data-access';
 import { Button, Tile, ToastService } from 'ui';
 import { CartStore, type CartProduct } from '../../core/cart.store';
-import { announceCartAdd, announceCartError } from '../../core/cart-messages';
+import { announceCartError } from '../../core/cart-messages';
+import { CartDrawerService } from '../../core/cart-drawer.service';
 
 /** The customer's wishlist: saved products with quick add-to-cart and remove. */
 @Component({
@@ -27,6 +28,7 @@ export class Wishlist {
   private readonly service = inject(StorefrontFeaturesService);
   private readonly cart = inject(CartStore);
   private readonly toast = inject(ToastService);
+  private readonly cartDrawer = inject(CartDrawerService);
   private readonly translate = inject(TranslateService);
 
   protected readonly items = signal<WishListItemDto[]>([]);
@@ -56,7 +58,7 @@ export class Wishlist {
       isAllowToOrder: item.isAvailable,
     };
     this.cart.add(product, item.quantity || 1).subscribe({
-      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      next: (cart) => this.cartDrawer.showAdded(cart),
       error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }

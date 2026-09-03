@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -56,6 +58,29 @@ export class Header {
   protected readonly menuOpen = signal(false);
 
   private readonly categories = this.catalog.categoriesResource();
+
+  /** True for a moment after the bag count changes, to bump the badge. */
+  protected readonly bump = signal(false);
+  private bumpTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    let previous = untracked(() => this.cart.count());
+    effect(() => {
+      const count = this.cart.count();
+      if (count === previous) {
+        return;
+      }
+      previous = count;
+      if (count === 0) {
+        return;
+      }
+      untracked(() => {
+        clearTimeout(this.bumpTimer);
+        this.bump.set(true);
+        this.bumpTimer = setTimeout(() => this.bump.set(false), 500);
+      });
+    });
+  }
 
   /**
    * Hardcoded primary nav. "Store Sections" opens the category hub (/categories)

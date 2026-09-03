@@ -57,8 +57,9 @@
             (click)="cartDrawer.show()"
           >
             <lib-icon name="bag" [size]="20" />
+            <span class="cart-label d-none d-lg-inline">{{ 'nav.cart' | translate }}</span>
             @if (cart.count(); as count) {
-              <span class="cart-count">{{ count }}</span>
+              <span class="cart-count" [class.is-bump]="bump()">{{ count }}</span>
             }
           </button>
         </div>

@@ -651,3 +651,44 @@
       }
     }
   
+/* Mobile sticky buy bar (hidden from md up via .d-md-none). */
+.pdp-sticky {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1010;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-block-start: 1px solid var(--line);
+  box-shadow: 0 -6px 20px rgba(26, 23, 48, 0.08);
+}
+.pdp-sticky-price {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  line-height: 1.2;
+}
+.pdp-sticky-label {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdp-sticky-price strong {
+  font-size: 1.05rem;
+}
+.pdp-sticky > button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+@media (max-width: 767.98px) {
+  :host {
+    /* Keep the footer / reviews reachable above the fixed bar. */
+    padding-block-end: 84px;
+  }
+}

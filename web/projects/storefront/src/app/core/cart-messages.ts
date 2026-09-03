@@ -90,23 +90,6 @@ function isCartWriteError(error: unknown): error is CartWriteError {
   return typeof error === 'object' && error !== null && 'isCartWriteError' in error;
 }
 
-/**
- * Announces a successful add: the cap when stock cut it short, otherwise the plain confirmation.
- * Every add-to-bag button routes through this so the two carts and five call sites say one thing.
- */
-export function announceCartAdd(
-  toast: ToastService,
-  translate: TranslateService,
-  cart: CartModel,
-): void {
-  const capped = cartAdjustmentMessage(cart);
-  toast.success(
-    capped
-      ? translate.instant(capped.key, capped.params)
-      : translate.instant('product.added'),
-  );
-}
-
 /** Announces an add that could not happen at all — a sold-out or withdrawn product. */
 export function announceCartError(
   toast: ToastService,

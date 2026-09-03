@@ -24,7 +24,8 @@ import { MissionBand } from './sections/mission-band';
 import { StoryRail } from './sections/story-rail';
 import { ValuesRow } from './sections/values-row';
 import { CtaBand } from './sections/cta-band';
-import { announceCartAdd, announceCartError } from '../../core/cart-messages';
+import { announceCartError } from '../../core/cart-messages';
+import { CartDrawerService } from '../../core/cart-drawer.service';
 
 /**
  * Home page per supported-doc/HOME-PAGE.md: hero → trust strip → categories →
@@ -56,6 +57,7 @@ export class Home {
   private readonly features = inject(StorefrontFeaturesService);
   private readonly cart = inject(CartStore);
   private readonly toast = inject(ToastService);
+  private readonly cartDrawer = inject(CartDrawerService);
   private readonly seo = inject(SeoService);
   private readonly translate = inject(TranslateService);
 
@@ -116,7 +118,7 @@ export class Home {
 
   protected add(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      next: (cart) => this.cartDrawer.showAdded(cart),
       error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }

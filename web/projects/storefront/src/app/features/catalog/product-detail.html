@@ -169,6 +169,27 @@
             </div>
           }
 
+          <!-- Mobile-only sticky buy bar: on phones the buy block sits below the gallery,
+               often below the fold, so the price + add button stay one thumb away. -->
+          @if (!p.isCallForPricing) {
+            <div class="pdp-sticky d-md-none">
+              <div class="pdp-sticky-price">
+                <span class="pdp-sticky-label">{{ p.name }}</span>
+                <strong class="tabular-nums">{{ activePrice().price | money }}</strong>
+              </div>
+              <button
+                libButton
+                variant="success"
+                size="lg"
+                [disabled]="!canOrder() || allStockInBag() || adding()"
+                (click)="addToCart(p)"
+              >
+                <lib-icon name="bag" [size]="18" class="me-2" />
+                {{ (canOrder() ? (allStockInBag() ? 'product.all_in_bag' : 'product.add') : 'product.out_of_stock') | translate }}
+              </button>
+            </div>
+          }
+
           <!-- Trust perks -->
           <div class="pdp-perks">
             @for (perk of perks; track perk.title) {

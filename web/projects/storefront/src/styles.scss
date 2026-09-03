@@ -8,3 +8,8 @@ html,
 body {
   overflow-x: clip;
 }
+
+// The cart drawer locks page scroll while it is open (see CartDrawerService).
+body.drawer-open {
+  overflow: hidden;
+}

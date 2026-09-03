@@ -1,6 +1,9 @@
 
     :host {
-      display: block;
+      /* No box of its own: the sticky header must be positioned against the page
+         scroll, not against this component's (short) box — otherwise it stops
+         sticking as soon as the shopper scrolls past the announce bar. */
+      display: contents;
     }
     .announce {
       background: var(--titanium);
@@ -119,6 +122,41 @@
     }
     .cart-btn {
       position: relative;
+      gap: 0.4rem;
+    }
+    .cart-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    @media (min-width: 992px) {
+      .cart-btn {
+        inline-size: auto;
+        padding-inline: 0.9rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .site-header .cart-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+    .cart-count.is-bump {
+      animation: badge-bump 0.45s cubic-bezier(0.2, 0.8, 0.2, 1.4);
+    }
+    @keyframes badge-bump {
+      0% {
+        transform: scale(1);
+      }
+      40% {
+        transform: scale(1.45);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cart-count.is-bump {
+        animation: none;
+      }
     }
     .cart-count {
       position: absolute;

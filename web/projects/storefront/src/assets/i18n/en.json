@@ -210,6 +210,8 @@
   },
   "cart": {
     "title": "Your bag",
+    "close": "Close bag",
+    "added_title": "Added to your bag",
     "empty": "Your bag is empty",
     "empty_sub": "Nothing in here yet — go find something good.",
     "subtotal": "Subtotal",
@@ -224,6 +226,7 @@
     "remove": "Remove",
     "unavailable": "No longer available",
     "count": "{{count}} items",
+    "count_one": "1 item",
     "free": "Free",
     "promo_ph": "Promo code",
     "apply": "Apply",

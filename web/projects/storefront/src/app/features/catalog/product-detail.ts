@@ -35,7 +35,8 @@ import {
 import { CartStore, type CartProduct } from '../../core/cart.store';
 import { SeoService } from '../../core/seo.service';
 import { ProductCard } from '../../shared/product-card';
-import { announceCartAdd, announceCartError } from '../../core/cart-messages';
+import { announceCartError } from '../../core/cart-messages';
+import { CartDrawerService } from '../../core/cart-drawer.service';
 
 /**
  * Product page: breadcrumb, gradient gallery, origin/title/rating, price with
@@ -68,6 +69,7 @@ export class ProductDetail {
   private readonly cart = inject(CartStore);
   private readonly seo = inject(SeoService);
   private readonly toast = inject(ToastService);
+  private readonly cartDrawer = inject(CartDrawerService);
   private readonly translate = inject(TranslateService);
   private readonly features = inject(StorefrontFeaturesService);
   private readonly auth = inject(AuthService);
@@ -405,7 +407,7 @@ export class ProductDetail {
     this.cart.add(cartProduct, this.quantity()).subscribe({
       next: (cart) => {
         this.adding.set(false);
-        announceCartAdd(this.toast, this.translate, cart);
+        this.cartDrawer.showAdded(cart);
       },
       error: (error) => {
         this.adding.set(false);
@@ -416,7 +418,7 @@ export class ProductDetail {
 
   protected quickAdd(product: ProductListItem): void {
     this.cart.add(product).subscribe({
-      next: (cart) => announceCartAdd(this.toast, this.translate, cart),
+      next: (cart) => this.cartDrawer.showAdded(cart),
       error: (error) => announceCartError(this.toast, this.translate, error),
     });
   }
