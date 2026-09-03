@@ -1,0 +1,117 @@
+:host {
+  display: contents;
+}
+
+// The one navy surface on small screens: the header goes canvas-coloured there,
+// so the bar is the primary-coloured anchor the eye lands on.
+.tabbar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: stretch;
+  block-size: calc(var(--tabbar-base, 64px) + env(safe-area-inset-bottom, 0px));
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  background: linear-gradient(180deg, var(--navy), var(--navy-deep));
+  border-block-start: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -6px 20px rgba(31, 58, 87, 0.18);
+}
+
+.tab {
+  position: relative;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
+}
+.tab:hover,
+.tab:focus-visible {
+  color: #fff;
+  outline: none;
+}
+.tab:focus-visible .tab-icon {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-radius: 999px;
+}
+// Active state: gold line along the top edge + white icon and label. No fill.
+.tab::before {
+  content: '';
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline: 18%;
+  block-size: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--gold-bright);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+.tab.is-active {
+  color: #fff;
+}
+.tab.is-active::before {
+  transform: scaleX(1);
+}
+.tab.is-active .tab-icon {
+  color: var(--gold-bright);
+}
+
+.tab-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 54px;
+  block-size: 28px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.tab:active .tab-icon {
+  transform: scale(0.92);
+}
+
+.tab-label {
+  max-inline-size: 100%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab.is-active .tab-label {
+  font-weight: 700;
+}
+
+.tab-badge {
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-start: calc(50% + 5px);
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--navy-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .tab::before,
+  .tab-icon {
+    transition: none;
+  }
+}

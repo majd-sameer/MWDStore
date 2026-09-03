@@ -31,6 +31,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'payment/mock', renderMode: RenderMode.Client },
   { path: 'payment/stripe/return', renderMode: RenderMode.Client },
   { path: 'track-order', renderMode: RenderMode.Client },
+  { path: 'more', renderMode: RenderMode.Client },
   { path: 'account', renderMode: RenderMode.Client },
   { path: 'account/orders', renderMode: RenderMode.Client },
   { path: 'account/orders/:id', renderMode: RenderMode.Client },

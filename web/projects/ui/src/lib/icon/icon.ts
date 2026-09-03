@@ -40,7 +40,9 @@ export type IconName =
   | 'twitter'
   | 'youtube'
   | 'tiktok'
-  | 'whatsapp';
+  | 'whatsapp'
+  | 'home'
+  | 'store';
 
 interface IconDef {
   readonly d: string;
@@ -106,6 +108,10 @@ const ICONS: Record<IconName, IconDef> = {
   },
   whatsapp: {
     d: 'M20 11.5a8 8 0 0 1-11.9 7L4 20l1.6-4A8 8 0 1 1 20 11.5z M9 8.5c0 4 2.5 6.5 6.5 6.5.5 0 1-.5 1-1.2 0-.4-1.7-1.1-2-1.1s-.6.6-.9.6C13 12.2 11.8 11 11.5 10c0-.3.6-.5.6-.9S11.4 7.5 11 7.4c-.7-.2-2 .4-2 1.1z',
+  },
+  home: { d: 'M3 11l9-7 9 7 M5 10v10h5v-6h4v6h5V10' },
+  store: {
+    d: 'M4 4h16l1 5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0l1-5z M5 12v8h14v-8 M10 20v-5h4v5',
   },
 };
 

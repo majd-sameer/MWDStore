@@ -6,7 +6,7 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
 import { isPlatformBrowser, registerLocaleData } from '@angular/common';
 import localeAr from '@angular/common/locales/ar';
@@ -25,7 +25,12 @@ registerLocaleData(localeAr);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    // Each navigation (tab tap, product link) opens at the top, as in a native app;
+    // browser back still restores the previous position.
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+    ),
     provideClientHydration(),
     // Jordanian dinar is the store currency. Prices render through core's
     // language-aware `| money` pipe (Arabic "أ.د", otherwise "JOD"); this

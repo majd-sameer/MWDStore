@@ -13,3 +13,21 @@ body {
 body.drawer-open {
   overflow: hidden;
 }
+
+// ---------------------------------------------------------------------------
+// Mobile / tablet bottom tab bar (see layout/bottom-nav). `--tabbar-h` is 0 on
+// desktop and while the bar is hidden (checkout), so other bottom-anchored UI
+// can simply offset by it.
+:root {
+  --tabbar-base: 64px;
+  --tabbar-h: 0px;
+}
+@media (max-width: 991.98px) {
+  body.has-tabbar {
+    --tabbar-h: calc(var(--tabbar-base) + env(safe-area-inset-bottom, 0px));
+    padding-block-end: var(--tabbar-h);
+  }
+}
+.mystore-toast-container {
+  bottom: var(--tabbar-h) !important;
+}

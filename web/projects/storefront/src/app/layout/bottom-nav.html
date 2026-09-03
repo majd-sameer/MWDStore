@@ -1,0 +1,20 @@
+@if (!hidden()) {
+  <nav class="tabbar d-lg-none" [attr.aria-label]="'nav.menu' | translate">
+    @for (tab of tabs; track tab.key) {
+      <a
+        class="tab"
+        [class.is-active]="isActive(tab)"
+        [routerLink]="tab.link"
+        [attr.aria-current]="isActive(tab) ? 'page' : null"
+      >
+        <span class="tab-icon">
+          <lib-icon [name]="tab.icon" [size]="22" />
+          @if (tab.key === 'cart' && cart.count(); as count) {
+            <span class="tab-badge">{{ count > 99 ? '99+' : count }}</span>
+          }
+        </span>
+        <span class="tab-label">{{ 'nav.' + tab.key | translate }}</span>
+      </a>
+    }
+  </nav>
+}

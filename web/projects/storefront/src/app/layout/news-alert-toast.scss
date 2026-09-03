@@ -3,7 +3,7 @@
 // the cart drawer (z-index 1050/1055) so the drawer always covers it.
 :host {
   position: fixed;
-  inset-block-end: 20px;
+  inset-block-end: calc(20px + var(--tabbar-h, 0px));
   inset-inline-end: 20px;
   z-index: 1040;
   display: block;
@@ -162,7 +162,7 @@
 
 @media (max-width: 576px) {
   :host {
-    inset-block-end: 12px;
+    inset-block-end: calc(12px + var(--tabbar-h, 0px));
     inset-inline-end: 12px;
   }
   .card {

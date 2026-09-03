@@ -160,6 +160,14 @@ export const routes: Routes = [
       ),
   },
   {
+    // "More" tab of the mobile / tablet bottom bar: profile, tracking, news,
+    // about and language as a page.
+    path: 'more',
+    title: 'More',
+    loadComponent: () =>
+      import('./features/more/more').then((m) => m.More),
+  },
+  {
     path: 'account',
     title: 'My account',
     canActivate: [authGuard],

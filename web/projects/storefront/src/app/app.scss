@@ -3,3 +3,9 @@
   padding-block: 2.5rem 0;
   min-block-size: 60vh;
 }
+/* Tighter top gap under the app-style chrome on phones and tablets. */
+@media (max-width: 991.98px) {
+  .app-main {
+    padding-block-start: 1.5rem;
+  }
+}

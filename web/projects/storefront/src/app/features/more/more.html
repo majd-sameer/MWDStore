@@ -1,0 +1,25 @@
+<h1 class="page-title">{{ 'nav.more' | translate }}</h1>
+
+<nav class="more-list" [attr.aria-label]="'nav.more' | translate">
+  @for (link of links(); track link.key) {
+    <a class="more-row" [routerLink]="link.link">
+      <span class="more-ico"><lib-icon [name]="link.icon" [size]="22" /></span>
+      <span class="more-txt">{{ 'nav.' + link.key | translate }}</span>
+      <lib-icon class="more-chev" name="chevEnd" [size]="20" />
+    </a>
+  }
+</nav>
+
+<div class="more-list more-lang-block">
+  <div class="more-row more-lang">
+    <span class="more-ico"><lib-icon name="menu" [size]="22" /></span>
+    <span class="more-txt">{{ 'common.language_select' | translate }}</span>
+    <app-language-switcher />
+  </div>
+</div>
+
+@if (auth.isAuthenticated()) {
+  <button type="button" class="more-logout" (click)="onLogout()">
+    {{ 'account.logout' | translate }}
+  </button>
+}

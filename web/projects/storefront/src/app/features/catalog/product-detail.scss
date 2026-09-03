@@ -655,7 +655,7 @@
 .pdp-sticky {
   position: fixed;
   inset-inline: 0;
-  inset-block-end: 0;
+  inset-block-end: var(--tabbar-h, 0px);
   z-index: 1010;
   display: flex;
   align-items: center;

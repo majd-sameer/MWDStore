@@ -1,26 +1,18 @@
-
     <div class="announce">
       {{ 'announce' | translate }}
     </div>
 
     <header class="site-header">
       <div class="wrap header-bar">
-        <button
-          type="button"
-          class="icon-btn d-md-none"
-          [attr.aria-label]="'nav.menu' | translate"
-          [attr.aria-expanded]="menuOpen()"
-          (click)="menuOpen.set(true)"
-        >
-          <lib-icon name="menu" [size]="22" />
-        </button>
-
         <a routerLink="/" class="wordmark" aria-label="MadeWithDetermination">
-          <img class="wordmark-logo" src="logo-gold.png" alt="" />
+          <img class="wordmark-logo d-none d-lg-block" src="logo-gold.png" alt="" />
+          <img class="wordmark-logo d-lg-none" src="logo-color.png" alt="" />
           <span class="wordmark-text">{{ 'brand.name' | translate }}</span>
         </a>
 
-        <nav class="primary-nav d-none d-md-flex" [attr.aria-label]="'nav.menu' | translate">
+        <!-- Desktop only: below lg the bottom tab bar (layout/bottom-nav) carries
+             navigation, cart, account and language, so the header is the logo alone. -->
+        <nav class="primary-nav d-none d-lg-flex" [attr.aria-label]="'nav.menu' | translate">
           @for (link of mainLinks; track link.key) {
             <a
               class="nav-link"
@@ -33,8 +25,8 @@
           }
         </nav>
 
-        <div class="header-actions">
-          <app-language-switcher class="d-none d-sm-inline-flex" />
+        <div class="header-actions d-none d-lg-flex">
+          <app-language-switcher />
           <a
             class="icon-btn"
             [routerLink]="auth.isAuthenticated() ? '/account' : '/login'"
@@ -57,7 +49,7 @@
             (click)="cartDrawer.show()"
           >
             <lib-icon name="bag" [size]="20" />
-            <span class="cart-label d-none d-lg-inline">{{ 'nav.cart' | translate }}</span>
+            <span class="cart-label">{{ 'nav.cart' | translate }}</span>
             @if (cart.count(); as count) {
               <span class="cart-count" [class.is-bump]="bump()">{{ count }}</span>
             }
@@ -65,63 +57,3 @@
         </div>
       </div>
     </header>
-
-
-
-    @if (menuOpen()) {
-      <button
-        type="button"
-        class="drawer-backdrop"
-        [attr.aria-label]="'nav.menu' | translate"
-        (click)="menuOpen.set(false)"
-      ></button>
-      <div class="drawer" role="dialog" [attr.aria-label]="'nav.menu' | translate">
-        <div class="drawer-head">
-          <span class="wordmark wordmark--ink">
-            <img class="wordmark-logo" src="logo-color.png" alt="" />
-            <span>{{ 'brand.name' | translate }}</span>
-          </span>
-          <button type="button" class="icon-btn" aria-label="Close" (click)="menuOpen.set(false)">
-            <lib-icon name="x" [size]="22" />
-          </button>
-        </div>
-        <div class="drawer-lang"><app-language-switcher /></div>
-        <nav class="drawer-nav" [attr.aria-label]="'nav.menu' | translate">
-          @for (link of mainLinks; track link.key) {
-            <a
-              [routerLink]="link.link"
-              [queryParams]="link.queryParams ?? null"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: true }"
-              (click)="menuOpen.set(false)"
-            >
-              {{ 'nav.' + link.key | translate }}
-            </a>
-          }
-
-          @if (categoryLinks().length) {
-            <span class="drawer-section">{{ 'nav.categories' | translate }}</span>
-            @for (link of categoryLinks(); track link.category) {
-              <a
-                class="drawer-sub"
-                [routerLink]="['/shop']"
-                [queryParams]="{ category: link.category }"
-                (click)="menuOpen.set(false)"
-                >{{ link.category | categoryLabel: link.name }}</a
-              >
-            }
-          }
-
-          <a
-            class="drawer-account"
-            [routerLink]="auth.isAuthenticated() ? '/account' : '/login'"
-            routerLinkActive="active"
-            (click)="menuOpen.set(false)"
-          >
-            <lib-icon name="user" [size]="18" />
-            {{ (auth.isAuthenticated() ? 'nav.account' : 'nav.signin') | translate }}
-          </a>
-        </nav>
-      </div>
-    }
-  

@@ -177,113 +177,35 @@
       line-height: 18px;
       text-align: center;
     }
-    .drawer-backdrop {
-      position: fixed;
-      inset: 0;
-      border: 0;
-      padding: 0;
-      background: rgba(26, 23, 48, 0.4);
-      cursor: pointer;
-      z-index: 1040;
-    }
-    .drawer {
-      position: fixed;
-      inset-block: 0;
-      inset-inline-start: 0;
-      inline-size: min(82vw, 320px);
-      z-index: 1045;
-      background: var(--surface);
-      border-inline-end: 1px solid var(--line);
-      padding: 1.25rem;
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      flex-direction: column;
-    }
-    .drawer-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-block-end: 0.75rem;
-      padding-block-end: 0.85rem;
-      border-block-end: 1px solid var(--line);
-      flex: 0 0 auto;
-    }
-    .drawer-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1 1 auto;
-      min-block-size: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-    }
-    .drawer-nav a {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.8rem 0.75rem;
-      border-radius: var(--r-sm);
-      color: var(--ink);
-      font-weight: 600;
-      text-decoration: none;
-      transition: background-color 0.15s ease, color 0.15s ease;
-    }
-    .drawer-nav a:hover {
-      background: var(--surface-2);
-      color: var(--accent);
-    }
-    .drawer-nav a.active {
-      color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 12%, transparent);
-    }
-    .drawer-nav a.active::before {
-      content: '';
-      position: absolute;
-      inset-block: 0.55rem;
-      inset-inline-start: 0;
-      inline-size: 3px;
-      border-radius: 999px;
-      background: var(--accent);
-    }
-    .drawer-section {
-      padding: 1rem 0.75rem 0.4rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ink-3);
-    }
-    .drawer-nav a.drawer-sub {
-      padding-block: 0.6rem;
-      font-weight: 500;
-      color: var(--ink-2);
-    }
-    .drawer-nav a.drawer-account {
-      margin-block-start: 0.6rem;
-      padding-block-start: 1rem;
-      border-block-start: 1px solid var(--line);
-      border-radius: 0;
-    }
-    .drawer-nav a.drawer-account:hover {
-      border-radius: var(--r-sm);
-    }
-    .drawer-lang {
-      flex: 0 0 auto;
-      padding-block-end: 0.85rem;
-      margin-block-end: 0.25rem;
-      border-block-end: 1px solid var(--line-2);
-    }
-    /* Brand text only once there's room for wordmark + centred nav + actions. */
+    /* Below lg the header is the logo alone (nav, cart, account and language
+       live in the bottom tab bar): centre it and give it a little more presence. */
     @media (max-width: 991.98px) {
+      /* Calm, canvas-coloured and in normal flow (not sticky): the navy bottom
+         tab bar is the one piece of chrome that should draw the eye. */
+      .announce {
+        background: var(--surface-2);
+        color: var(--ink-2);
+        border-block-end: 1px solid var(--line-2);
+      }
+      .site-header {
+        position: static;
+        background: var(--canvas);
+        border-block-end: 1px solid var(--line);
+      }
+      .header-bar {
+        justify-content: center;
+        block-size: 64px;
+      }
       .wordmark-text {
         display: none;
+      }
+      .wordmark-logo {
+        block-size: 46px;
       }
     }
     /* From md up the primary nav is in flow and auto-centred between the
        wordmark and the actions, so it can never overlap them. */
-    @media (min-width: 768px) {
+    @media (min-width: 992px) {
       .primary-nav {
         margin-inline: auto;
       }
